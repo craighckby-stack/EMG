@@ -12,6 +12,8 @@ An autonomous, AI-powered codebase optimization and refactoring engine designed 
 ## 🚀 Key Capabilities
 
 - **Autonomous & On-Demand Optimization Loops**: Run single-pass enhancements or automated continuous scanning across entire repositories.
+- **Closed-Loop Neural Learning**: Mutations are validated against a real compiler (or AST). Compiler stderr failures are recorded in `POSTMORTEMS.md` as permanent constraints. The mutator learns from exact evidence instead of guessing.
+- **Dynamic Re-arming & Global Halt**: The engine calculates structural equilibrium. When 0-diffs saturate the repository, it executes a Global Saturation Halt. If new lessons are added to `POSTMORTEMS.md`, the skip-list cache invalidates and the engine dynamically re-arms itself.
 - **GitHub REST API Integration**: Direct integration with GitHub Personal Access Tokens (PAT) for listing user/organization repositories, fetching trees, and committing atomic refactoring passes.
 - **Offline Sandbox Mode**: Built-in simulated repositories (TypeScript/React, Python FastAPI, and Go Concurrency microservices) for safe, instant testing without requiring external credentials.
 - **Next-Gen Gemini Engine**: Server-side integration with Google's Gemini models (`gemini-2.5-flash`, `gemini-2.5-pro`, `gemini-2.5-flash-lite`, and experimental models) through the official `@google/genai` SDK.
@@ -34,29 +36,34 @@ EMG Core implements multi-layered defensive engineering to ensure that AI-genera
 [ Target Source File ]
           │
           ▼
-[ Gemini Neural Optimization ]
+[ Gemini Neural Optimization (Injected w/ Post-Mortem Constraints) ]
           │
           ▼
 [ Automated Secret Sanitizer ] ──► Strips PATs, API Keys, Tokens & Private Keys
           │
           ▼
-[ AST Type & Syntax Validator ] ──► Compiles with TypeScript AST & transpiler
-          │                     └── Rejects parse errors / unmatched delimiters
+[ External Verification Gate ] ──► TypeScript AST check OR Godbolt API (Real GCC 13.2 compiler)
+          │                     └── Rejects parse errors & logs real stderr evidence to POSTMORTEMS.md
           ▼
-[ Same-File Saturation Guard ] ──► Detects zero-diff no-ops & triggers alert
+[ Same-File Saturation Guard ] ──► Detects zero-diff no-ops & triggers alert (leads to Global Halt)
           │
           ▼
 [ Atomic GitHub Commit / Sandbox Write ]
 ```
 
 1. **Client & Server Secret Sanitizer**: Proactively detects and redacts GitHub PATs (`ghp_`, `gho_`, `github_pat_`), Gemini API keys (`AIza...`), OpenAI/Anthropic keys, Stripe secrets, AWS credentials, and private keys from code, summaries, and telemetry streams.
-2. **Strict TypeScript AST Diagnostic Engine**: Validates all generated JavaScript/TypeScript code using `ts.createSourceFile` and `ts.transpileModule` before committing. Rejects syntax defects, unclosed braces, or malformed typing with line-and-column diagnostic reporting.
-3. **Same-File Saturation Guard (Zero-Diff Detection)**: Compares transformed code directly against the repository's current file content. If 0 modifications are made, the engine flags a **`[NO-OP]`**, skips the redundant commit, and offers one-click file blacklisting or rotation.
+2. **Real Compiler & Strict AST Diagnostics**: Validates all generated TypeScript code using AST parsing. For C/C++ code, the engine uses the Godbolt API to verify mutations against a genuine GCC 13.2 compiler (`-fsyntax-only`). Rejects syntax defects and feeds exact compiler `stderr` back into the learning loop.
+3. **Same-File Saturation Guard & Global Halt (Zero-Diff Detection)**: Compares transformed code directly against the repository's current file content. If 0 modifications are made, the engine flags a **`[NO-OP]`**, and skips the redundant commit. When the entire repository is saturated, the engine executes a mathematically bounded Global Halt.
 4. **Resilient Rate-Limit & HTTP Handling**: Gracefully catches HTTP `429 Too Many Requests`, `401 Unauthorized`, `404 Not Found`, and `409 Conflict` errors with automatic pause mechanisms and clear corrective guidance.
 
 ---
 
 ## 📋 Comprehensive List of Fixes & Enhancements
+
+### 🧠 Evidence-Backed Learning System
+- **Real External Compiler Oracle**: Replaced heuristic AST checks for C/C++ with a real GCC 13.2 compiler verification layer via the Godbolt API.
+- **Post-Mortem Lessons**: Engine auto-writes `.md` post-mortems with real compiler output (`stderr`) upon mutation failure, teaching the next generation to avoid exact constraints.
+- **Cache Invalidation via Hash Check**: The engine dynamically checks the `POSTMORTEMS.md` hash at the start of each cycle. If the file changes, the skip-list is cleared and the engine re-arms itself.
 
 ### 🛡️ Safety & Validation Enhancements
 - **TypeScript AST Pre-Commit Verification**: Added a dedicated AST parser and compiler diagnostic engine (`/api/validate`) that inspects code syntax and types before writing to sandbox or GitHub.
