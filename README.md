@@ -1,160 +1,23 @@
-readme to be updated 
+# EMG Core
 
-licence to be updated 
+EMG Core is an autonomous, AI-powered codebase optimization and refactoring engine. Powered by Google's Gemini models, it connects directly to GitHub repositories or runs in an offline sandbox to continuously scan, refactor, and safely optimize source code.
 
-# EMG Core v49
+## What Sets It Apart: Closed-Loop Neural Learning
 
-[![AI Studio Applet](https://img.shields.io/badge/Google%20AI%20Studio-Applet%20Live-4285F4?style=flat&logo=google)](https://ai.studio/apps/c7006db0-163f-48a6-bc9e-dfdac7b37ff0)
-[![License: CC BY-NC-SA 4.0](https://img.shields.io/badge/License-CC%20BY--NC--SA%204.0-lightgrey.svg)](https://creativecommons.org/licenses/by-nc-sa/4.0/)
+Unlike traditional AI coding assistants that rely on heuristics or loop infinitely, EMG Core operates on **evidence-backed constraints and mathematical boundaries**:
 
-> **Live Applet**: [https://ai.studio/apps/c7006db0-163f-48a6-bc9e-dfdac7b37ff0](https://ai.studio/apps/c7006db0-163f-48a6-bc9e-dfdac7b37ff0)
+* **Real Compiler Verification:** Code mutations are not trusted blindly. C/C++ changes are verified against a genuine GCC 13.2 compiler via the Godbolt API, while TypeScript is parsed through strict AST diagnostics.
+* **Post-Mortem Memory:** When a compilation fails, the exact `stderr` trace is captured and written to a `POSTMORTEMS.md` ledger. The engine reads this ledger before every cycle, treating past failures as strict prompt constraints so it never repeats a verified mistake.
+* **Global Saturation Halt:** The engine calculates structural equilibrium. When zero meaningful diffs can be produced without violating established constraints, the engine recognizes it is finished and initiates a global halt.
 
-An autonomous, AI-powered codebase optimization and refactoring engine designed to connect directly to GitHub repositories or run in offline sandbox environments. EMG Core continuously scans source files, applies neural refactoring transformations via the Google Gemini API, validates code safety via abstract syntax tree (AST) diagnostics, and safely applies optimizations with zero-risk safeguards.
+## Live Preview
 
----
+You can test the engine directly in your browser using the AI Studio Applet:
 
-## 🚀 Key Capabilities
+**[Launch EMG Core Preview](https://ai.studio/apps/c7006db0-163f-48a6-bc9e-dfdac7b37ff0)**
 
-- **Autonomous & On-Demand Optimization Loops**: Run single-pass enhancements or automated continuous scanning across entire repositories.
-- **Closed-Loop Neural Learning**: Mutations are validated against a real compiler (or AST). Compiler stderr failures are recorded in `POSTMORTEMS.md` as permanent constraints. The mutator learns from exact evidence instead of guessing.
-- **Dynamic Re-arming & Global Halt**: The engine calculates structural equilibrium. When 0-diffs saturate the repository, it executes a Global Saturation Halt. If new lessons are added to `POSTMORTEMS.md`, the skip-list cache invalidates and the engine dynamically re-arms itself.
-- **GitHub REST API Integration**: Direct integration with GitHub Personal Access Tokens (PAT) for listing user/organization repositories, fetching trees, and committing atomic refactoring passes.
-- **Offline Sandbox Mode**: Built-in simulated repositories (TypeScript/React, Python FastAPI, and Go Concurrency microservices) for safe, instant testing without requiring external credentials.
-- **Next-Gen Gemini Engine**: Server-side integration with Google's Gemini models (`gemini-2.5-flash`, `gemini-2.5-pro`, `gemini-2.5-flash-lite`, and experimental models) through the official `@google/genai` SDK.
-- **Targeted Refactoring Directives**:
-  - **Comprehensive**: Balanced improvements across performance, readability, and typing.
-  - **High-Throughput Performance**: Algorithmic complexity reduction, memoization, and loop unrolling.
-  - **Security & Memory Hardening**: Input sanitization, memory leak prevention, and boundary validation.
-  - **Strict Type Safety**: Elimination of `any` types, exhaustive match patterns, and strict null handling.
-  - **Clean Architecture & Readability**: Modern idioms, self-documenting naming, and modular decomposition.
-- **Interactive Diff Modal & Mutation History**: Full side-by-side and unified diff inspector with line-delta indicators, latency metrics, and copy utilities.
-- **Real-Time Telemetry & Health Monitoring**: Live logging bus, latency tracker, token throughput calculation, and diagnostic health probe.
-
----
-
-## 🛠️ Safety Safeguards & Architecture
-
-EMG Core implements multi-layered defensive engineering to ensure that AI-generated code never corrupts repositories or leaks secrets:
-
-```
-[ Target Source File ]
-          │
-          ▼
-[ Gemini Neural Optimization (Injected w/ Post-Mortem Constraints) ]
-          │
-          ▼
-[ Automated Secret Sanitizer ] ──► Strips PATs, API Keys, Tokens & Private Keys
-          │
-          ▼
-[ External Verification Gate ] ──► TypeScript AST check OR Godbolt API (Real GCC 13.2 compiler)
-          │                     └── Rejects parse errors & logs real stderr evidence to POSTMORTEMS.md
-          ▼
-[ Same-File Saturation Guard ] ──► Detects zero-diff no-ops & triggers alert (leads to Global Halt)
-          │
-          ▼
-[ Atomic GitHub Commit / Sandbox Write ]
-```
-
-1. **Client & Server Secret Sanitizer**: Proactively detects and redacts GitHub PATs (`ghp_`, `gho_`, `github_pat_`), Gemini API keys (`AIza...`), OpenAI/Anthropic keys, Stripe secrets, AWS credentials, and private keys from code, summaries, and telemetry streams.
-2. **Real Compiler & Strict AST Diagnostics**: Validates all generated TypeScript code using AST parsing. For C/C++ code, the engine uses the Godbolt API to verify mutations against a genuine GCC 13.2 compiler (`-fsyntax-only`). Rejects syntax defects and feeds exact compiler `stderr` back into the learning loop.
-3. **Same-File Saturation Guard & Global Halt (Zero-Diff Detection)**: Compares transformed code directly against the repository's current file content. If 0 modifications are made, the engine flags a **`[NO-OP]`**, and skips the redundant commit. When the entire repository is saturated, the engine executes a mathematically bounded Global Halt.
-4. **Resilient Rate-Limit & HTTP Handling**: Gracefully catches HTTP `429 Too Many Requests`, `401 Unauthorized`, `404 Not Found`, and `409 Conflict` errors with automatic pause mechanisms and clear corrective guidance.
-
----
-
-## 📋 Comprehensive List of Fixes & Enhancements
-
-### 🧠 Evidence-Backed Learning System
-- **Real External Compiler Oracle**: Replaced heuristic AST checks for C/C++ with a real GCC 13.2 compiler verification layer via the Godbolt API.
-- **Post-Mortem Lessons**: Engine auto-writes `.md` post-mortems with real compiler output (`stderr`) upon mutation failure, teaching the next generation to avoid exact constraints.
-- **Cache Invalidation via Hash Check**: The engine dynamically checks the `POSTMORTEMS.md` hash at the start of each cycle. If the file changes, the skip-list is cleared and the engine re-arms itself.
-
-### 🛡️ Safety & Validation Enhancements
-- **TypeScript AST Pre-Commit Verification**: Added a dedicated AST parser and compiler diagnostic engine (`/api/validate`) that inspects code syntax and types before writing to sandbox or GitHub.
-- **Automatic Syntax Healing**: Built intelligent syntax healing for missing backticks, unclosed code fences, and trailing delimiters.
-- **Defensive Secret Redaction**: Added client and server-side regex scrubbers that strip personal access tokens and sensitive credentials from commits and live logs.
-- **Configurable Safety Toggles**: Introduced toggle switches for "Auto-Sanitize Secrets & PATs" and "Strict Type & Syntax Verifier" in the configuration panel.
-
-### 🔄 GitHub & Workflow Enhancements
-- **Saturation Alert Modal**: Created an alert interface when an AI transformation produces a zero-diff identical file, allowing developers to blacklist saturated files or bypass with one click.
-- **Same-File Pre-Commit Verification**: Prevented redundant, empty commits on GitHub repositories by enforcing strict delta checks.
-- **Repository Scope Filtering**: Added granular file targeting options (All files, `.ts/.tsx/.js`, `.py`, `.go`, single specific path, and dynamic blacklist exclusion lists).
-- **Dry-Run Mode**: Allows testing optimization passes with full diff inspection without modifying remote branches or sandbox states.
-
-### ⚡ AI Engine & Performance Enhancements
-- **Multi-Model Selector**: Updated engine to support modern Gemini models (`gemini-2.5-flash`, `gemini-2.5-pro`, `gemini-2.5-flash-lite`, and latest aliases) with sovereign offline fallback generators.
-- **Enhanced System Directives**: Refined prompt engineering with strict code-only output formatting and markdown fence sanitization.
-- **Token & Latency Accounting**: Added real-time token throughput estimators and average mutation latency statistics.
-
-### 🖥️ UI/UX & Telemetry Enhancements
-- **Refined Mutation Card Viewer**: Badges for applied, dry-run, no-op, and failed mutations with instant access to line deltas and scrubbed secret counters.
-- **System Memory Wipe**: Added a "Wipe Memory" function in the status bar to reset candidate rotation indexes, clear logs, purge diff caches, and restore sandbox state.
-- **Live Telemetry Stream**: Monospaced event logging with category filters (All, System, Optimization, Network, Warnings, Errors, No-Op).
-- **Diagnostics Health Probe**: Diagnostic modal testing server connectivity, Gemini API responsiveness, and environment health.
-
----
-
-## 🏗️ Tech Stack
-
-- **Frontend**: React 18, TypeScript, Tailwind CSS, Lucide Icons, Framer Motion
-- **Backend**: Node.js, Express, TypeScript AST Compiler (`typescript`), Vite Middleware
-- **AI SDK**: `@google/genai` (Google Gen AI SDK)
-- **Tooling**: Vite, esbuild, dotenv
-
----
-
-## 🏁 Getting Started
-
-### Prerequisites
-
-- **Node.js**: v18.0.0 or higher
-- **npm**: v9.0.0 or higher
-- **Google Gemini API Key**: Obtainable from [Google AI Studio](https://aistudio.google.com/)
-
-### Installation
-
-```bash
-# Clone repository
-git clone https://github.com/Craighckby/emg-core.git
-cd emg-core
-
-# Install dependencies
-npm install
-```
-
-### Environment Configuration
-
-Create a `.env` file in the project root:
-
-```env
-GEMINI_API_KEY=your_gemini_api_key_here
-PORT=3000
-```
-
-### Running in Development
-
-Start the Express + Vite full-stack server:
-
-```bash
-npm run dev
-```
-
-Open your browser to [http://localhost:3000](http://localhost:3000).
-
-### Production Build & Deployment
-
-```bash
-# Compile frontend and backend bundle
-npm run build
-
-# Start production server
-npm start
-```
-
----
-
-## 📄 License
-
-This project is licensed under the **Creative Commons Attribution-NonCommercial-ShareAlike 4.0 International License (CC BY-NC-SA 4.0)**.
-
-Copyright (c) 2026 Craighckby. All rights reserved.
+### How to Use
+1. Open the preview link above.
+2. **For safe testing:** Ensure "Sandbox Mode" is toggled on to run optimization cycles against built-in simulated repositories without needing any credentials.
+3. **For real repositories:** Enter a GitHub Personal Access Token (PAT) and a target repository name (e.g., `username/repo`).
+4. Click **Run Single Cycle** or **Toggle Live Optimization** to begin the neural refactoring loop and watch the system learn and optimize in real-time.

@@ -25,18 +25,18 @@ interface LicenseModalProps {
   onClose: () => void;
 }
 
-export const LICENSE_TEXT = `Creative Commons Attribution-NonCommercial-ShareAlike 4.0 International (CC BY-NC-SA 4.0)
+export const LICENSE_TEXT = `Creative Commons Attribution-NonCommercial-NoDerivatives 4.0 International (CC BY-NC-ND 4.0)
 [Full text of the license is available at https://creativecommons.org]
 
 Copyright (c) 2026 Craighckby
 
-This work is licensed under the Creative Commons Attribution-NonCommercial-ShareAlike 4.0 International License.
-To view a copy of this license, visit https://creativecommons.org/licenses/by-nc-sa/4.0/ or send a letter to Creative Commons, PO Box 1866, Mountain View, CA 94042, USA.
+This work is licensed under the Creative Commons Attribution-NonCommercial-NoDerivatives 4.0 International License.
+To view a copy of this license, visit https://creativecommons.org/licenses/by-nc-nd/4.0/ or send a letter to Creative Commons, PO Box 1866, Mountain View, CA 94042, USA.
 
 License Summary:
 - Share: Copy and redistribute the material.
-- Adapt: Remix, transform, and build upon the material.
-- Attribution/NonCommercial/ShareAlike terms apply as detailed at the link above.`;
+- NoDerivatives: If you remix, transform, or build upon the material, you may not distribute the modified material.
+- Attribution/NonCommercial/NoDerivatives terms apply as detailed at the link above.`;
 
 export const LicenseModal: React.FC<LicenseModalProps> = ({ isOpen, onClose }) => {
   const [copied, setCopied] = useState(false);
@@ -92,7 +92,7 @@ export const LicenseModal: React.FC<LicenseModalProps> = ({ isOpen, onClose }) =
                   License & Attribution
                 </h3>
                 <p className="text-xs font-mono text-neutral-400">
-                  CC BY-NC-SA 4.0 International
+                  CC BY-NC-ND 4.0 International
                 </p>
               </div>
             </div>
@@ -156,7 +156,7 @@ export const LicenseModal: React.FC<LicenseModalProps> = ({ isOpen, onClose }) =
           <div className="flex flex-wrap items-center justify-between gap-3 p-4 md:p-5 border-t border-neutral-800 bg-neutral-950/70 shrink-0">
             <a
               id="link-creative-commons"
-              href="https://creativecommons.org/licenses/by-nc-sa/4.0/"
+              href="https://creativecommons.org/licenses/by-nc-nd/4.0/"
               target="_blank"
               rel="noopener noreferrer"
               className="inline-flex items-center gap-1.5 text-xs text-blue-400 hover:text-blue-300 transition-colors font-medium cursor-pointer"
