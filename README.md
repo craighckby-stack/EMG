@@ -1,3 +1,7 @@
+readme to be updated 
+
+licence to be updated 
+
 # EMG Core v49
 
 [![AI Studio Applet](https://img.shields.io/badge/Google%20AI%20Studio-Applet%20Live-4285F4?style=flat&logo=google)](https://ai.studio/apps/c7006db0-163f-48a6-bc9e-dfdac7b37ff0)
