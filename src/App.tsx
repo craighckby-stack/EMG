@@ -25,6 +25,7 @@ import { LicenseModal } from './components/LicenseModal';
 import { DiagnosticsModal } from './components/DiagnosticsModal';
 import { SaturationModal } from './components/SaturationModal';
 import { WipeMemoryModal } from './components/WipeMemoryModal';
+import { OracleModal } from './components/OracleModal';
 import { SANDBOX_REPOSITORIES, resetSandboxRepositories } from './utils/mockRepo';
 import {
   fetchRepoDetails,
@@ -83,6 +84,7 @@ export default function App() {
   const [isLicenseOpen, setIsLicenseOpen] = useState(false);
   const [isDiagnosticsOpen, setIsDiagnosticsOpen] = useState(false);
   const [isWipeMemoryOpen, setIsWipeMemoryOpen] = useState(false);
+  const [isOracleOpen, setIsOracleOpen] = useState(false);
   const [isCycling, setIsCycling] = useState(false);
 
   const isCyclingRef = useRef(false);
@@ -549,7 +551,7 @@ export default function App() {
             const hashValue = computeStringHash(pmData.content);
             
             if (hashValue !== config.postmortemHash) {
-              pushLog(`[LEARNING] Loaded rule constraints from ${postmortemItem.path}.`, 'info');
+              pushLog(`[LEARNING] Detected updated docs/POSTMORTEMS.md (SHA: ${hashValue.slice(0, 8)}...). Ingesting updated negative constraints into prompt memory.`, 'info');
               // Update constraints without wiping the skip list of already-completed files!
               setConfig(prev => ({
                 ...prev,
@@ -793,16 +795,28 @@ export default function App() {
         const extVal = await lintSourceCode(cleanCode, target.path);
         
         if (!extVal.valid) {
-          pushLog(`[HEURISTIC LINT REJECTED] Linting failed. Writing post-mortem lesson...`, 'error', undefined, target.path);
+          pushLog(`[HEURISTIC LINT REJECTED] Gate fired on [${target.path}]: ${extVal.lintEvidence}`, 'error', undefined, target.path);
           if (!config.dryRun && config.ghToken) {
             try {
-              const pmResult = await writePostmortem(config.targetRepo, target.path, 'Failure', extVal.lintEvidence, config.ghToken, branch);
+              const pmResult = await writePostmortem(
+                config.targetRepo,
+                target.path,
+                'Failure',
+                extVal.lintEvidence,
+                config.ghToken,
+                branch,
+                {
+                  source: 'mutation-cycle',
+                  symptom: 'Active Linter / Compiler Gate Rejection on LLM Output (Option B)',
+                }
+              );
               if (pmResult?.hash) {
                 setConfig((prev) => ({
                   ...prev,
                   postmortemHash: pmResult.hash,
                   postmortemConstraints: pmResult.content,
                 }));
+                pushLog(`[LEARN] Logged failure to docs/POSTMORTEMS.md. Ingested negative constraint for next cycle.`, 'warning');
               }
             } catch (pmErr) {
               pushLog(`Failed to write postmortem: ${String(pmErr)}`, 'error');
@@ -1037,6 +1051,7 @@ export default function App() {
         onOpenLicense={() => setIsLicenseOpen(true)}
         onOpenDiagnostics={() => setIsDiagnosticsOpen(true)}
         onOpenWipeMemory={() => setIsWipeMemoryOpen(true)}
+        onOpenOracle={() => setIsOracleOpen(true)}
         isCycling={isCycling}
       />
 
@@ -1098,6 +1113,23 @@ export default function App() {
       <DiagnosticsModal
         isOpen={isDiagnosticsOpen}
         onClose={() => setIsDiagnosticsOpen(false)}
+      />
+
+      {/* Oracle Harness & Direct Stress Test Modal (Option A) */}
+      <OracleModal
+        isOpen={isOracleOpen}
+        onClose={() => setIsOracleOpen(false)}
+        targetRepo={config.targetRepo}
+        branch={config.branch}
+        token={config.ghToken}
+        onPostmortemCreated={(content, hash) => {
+          setConfig((prev) => ({
+            ...prev,
+            postmortemConstraints: content,
+            postmortemHash: hash,
+          }));
+          pushLog(`[ORACLE HARNESS] Ingested new synthetic post-mortem constraint into engine memory.`, 'warning');
+        }}
       />
 
       {/* Code Saturation & Skip List Modal */}

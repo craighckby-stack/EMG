@@ -6,7 +6,7 @@
  */
 
 import React from 'react';
-import { Zap, Play, Square, RefreshCw, Layers, ShieldCheck, Github, Scale, Activity, Trash2 } from 'lucide-react';
+import { Zap, Play, Square, RefreshCw, Layers, ShieldCheck, Github, Scale, Activity, Trash2, ShieldAlert } from 'lucide-react';
 import { EngineStatus } from '../types';
 
 interface HeaderProps {
@@ -19,6 +19,7 @@ interface HeaderProps {
   onOpenLicense: () => void;
   onOpenDiagnostics?: () => void;
   onOpenWipeMemory?: () => void;
+  onOpenOracle?: () => void;
   isCycling: boolean;
 }
 
@@ -32,6 +33,7 @@ export const Header: React.FC<HeaderProps> = ({
   onOpenLicense,
   onOpenDiagnostics,
   onOpenWipeMemory,
+  onOpenOracle,
   isCycling,
 }) => {
   const getStatusColor = (st: EngineStatus) => {
@@ -111,6 +113,18 @@ export const Header: React.FC<HeaderProps> = ({
 
       {/* Control Actions */}
       <div className="flex items-center gap-2.5">
+        {onOpenOracle && (
+          <button
+            id="btn-header-oracle"
+            onClick={onOpenOracle}
+            title="Open Oracle Stress-Test & Direct Poison Injection Harness (Option A)"
+            className="px-3 py-2 rounded-xl bg-amber-500/10 hover:bg-amber-500/20 text-amber-300 border border-amber-500/30 font-mono text-[11px] transition-all flex items-center gap-1.5 cursor-pointer"
+          >
+            <ShieldAlert className="w-3.5 h-3.5 text-amber-400" />
+            <span className="hidden sm:inline">Oracle Harness</span>
+          </button>
+        )}
+
         {onOpenDiagnostics && (
           <button
             id="btn-header-diagnostics"

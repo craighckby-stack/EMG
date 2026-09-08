@@ -507,7 +507,7 @@ CRITICAL Requirements:
     }
   });
 
-  // External Compile / Verification Endpoint
+  // External Compile / Verification Endpoint with Real Compiler & Active Output Linting Rules
   app.post('/api/lint', async (req, res) => {
     try {
       const { code, filePath } = req.body;
@@ -515,7 +515,63 @@ CRITICAL Requirements:
       
       const isC = filePath.endsWith('.c') || filePath.endsWith('.cpp') || filePath.endsWith('.h') || filePath.endsWith('.hpp');
       
-      // Heuristic Linting -> Upgraded to REAL Compiler Check via Godbolt API
+      // Rule 1: NO UNVERIFIABLE SELF-DESCRIPTION / MARKETING CLAIMS IN COMMENTS
+      // Flags phrases like "Fully optimized", "Leak-free", "Hardened", "Bulletproof", "Production-grade"
+      const selfPraisePatterns = [
+        /\b(?:fully\s+optimized|leak-free|bulletproof|production-grade|robustly\s+hardened|optimal\s+memory\s+management|hardened\s+architecture)\b/i,
+        /\b(?:optimized,\s*standards-compliant|flawlessly\s+verified|zero-defect)\b/i
+      ];
+      for (const pattern of selfPraisePatterns) {
+        const match = code.match(pattern);
+        if (match) {
+          return res.json({
+            valid: false,
+            lintEvidence: `[LINT REJECT: NO_UNVERIFIABLE_SELF_PRAISE] Detected unsubstantiated self-description in commentary: "${match[0]}". Output must adhere to neutral, factual documentation without marketing adjectives.`,
+            ruleName: 'NO_UNVERIFIABLE_SELF_PRAISE'
+          });
+        }
+      }
+
+      // Rule 2: NO DEAD CONDITIONAL CHECKS (e.g. `len > 0u` inside `for (size_t i = 0u; i < len; ++i)` loop)
+      const deadLoopGuardPattern = /for\s*\([^)]*;\s*([a-zA-Z0-9_]+)\s*<\s*([a-zA-Z0-9_]+)[^)]*\)\s*\{[\s\S]*?if\s*\(\s*\2\s*>\s*0u?\s*\)/;
+      if (deadLoopGuardPattern.test(code)) {
+        return res.json({
+          valid: false,
+          lintEvidence: `[LINT REJECT: NO_DEAD_CONDITIONS] Detected redundant inner condition checking upper bound inside a loop already bounded by that parameter.`,
+          ruleName: 'NO_DEAD_CONDITIONS'
+        });
+      }
+
+      // Rule 3: NO UNUSED MACRO DEFINITIONS (e.g. #define WP_NONNULL ... defined but never used in function signatures)
+      const defineMacroMatch = code.match(/#define\s+([A-Z0-9_]{3,})\b/g);
+      if (defineMacroMatch) {
+        for (const def of defineMacroMatch) {
+          const macroName = def.replace(/#define\s+/, '').trim();
+          // Count occurrences in code
+          const regex = new RegExp(`\\b${macroName}\\b`, 'g');
+          const occurrences = (code.match(regex) || []).length;
+          // If only 1 occurrence (the #define itself), it is unused
+          if (occurrences === 1) {
+            return res.json({
+              valid: false,
+              lintEvidence: `[LINT REJECT: NO_UNUSED_MACROS] Macro '${macroName}' was defined but never applied in any function or type signature.`,
+              ruleName: 'NO_UNUSED_MACROS'
+            });
+          }
+        }
+      }
+
+      // Rule 4: NO TODO-ADJACENT-SUCCESS (Regression check for PM#4)
+      const todoAdjacentSuccessPattern = /\/\/\s*TODO[^\n]*\n\s*return\s+(?:true|0|SUCCESS|1);/i;
+      if (todoAdjacentSuccessPattern.test(code)) {
+        return res.json({
+          valid: false,
+          lintEvidence: `[LINT REJECT: TODO_ADJACENT_SUCCESS] Placeholder TODO comment detected immediately adjacent to success return statement.`,
+          ruleName: 'TODO_ADJACENT_SUCCESS'
+        });
+      }
+
+      // Real Compiler Check via Godbolt API for C/C++ units
       if (isC) {
         const isCpp = filePath.endsWith('.cpp') || filePath.endsWith('.hpp') || filePath.endsWith('.cc');
         const compilerId = isCpp ? 'g132' : 'cg132';
