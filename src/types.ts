@@ -77,6 +77,8 @@ export interface EngineConfig {
   autoApproveSaturated?: boolean;
   postmortemHash?: string;
   postmortemConstraints?: string;
+  saturatedTreeHash?: string;
+  saturatedGoal?: string;
 }
 
 export interface SaturationAlert {

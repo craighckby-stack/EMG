@@ -60,9 +60,12 @@ When a mutation fails any gate, EMG Core autonomously writes back its own scar t
 * Computes the cryptographic **`SHA-256`** digest of `docs/POSTMORTEMS.md` on every cycle.
 * When a hash mutation is detected (whether auto-written by the engine or hand-edited by an engineer on GitHub), the engine automatically invalidates the skip list and re-arms candidate files with the updated negative constraints.
 
-### 4. Automatic Global Saturation (`STOP`)
-* Calculates file-by-file diffs against repository baselines.
-* When all candidate files achieve zero diffs under current constraints, the engine triggers `[GLOBAL SATURATION REACHED]` and cleanly halts, preventing infinite loop churn.
+### 4. Automatic Global Saturation & Re-Run Lockout (`STOP` / PM#11)
+* **Deterministic Convergence Detection:** Calculates file-by-file diffs against repository baselines. When all candidate files achieve zero diffs under current constraints, the engine triggers:
+  ```text
+  [GLOBAL SATURATION REACHED] No remaining diffs under current constraints. The repository is converged — not proven optimal. Re-runs require new input. 🏁
+  ```
+* **Re-Run Lockout (Anti-Over-Optimization):** Records the baseline tree hash at saturation. Subsequent runs without new repository commits, post-mortem ledger updates, or prompt goal modifications are refused (`[REFUSAL] Repository at saturation...`), permanently preventing post-halt hallucination cascades and fiction-load-bearing commentary.
 
 ### 5. Permanent Apparatus Protection (PM#9)
 * **Hard-Locked Skip Set:** Evaluation fixtures and scorecards (`BUGS.md`, `README.md`, `docs/POSTMORTEMS.md`) are permanently excluded from mutation candidates:

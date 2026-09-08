@@ -541,6 +541,24 @@ export default function App() {
           throw new Error('No candidate source code files found in repository tree.');
         }
 
+        // --- SATURATION LOCKOUT (PM#11: Prevent Post-Halt Ghost Feedback / Over-Optimization) ---
+        const currentTreeFingerprint = await computeSHA256(tree.map(t => `${t.path}:${t.sha}`).join('|'));
+        if (
+          config.saturatedTreeHash === currentTreeFingerprint &&
+          config.saturatedGoal === config.goal &&
+          !config.postmortemConstraints?.includes('[MANUAL_OVERRIDE]')
+        ) {
+          pushLog(
+            `[REFUSAL] Repository at saturation (Baseline SHA: ${currentTreeFingerprint.slice(0, 12)}...). Re-runs require new input, ledger update, or prompt goal change.`,
+            'warning'
+          );
+          if (isLive) {
+            setIsLive(false);
+          }
+          setStatus('IDLE');
+          return;
+        }
+
         let skippedSet = new Set(config.skippedFiles || []);
         
         // --- PERMANENT LAB FIXTURE PROTECTION (PM#9: Freeze Apparatus) ---
@@ -633,12 +651,18 @@ export default function App() {
 
         if (candidateTree.length === 0) {
           pushLog(
-            `[GLOBAL SATURATION REACHED] All candidate files have achieved neural saturation and optimization. The repository is fully optimized. 🏁`,
+            `[GLOBAL SATURATION REACHED] No remaining diffs under current constraints. The repository is converged — not proven optimal. Re-runs require new input. 🏁`,
             'success'
           );
           if (isLive) {
             setIsLive(false);
           }
+          // Lock out redundant re-runs until repo tree or goals change
+          setConfig(prev => ({
+            ...prev,
+            saturatedTreeHash: currentTreeFingerprint,
+            saturatedGoal: prev.goal
+          }));
           setActivePath(null);
           setStatus('IDLE');
           return;

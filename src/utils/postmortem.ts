@@ -109,6 +109,9 @@ function deriveConstraintFromEvidence(evidence: string, filePath: string): strin
   if (evLower.includes('fixture') || evLower.includes('apparatus') || evLower.includes('bugs.md')) {
     return 'Do NOT mutate evaluation fixtures or lab apparatus files (BUGS.md, README.md, POSTMORTEMS.md). System under test must never wordsmith the exam.';
   }
+  if (evLower.includes('saturation') || evLower.includes('over-optimization') || evLower.includes('post-halt') || evLower.includes('converged')) {
+    return 'Do NOT invent artificial refactorings, redundant checks, or inflated claims when code has converged. Respect global saturation and refuse unassisted re-runs.';
+  }
   return `Never repeat code patterns that produce this compiler/linter error on ${filePath}.`;
 }
 
