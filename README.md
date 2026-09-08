@@ -58,17 +58,15 @@ When a mutation fails any gate, EMG Core autonomously writes back its own scar t
 
 ### 3. Dynamic Hash Tracking & Re-Arming (`REMEMBER`)
 * Computes the cryptographic **`SHA-256`** digest of `docs/POSTMORTEMS.md` on every cycle.
-* When a change is detected (whether auto-written by the engine or hand-edited by an engineer on GitHub), the engine logs:
-  `[LEARNING] Detected updated docs/POSTMORTEMS.md (SHA-256: ...). Ingesting updated negative constraints and re-arming prompt memory.`
-* Instantly invalidates the skip list so candidate files are re-evaluated against the new constraints.
+* When a hash mutation is detected (whether auto-written by the engine or hand-edited by an engineer on GitHub), the engine automatically invalidates the skip list and re-arms candidate files with the updated negative constraints.
 
 ### 4. Automatic Global Saturation (`STOP`)
 * Calculates file-by-file diffs against repository baselines.
 * When all candidate files achieve zero diffs under current constraints, the engine triggers `[GLOBAL SATURATION REACHED]` and cleanly halts, preventing infinite loop churn.
 
 ### 5. Permanent Apparatus Protection (PM#9)
-* Hard-locks evaluation fixtures and scorecards (`BUGS.md`, `README.md`, `docs/POSTMORTEMS.md`) into a permanent skip-list to prevent the examinee from mutating the evaluation suite:
-  `[SKIP] Protected apparatus fixture: BUGS.md (PM#9: Write-protection active)`
+* **Implemented in this release:** Evaluation fixtures and scorecards (`BUGS.md`, `README.md`, `docs/POSTMORTEMS.md`) are hard-locked into an un-bypassable engine skip-list.
+* *Demonstrated artifact pending validation run:* See [EMG-Tests](https://github.com/craighckby-stack/EMG-Tests) for the prior-run test fixture contamination that motivated and documented this guard (PM#9: Fixture Churn).
 
 ---
 
