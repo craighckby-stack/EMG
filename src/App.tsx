@@ -585,7 +585,12 @@ export default function App() {
           }
         }
 
-        // Filter out skipped files
+        // Filter out skipped files & explicitly log protected apparatus fixtures
+        const protectedEncountered = tree.filter((item) => protectedFixtures.includes(item.path));
+        for (const pf of protectedEncountered) {
+          pushLog(`[SKIP] Protected apparatus fixture: ${pf.path} (PM#9: Write-protection active)`, 'info');
+        }
+
         let candidateTree = tree.filter((item) => !skippedSet.has(item.path));
 
         // Apply File Scope filter

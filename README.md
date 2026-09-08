@@ -1,6 +1,6 @@
-# EMG Core: Closed-Loop Neural Optimization & Verification Engine
+# EMG Core: Closed-Loop, Verification-Gated Code Refactoring
 
-EMG Core is an autonomous, verification-gated neural code refactoring engine. Powered by Google Gemini models, it performs closed-loop code optimization across multi-file repositories with **real compiler gates**, **autonomous memory write-back**, **SHA-256 hash tracking**, and **deterministic self-halting**.
+EMG Core is an autonomous, verification-gated code refactoring engine. Powered by Google Gemini models, it performs closed-loop refactoring across multi-file repositories with **real compiler gates**, **autonomous memory write-back**, **SHA-256 hash tracking**, and **automatic self-halting**.
 
 ---
 
@@ -37,17 +37,18 @@ docs/POSTMORTEMS.md             └── NO:  Commit to Repo    │
 
 ---
 
-## ⚡ The 5 Foundational Capabilities
+## ⚡ The 5 Core Capabilities
 
 ### 1. External Verification Gates (`REJECT`)
 Mutations are never trusted blindly:
 * **C/C++ Translation Units:** Tested against a real GCC 13.2 compiler via the Godbolt API. Rejects invalid keywords (e.g. `noexcept` in C), missing system headers (`<stddef.h>`), or syntax bugs with verbatim machine `stderr`.
-* **TypeScript/JavaScript:** Checked via authoritative TypeScript compiler diagnostics.
-* **Output Linter Rules:** Enforces strict anti-hallucination standards:
+  > *Privacy Disclosure:* Code passed to the GCC compiler gate is transmitted over HTTPS to the public [Godbolt Compiler Explorer API](https://godbolt.org). Sensitive internal headers or proprietary tokens should be sanitized or tested with Sandbox/Mock mode.
+* **TypeScript/JavaScript:** Checked via compiler diagnostics and AST balanced-bracket verification.
+* **Active Output Linter Rules:** Rejects invalid patterns before commit:
   * `NO_UNVERIFIABLE_SELF_PRAISE`: Blocks unsubstantiated adjectives (`"Fully optimized"`, `"Hardened"`).
   * `NO_STALE_DEFECT_CLAIMS`: Rejects leaked lab predictions or docstrings claiming bugs that the code already fixed.
-  * `NO_DEAD_CONDITIONS`: Catches redundant inner guards inside bounded loops.
-  * `TODO_ADJACENT_SUCCESS`: Prohibits placeholder TODOs right before success return statements.
+  * `NO_DEAD_CONDITIONS`: Catches redundant inner bounds guards inside bounded loops.
+  * `TODO_ADJACENT_SUCCESS`: Prohibits placeholder TODOs adjacent to success return statements.
 
 ### 2. Autonomous Memory Write-Back (`LEARN`)
 When a mutation fails any gate, EMG Core autonomously writes back its own scar tissue:
@@ -61,18 +62,29 @@ When a mutation fails any gate, EMG Core autonomously writes back its own scar t
   `[LEARNING] Detected updated docs/POSTMORTEMS.md (SHA-256: ...). Ingesting updated negative constraints and re-arming prompt memory.`
 * Instantly invalidates the skip list so candidate files are re-evaluated against the new constraints.
 
-### 4. Deterministic Global Saturation (`STOP`)
+### 4. Automatic Global Saturation (`STOP`)
 * Calculates file-by-file diffs against repository baselines.
 * When all candidate files achieve zero diffs under current constraints, the engine triggers `[GLOBAL SATURATION REACHED]` and cleanly halts, preventing infinite loop churn.
 
 ### 5. Permanent Apparatus Protection (PM#9)
-* Hard-locks evaluation fixtures and scorecards (`BUGS.md`, `README.md`, `docs/POSTMORTEMS.md`) into a permanent skip-list to prevent the examinee from wordsmithing the exam.
+* Hard-locks evaluation fixtures and scorecards (`BUGS.md`, `README.md`, `docs/POSTMORTEMS.md`) into a permanent skip-list to prevent the examinee from mutating the evaluation suite:
+  `[SKIP] Protected apparatus fixture: BUGS.md (PM#9: Write-protection active)`
+
+---
+
+## 🔬 Verification & Evidence
+
+Every capability claim above is backed by machine artifacts — verbatim compiler stderr, hash-chain telemetry, and captured halt events — in the validation lab:
+
+**[EMG-Tests](https://github.com/craighckby-stack/EMG-Tests)** — seeded-defect corpus + the engine's own post-mortem ledger, published raw. Claims are reproducible; the ledger is the receipt.
+
+> **Known Frontier (PM#7):** The gate verifies compilation and lint compliance, not semantic intent. Syntactic verification pressure without a semantic contract oracle can select for disguised parameter checks (e.g. `wp_verify_locked_state`). See the test ledger for the documented boundary.
 
 ---
 
 ## 🧪 Oracle Stress-Test Mode (Option A)
 
-The UI includes a dedicated **Oracle Harness** in the top navigation bar. This enables engineers to bypass the LLM entirely and inject raw defective specimens directly into the GCC compiler and output linting gate to verify gate behavior and memory write-back under unit-test conditions.
+The UI includes a dedicated **Oracle Harness** in the top navigation bar. This enables engineers to bypass LLM generation entirely and inject raw defective specimens directly into the GCC compiler and output linting gate to verify gate behavior and memory write-back under unit-test conditions.
 
 ---
 
@@ -82,6 +94,17 @@ You can run the engine directly in your browser:
 
 **[Launch EMG Core Preview](https://ai.studio/apps/c7006db0-163f-48a6-bc9e-dfdac7b37ff0)**
 
-1. **Sandbox Mode:** Toggle "Sandbox Mode" to run optimization cycles against simulated test suites without credentials.
+1. **Sandbox Mode:** Toggle "Sandbox Mode" to run cycles against simulated test suites without credentials.
 2. **Live GitHub Repositories:** Enter your GitHub PAT and target repository (`owner/repo`) with a dedicated branch.
-3. Click **Run Single Cycle** or **Toggle Live Optimization** to observe closed-loop mutation, verification, and autonomous learning.
+   * *Safety Note:* EMG Core commits only to the branch you designate. Always run against an isolated test branch (`test/emg-run`), never directly against `main`.
+3. Click **Run Single Cycle** or **Toggle Live Optimization** to observe closed-loop refactoring, verification, and autonomous learning.
+
+---
+
+## 📄 License & Disclaimer
+
+### License
+This project is licensed under the **Creative Commons Attribution-NonCommercial-ShareAlike 4.0 International (CC BY-NC-SA 4.0)** License.
+
+### Disclaimer
+This software is provided "as is", without warranty of any kind, express or implied. The authors and maintainers are not responsible for any modifications, data loss, or regressions resulting from automated commits made by this engine. Always configure repository branch protection rules and review pull requests before deploying changes to production environments.
