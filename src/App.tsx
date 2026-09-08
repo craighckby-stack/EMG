@@ -725,6 +725,35 @@ export default function App() {
               sanitizedSecretsCount: (prev.sanitizedSecretsCount || 0) + scrubbedCount,
             }));
 
+            // Memory Write-Back for AST / Type Errors
+            if (!config.dryRun && config.ghToken) {
+              try {
+                const astEvidence = validationDiagnostics.join('\n');
+                const pmResult = await writePostmortem(
+                  config.targetRepo,
+                  target.path,
+                  'Failure',
+                  astEvidence,
+                  config.ghToken,
+                  branch,
+                  {
+                    source: 'mutation-cycle',
+                    symptom: 'AST / TypeScript Compiler Validation Rejected',
+                  }
+                );
+                if (pmResult?.hash) {
+                  setConfig((prev) => ({
+                    ...prev,
+                    postmortemHash: pmResult.hash,
+                    postmortemConstraints: pmResult.content,
+                  }));
+                  pushLog(`[LEARN] Auto-logged AST failure to docs/POSTMORTEMS.md. Ingested constraint.`, 'warning');
+                }
+              } catch (pmErr) {
+                console.error('Failed to write AST postmortem:', pmErr);
+              }
+            }
+
             consecutiveFailuresRef.current[target.path] =
               (consecutiveFailuresRef.current[target.path] || 0) + 1;
 
