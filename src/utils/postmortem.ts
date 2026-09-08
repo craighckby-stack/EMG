@@ -1,5 +1,14 @@
 import { fetchFileContent, commitFileUpdate } from './github';
 
+export function computeStringHash(str: string): string {
+  let hash = 0;
+  for (let i = 0; i < str.length; i++) {
+    hash = ((hash << 5) - hash) + str.charCodeAt(i);
+    hash |= 0;
+  }
+  return hash.toString();
+}
+
 export async function writePostmortem(
   repo: string,
   filePath: string,
@@ -7,7 +16,7 @@ export async function writePostmortem(
   lintEvidence: string,
   token: string,
   branch?: string
-): Promise<void> {
+): Promise<{ content: string; hash: string }> {
   const pmPath = 'docs/POSTMORTEMS.md';
   let pmContent = '';
   let pmSha = '';
@@ -37,6 +46,7 @@ export async function writePostmortem(
   }
 
   const updatedContent = pmContent + newEntry;
+  const hash = computeStringHash(updatedContent);
 
   await commitFileUpdate(
     repo,
@@ -47,4 +57,7 @@ export async function writePostmortem(
     `EMG Core: Auto-logged ${type.toLowerCase()} post-mortem for ${filePath}`,
     branch
   );
+
+  return { content: updatedContent, hash };
 }
+

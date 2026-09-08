@@ -32,7 +32,7 @@ import {
   fetchFileContent,
   commitFileUpdate,
 } from './utils/github';
-import { writePostmortem } from './utils/postmortem';
+import { writePostmortem, computeStringHash } from './utils/postmortem';
 import { optimizeSourceCode } from './utils/gemini';
 import { sanitizeCode, sanitizeText } from './utils/sanitizer';
 import { validateSourceCode, isMarkdownFile, lintSourceCode } from './utils/validator';
@@ -52,7 +52,7 @@ const INITIAL_CONFIG: EngineConfig = {
   specificFilePath: 'README.md',
   autoSanitize: true,
   strictTypeCheck: true,
-  autoApproveSaturated: false,
+  autoApproveSaturated: true,
 };
 
 const INITIAL_METRICS: EngineMetrics = {
@@ -274,12 +274,13 @@ export default function App() {
 
         if (candidateFiles.length === 0) {
           pushLog(
-            `[GLOBAL SATURATION REACHED] All candidate files have achieved neural saturation (0-diffs) and are on the skip list. The engine has successfully finished optimizing this repository. 🏁`,
+            `[GLOBAL SATURATION REACHED] All candidate files have achieved neural saturation and optimization. The repository is fully optimized. 🏁`,
             'success'
           );
           if (isLive) {
             setIsLive(false);
           }
+          setActivePath(null);
           setStatus('IDLE');
           return;
         }
@@ -462,6 +463,15 @@ export default function App() {
           targetFile.content = cleanCode;
         }
 
+        // Auto-mark file as optimized in current session so it does not cycle infinitely
+        const currentSandboxSkip = config.skippedFiles || [];
+        if (!currentSandboxSkip.includes(targetFile.path)) {
+          setConfig((prev) => ({
+            ...prev,
+            skippedFiles: [...(prev.skippedFiles || []), targetFile.path],
+          }));
+        }
+
         const originalLines = originalContent.split('\n').length;
         const optimizedLines = cleanCode.split('\n').length;
 
@@ -531,26 +541,23 @@ export default function App() {
 
         let skippedSet = new Set(config.skippedFiles || []);
         
-        // --- 1 & 2. PRE-PASS: Read POSTMORTEMS.md and Invalidate Cache if changed ---
+        // --- 1 & 2. PRE-PASS: Read POSTMORTEMS.md and load rules if changed ---
         const postmortemItem = tree.find(i => i.path === 'docs/POSTMORTEMS.md' || i.path === 'POSTMORTEMS.md');
         if (postmortemItem) {
           try {
             const pmData = await fetchFileContent(config.targetRepo, postmortemItem.path, config.ghToken, branch);
-            
-            let hash = 0;
-            const str = pmData.content;
-            for (let i = 0; i < str.length; i++) {
-              hash = ((hash << 5) - hash) + str.charCodeAt(i);
-              hash |= 0;
-            }
-            const hashValue = hash.toString();
+            const hashValue = computeStringHash(pmData.content);
             
             if (hashValue !== config.postmortemHash) {
-              pushLog(`[LEARNING] Detected changes in ${postmortemItem.path}. Invalidating skip list cache...`, 'info');
-              // Clear skip list EXCEPT the postmortem file itself
-              const newSkipped = [postmortemItem.path];
-              setConfig(prev => ({ ...prev, skippedFiles: newSkipped, postmortemHash: hashValue, postmortemConstraints: pmData.content }));
-              skippedSet = new Set(newSkipped);
+              pushLog(`[LEARNING] Loaded rule constraints from ${postmortemItem.path}.`, 'info');
+              // Update constraints without wiping the skip list of already-completed files!
+              setConfig(prev => ({
+                ...prev,
+                postmortemHash: hashValue,
+                postmortemConstraints: pmData.content,
+                skippedFiles: Array.from(new Set([...(prev.skippedFiles || []), postmortemItem.path])),
+              }));
+              skippedSet.add(postmortemItem.path);
             }
             // Permanently ensure POSTMORTEMS.md is skipped
             if (!skippedSet.has(postmortemItem.path)) {
@@ -605,12 +612,13 @@ export default function App() {
 
         if (candidateTree.length === 0) {
           pushLog(
-            `[GLOBAL SATURATION REACHED] All candidate files have achieved neural saturation (0-diffs) and are on the skip list. The engine has successfully finished optimizing this repository. 🏁`,
+            `[GLOBAL SATURATION REACHED] All candidate files have achieved neural saturation and optimization. The repository is fully optimized. 🏁`,
             'success'
           );
           if (isLive) {
             setIsLive(false);
           }
+          setActivePath(null);
           setStatus('IDLE');
           return;
         }
@@ -787,7 +795,18 @@ export default function App() {
         if (!extVal.valid) {
           pushLog(`[HEURISTIC LINT REJECTED] Linting failed. Writing post-mortem lesson...`, 'error', undefined, target.path);
           if (!config.dryRun && config.ghToken) {
-            await writePostmortem(config.targetRepo, target.path, 'Failure', extVal.lintEvidence, config.ghToken, branch);
+            try {
+              const pmResult = await writePostmortem(config.targetRepo, target.path, 'Failure', extVal.lintEvidence, config.ghToken, branch);
+              if (pmResult?.hash) {
+                setConfig((prev) => ({
+                  ...prev,
+                  postmortemHash: pmResult.hash,
+                  postmortemConstraints: pmResult.content,
+                }));
+              }
+            } catch (pmErr) {
+              pushLog(`Failed to write postmortem: ${String(pmErr)}`, 'error');
+            }
           }
           consecutiveFailuresRef.current[target.path] = (consecutiveFailuresRef.current[target.path] || 0) + 1;
           setStatus('IDLE');
@@ -795,9 +814,7 @@ export default function App() {
         }
 
         pushLog(`[HEURISTIC LINT PASSED] Linting passed.`, 'success', undefined, target.path);
-        if (!config.dryRun && config.ghToken && result.summary) {
-          await writePostmortem(config.targetRepo, target.path, 'Success', result.summary, config.ghToken, branch);
-        }
+        // Successful optimizations do not generate failure postmortems, avoiding commit loops
 
         const originalLines = originalContent.split('\n').length;
         const optimizedLines = cleanCode.split('\n').length;
@@ -821,6 +838,15 @@ export default function App() {
             config.branch
           );
           commitSha = commitRes.commitSha;
+        }
+
+        // Auto-mark file as optimized in current session so it does not cycle infinitely
+        const currentLiveSkip = config.skippedFiles || [];
+        if (!currentLiveSkip.includes(target.path)) {
+          setConfig((prev) => ({
+            ...prev,
+            skippedFiles: [...(prev.skippedFiles || []), target.path],
+          }));
         }
 
         // Record mutation
