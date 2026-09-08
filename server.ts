@@ -516,10 +516,12 @@ CRITICAL Requirements:
       const isC = filePath.endsWith('.c') || filePath.endsWith('.cpp') || filePath.endsWith('.h') || filePath.endsWith('.hpp');
       
       // Rule 1: NO UNVERIFIABLE SELF-DESCRIPTION / MARKETING CLAIMS IN COMMENTS
-      // Flags phrases like "Fully optimized", "Leak-free", "Hardened", "Bulletproof", "Production-grade"
+      // Catches: "Hardened Write-Protect Module", "Optimized, type-safe", "Fully optimized", "Leak-free", "Hardened", "Bulletproof", "Production-grade"
       const selfPraisePatterns = [
-        /\b(?:fully\s+optimized|leak-free|bulletproof|production-grade|robustly\s+hardened|optimal\s+memory\s+management|hardened\s+architecture)\b/i,
-        /\b(?:optimized,\s*standards-compliant|flawlessly\s+verified|zero-defect)\b/i
+        /\b(?:hardened|bulletproof|production-grade|leak-free|zero-defect|flawlessly\s+verified)\b/i,
+        /\b(?:fully|robustly|highly)\s+(?:optimized|hardened|secured|typed|tested)\b/i,
+        /\boptimized[,\s]+(?:and\s+)?(?:fully\s+)?(?:type-safe|standards-compliant|hardened|secure|memory-safe)\b/i,
+        /\b(?:optimal|perfect)\s+(?:memory\s+management|type-safety|alignment|performance)\b/i
       ];
       for (const pattern of selfPraisePatterns) {
         const match = code.match(pattern);
@@ -528,6 +530,25 @@ CRITICAL Requirements:
             valid: false,
             lintEvidence: `[LINT REJECT: NO_UNVERIFIABLE_SELF_PRAISE] Detected unsubstantiated self-description in commentary: "${match[0]}". Output must adhere to neutral, factual documentation without marketing adjectives.`,
             ruleName: 'NO_UNVERIFIABLE_SELF_PRAISE'
+          });
+        }
+      }
+
+      // Rule 1B: NO STALE DEFECT CLAIMS / SCAFFOLDING LEAKAGE (PM#8)
+      // Flags docstrings that still claim a defect exists when the fix was already made or lab prediction tags leak into code
+      const staleDefectPatterns = [
+        /\bPREDICTION:\s*(?:PASSES|FAILS|REJECTED)/i,
+        /\bSeeded\s+defect,\s*documented\s+in\s+BUGS\.md/i,
+        /\bThe\s+poison:\s*`?[a-zA-Z0-9_]+`?\s+on\s+a\s+function/i,
+        /\bnever\s+freed\s+and\s+can\s+never\s+be\s+reached\s+by\s+the\s+caller\b/i
+      ];
+      for (const pattern of staleDefectPatterns) {
+        const match = code.match(pattern);
+        if (match) {
+          return res.json({
+            valid: false,
+            lintEvidence: `[LINT REJECT: NO_STALE_DEFECT_CLAIMS] Detected stale defect claim or test scaffolding leaked into production code: "${match[0]}". File documentation must reconcile with the actual fixed implementation.`,
+            ruleName: 'NO_STALE_DEFECT_CLAIMS'
           });
         }
       }

@@ -45,6 +45,11 @@ const PRESET_SPECIMENS = [
     filePath: 'src/specimen_05_todo_success.c',
     code: `int perform_handshake(void) {\n    // TODO: implement real handshake check\n    return 1;\n}\n`,
   },
+  {
+    name: 'Specimen 06 — Stale Defect Claim & Lab Scaffolding Leak (PM#8)',
+    filePath: 'src/specimen_06_stale_claim.c',
+    code: `/**\n * @file specimen_06.c\n * @brief Seeded defect, documented in BUGS.md. PREDICTION: PASSES the gate.\n * On one error path, an allocated buffer is never freed and can never be reached by the caller.\n */\n#include <stdlib.h>\nvoid clean_fix(void) { /* already fixed */ }\n`,
+  },
 ];
 
 export const OracleModal: React.FC<OracleModalProps> = ({

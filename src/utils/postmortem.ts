@@ -1,5 +1,21 @@
 import { fetchFileContent, commitFileUpdate } from './github';
 
+export async function computeSHA256(str: string): Promise<string> {
+  if (typeof crypto !== 'undefined' && crypto.subtle) {
+    const msgBuffer = new TextEncoder().encode(str);
+    const hashBuffer = await crypto.subtle.digest('SHA-256', msgBuffer);
+    const hashArray = Array.from(new Uint8Array(hashBuffer));
+    return hashArray.map((b) => b.toString(16).padStart(2, '0')).join('');
+  }
+  // Fallback for non-subtle crypto environments
+  let hash = 0;
+  for (let i = 0; i < str.length; i++) {
+    hash = ((hash << 5) - hash) + str.charCodeAt(i);
+    hash |= 0;
+  }
+  return Math.abs(hash).toString(16).padStart(64, '0');
+}
+
 export function computeStringHash(str: string): string {
   let hash = 0;
   for (let i = 0; i < str.length; i++) {
@@ -55,7 +71,7 @@ export async function writePostmortem(
   }
 
   const updatedContent = pmContent + newEntry;
-  const hash = computeStringHash(updatedContent);
+  const hash = await computeSHA256(updatedContent);
 
   await commitFileUpdate(
     repo,

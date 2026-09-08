@@ -33,7 +33,7 @@ import {
   fetchFileContent,
   commitFileUpdate,
 } from './utils/github';
-import { writePostmortem, computeStringHash } from './utils/postmortem';
+import { writePostmortem, computeSHA256, computeStringHash } from './utils/postmortem';
 import { optimizeSourceCode } from './utils/gemini';
 import { sanitizeCode, sanitizeText } from './utils/sanitizer';
 import { validateSourceCode, isMarkdownFile, lintSourceCode } from './utils/validator';
@@ -548,18 +548,25 @@ export default function App() {
         if (postmortemItem) {
           try {
             const pmData = await fetchFileContent(config.targetRepo, postmortemItem.path, config.ghToken, branch);
-            const hashValue = computeStringHash(pmData.content);
+            const sha256Hash = await computeSHA256(pmData.content);
             
-            if (hashValue !== config.postmortemHash) {
-              pushLog(`[LEARNING] Detected updated docs/POSTMORTEMS.md (SHA: ${hashValue.slice(0, 8)}...). Ingesting updated negative constraints into prompt memory.`, 'info');
-              // Update constraints without wiping the skip list of already-completed files!
+            if (sha256Hash !== config.postmortemHash) {
+              const prevHashShort = config.postmortemHash ? config.postmortemHash.slice(0, 12) : 'NONE';
+              const newHashShort = sha256Hash.slice(0, 12);
+              pushLog(
+                `[LEARNING] Detected updated ${postmortemItem.path} (SHA-256: ${newHashShort}... | Prev: ${prevHashShort}...). Ingesting updated negative constraints and re-arming prompt memory.`,
+                'info'
+              );
+              
+              // Invalidate skip list for re-evaluation against new constraints if requested, but keep postmortem itself skipped
               setConfig(prev => ({
                 ...prev,
-                postmortemHash: hashValue,
+                postmortemHash: sha256Hash,
                 postmortemConstraints: pmData.content,
-                skippedFiles: Array.from(new Set([...(prev.skippedFiles || []), postmortemItem.path])),
+                skippedFiles: [postmortemItem.path],
               }));
-              skippedSet.add(postmortemItem.path);
+              skippedSet = new Set([postmortemItem.path]);
+              pushLog(`[LEARNING] Skip-list invalidated due to ledger hash mutation (${sha256Hash}). All candidate files re-armed.`, 'warning');
             }
             // Permanently ensure POSTMORTEMS.md is skipped
             if (!skippedSet.has(postmortemItem.path)) {
