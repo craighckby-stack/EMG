@@ -888,6 +888,13 @@ export default function App() {
             throw new Error('GitHub PAT Token is required to commit changes to a real repository.');
           }
 
+          // Strict Commit Phase Guard for Protected Apparatus Fixtures (PM#9)
+          if (protectedFixtures.includes(target.path)) {
+            pushLog(`[SKIP] Protected apparatus fixture: ${target.path} (PM#9: Write-protection active) - Commit aborted.`, 'warning');
+            setStatus('IDLE');
+            return;
+          }
+
           setStatus('COMMITTING');
           pushLog(`Pushing sovereign commit for ${target.path}...`, 'info');
           const commitRes = await commitFileUpdate(
@@ -896,7 +903,7 @@ export default function App() {
             cleanCode,
             fileData.sha,
             config.ghToken,
-            `EMG Core v49: Neural Optimization on ${target.path}`,
+            `EMG Core: Refactoring on ${target.path}`,
             config.branch
           );
           commitSha = commitRes.commitSha;
