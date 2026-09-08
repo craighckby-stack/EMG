@@ -101,6 +101,18 @@ You can run the engine directly in your browser:
 
 ---
 
+## 👤 Author & Lineage
+
+**EMG Core was created by [Craig Huckerby](https://github.com/craighckby-stack)** after an AI coding agent corrupted his repository while logging self-verified success. The engine is the countermeasure: every mutation gated by a real compiler, every failure recorded as evidence, and every claim backed by an artifact.
+
+**The lineage:**
+* **[PKM](https://github.com/craighckby-stack/PKM)** — The origin project; its post-mortem ledger is where this evidence system was born.
+* **[EMG-Tests](https://github.com/craighckby-stack/EMG-Tests)** — The validation lab; contains the receipts and raw post-mortem ledgers for every claim in this system.
+
+*Trust diffs, never claims.*
+
+---
+
 ## 📄 License & Disclaimer
 
 ### License
