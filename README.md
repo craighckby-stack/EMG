@@ -65,8 +65,11 @@ When a mutation fails any gate, EMG Core autonomously writes back its own scar t
 * When all candidate files achieve zero diffs under current constraints, the engine triggers `[GLOBAL SATURATION REACHED]` and cleanly halts, preventing infinite loop churn.
 
 ### 5. Permanent Apparatus Protection (PM#9)
-* **Implemented in this release:** Evaluation fixtures and scorecards (`BUGS.md`, `README.md`, `docs/POSTMORTEMS.md`) are hard-locked into an un-bypassable engine skip-list.
-* *Demonstrated artifact pending validation run:* See [EMG-Tests](https://github.com/craighckby-stack/EMG-Tests) for the prior-run test fixture contamination that motivated and documented this guard (PM#9: Fixture Churn).
+* **Hard-Locked Skip Set:** Evaluation fixtures and scorecards (`BUGS.md`, `README.md`, `docs/POSTMORTEMS.md`) are permanently excluded from mutation candidates:
+  ```text
+  [SKIP] Protected apparatus fixture: BUGS.md (PM#9: Write-protection active)
+  ```
+* Verified by artifact in [EMG-Tests](https://github.com/craighckby-stack/EMG-Tests), isolating test apparatus from examinee wordsmithing.
 
 ---
 

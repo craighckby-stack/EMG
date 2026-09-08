@@ -103,6 +103,9 @@ function deriveConstraintFromEvidence(evidence: string, filePath: string): strin
   if (evLower.includes('todo') && evLower.includes('success')) {
     return 'Do NOT emit placeholder TODO comments adjacent to success / return statements.';
   }
+  if (evLower.includes('stale_defect') || evLower.includes('seeded defect') || evLower.includes('scaffolding')) {
+    return 'Do NOT leak test fixture scaffolding, prediction tags, or obsolete defect descriptions into candidate file docstrings. Code documentation must describe the current, reconciled implementation only.';
+  }
   if (evLower.includes('fixture') || evLower.includes('apparatus') || evLower.includes('bugs.md')) {
     return 'Do NOT mutate evaluation fixtures or lab apparatus files (BUGS.md, README.md, POSTMORTEMS.md). System under test must never wordsmith the exam.';
   }
