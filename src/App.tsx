@@ -543,6 +543,18 @@ export default function App() {
 
         let skippedSet = new Set(config.skippedFiles || []);
         
+        // --- PERMANENT LAB FIXTURE PROTECTION (PM#9: Freeze Apparatus) ---
+        const protectedFixtures = [
+          'docs/POSTMORTEMS.md',
+          'POSTMORTEMS.md',
+          'BUGS.md',
+          'docs/BUGS.md',
+          'README.md'
+        ];
+        for (const fixture of protectedFixtures) {
+          skippedSet.add(fixture);
+        }
+        
         // --- 1 & 2. PRE-PASS: Read POSTMORTEMS.md and load rules if changed ---
         const postmortemItem = tree.find(i => i.path === 'docs/POSTMORTEMS.md' || i.path === 'POSTMORTEMS.md');
         if (postmortemItem) {
@@ -558,20 +570,15 @@ export default function App() {
                 'info'
               );
               
-              // Invalidate skip list for re-evaluation against new constraints if requested, but keep postmortem itself skipped
+              // Invalidate skip list for candidate code re-evaluation, preserving permanent fixture locks
               setConfig(prev => ({
                 ...prev,
                 postmortemHash: sha256Hash,
                 postmortemConstraints: pmData.content,
-                skippedFiles: [postmortemItem.path],
+                skippedFiles: protectedFixtures,
               }));
-              skippedSet = new Set([postmortemItem.path]);
-              pushLog(`[LEARNING] Skip-list invalidated due to ledger hash mutation (${sha256Hash}). All candidate files re-armed.`, 'warning');
-            }
-            // Permanently ensure POSTMORTEMS.md is skipped
-            if (!skippedSet.has(postmortemItem.path)) {
-              skippedSet.add(postmortemItem.path);
-              setConfig(prev => ({ ...prev, skippedFiles: Array.from(skippedSet) }));
+              skippedSet = new Set(protectedFixtures);
+              pushLog(`[LEARNING] Skip-list invalidated due to ledger hash mutation (${sha256Hash}). All candidate files re-armed (Lab fixtures remain write-protected).`, 'warning');
             }
           } catch (e) {
             pushLog(`Failed to fetch postmortems: ${String(e)}`, 'error');
