@@ -571,16 +571,16 @@ async function callServerTsValidator(
 /**
  * Main Code and Type Error Validation Engine
  */
-export async function lintSourceCode(code: string, filePath: string): Promise<{ valid: boolean; lintEvidence: string }> {
+export async function lintSourceCode(code: string, filePath: string, projectFiles?: Record<string, string>): Promise<{ valid: boolean; lintEvidence: string; verdict?: string; undeclaredSymbol?: string; hitRecursionCap?: boolean }> {
   try {
     const res = await fetch('/api/lint', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ code, filePath })
+      body: JSON.stringify({ code, filePath, projectFiles })
     });
     if (!res.ok) return { valid: false, lintEvidence: 'Failed to connect to linting server' };
     const data = await res.json();
-    return { valid: !!data.valid, lintEvidence: data.lintEvidence || '' };
+    return { valid: !!data.valid, lintEvidence: data.lintEvidence || '', verdict: data.verdict, undeclaredSymbol: data.undeclaredSymbol, hitRecursionCap: data.hitRecursionCap };
   } catch (e) {
     return { valid: false, lintEvidence: String(e) };
   }

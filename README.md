@@ -41,7 +41,9 @@ docs/POSTMORTEMS.md             └── NO:  Commit to Repo    │
 
 ### 1. External Verification Gates (`REJECT`)
 Mutations are never trusted blindly:
-* **C/C++ Translation Units:** Tested against a real GCC 13.2 compiler via the Godbolt API. Rejects invalid keywords (e.g. `noexcept` in C), missing system headers (`<stddef.h>`), or syntax bugs with verbatim machine `stderr`.
+* **C/C++ Translation Units & The Splicing Engine:** Tested against a real GCC 13.2 compiler via the Godbolt API. For multi-file repositories, the engine automatically resolves and splices local `#include` headers (up to depth 5) into the source payload before compilation.
+  * **Syntactic Multi-File Coherence:** The engine verifies that the file and its direct headers form a syntactically valid unit. It does *not* verify full project linkage or semantic header drift.
+  * Rejects invalid keywords (e.g. `noexcept` in C), missing system headers (`<stddef.h>`), or syntax bugs with verbatim machine `stderr`. Hallucinated undeclared symbols are rejected; true cross-file macro dependencies outside the splice are safely bypassed.
   > *Privacy Disclosure:* Code passed to the GCC compiler gate is transmitted over HTTPS to the public [Godbolt Compiler Explorer API](https://godbolt.org). Sensitive internal headers or proprietary tokens should be sanitized or tested with Sandbox/Mock mode.
 * **TypeScript/JavaScript:** Checked via compiler diagnostics and AST balanced-bracket verification.
 * **Active Output Linter Rules:** Rejects invalid patterns before commit:

@@ -91,6 +91,7 @@ export default function App() {
   const loopTimerRef = useRef<NodeJS.Timeout | null>(null);
   const fileIndexRef = useRef(0);
   const consecutiveFailuresRef = useRef<Record<string, number>>({});
+  const globalFailuresRef = useRef<number[]>([]);
   const cooldownUntilRef = useRef<number>(0);
 
   // Push structured log
@@ -567,7 +568,15 @@ export default function App() {
           'POSTMORTEMS.md',
           'BUGS.md',
           'docs/BUGS.md',
-          'README.md'
+          'README.md',
+          'docs/RULES.md',
+          'RULES.md',
+          'docs/ARCHITECTURE.md',
+          'ARCHITECTURE.md',
+          'DISCLAIMER.md',
+          'LICENSE.md',
+          'LICENSE',
+          'LICENSE.txt'
         ];
         for (const fixture of protectedFixtures) {
           skippedSet.add(fixture);
@@ -578,7 +587,61 @@ export default function App() {
         if (postmortemItem) {
           try {
             const pmData = await fetchFileContent(config.targetRepo, postmortemItem.path, config.ghToken, branch);
-            const sha256Hash = await computeSHA256(pmData.content);
+            let content = pmData.content;
+            
+            // Ledger self-healing: purge poisoned isolation entries (PM#10)
+            const oldLines = content.split('\n');
+            let inPoisonedBlock = false;
+            let healedContent = '';
+            let healCount = 0;
+
+            for (let i = 0; i < oldLines.length; i++) {
+                const line = oldLines[i];
+                if (line.startsWith('### ❌')) {
+                    // Check ahead for poisoned evidence
+                    let lookahead = i + 1;
+                    let isPoisoned = false;
+                    while (lookahead < oldLines.length && !oldLines[lookahead].startsWith('### ')) {
+                        const l = oldLines[lookahead].toLowerCase();
+                        if (l.includes('fatal error:') && l.includes('no such file or directory')) isPoisoned = true;
+                        if (l.includes('error:') && (l.includes('undeclared') || l.includes('unknown type name') || l.includes('implicit declaration'))) isPoisoned = true;
+                        lookahead++;
+                    }
+                    if (isPoisoned) {
+                        healCount++;
+                        const dateStr = new Date().toISOString().split('T')[0];
+                        healedContent += line.replace('❌', `⚠️ [STRUCK: NOT_VERIFIABLE, ${dateStr}]`) + '\n';
+                        inPoisonedBlock = true;
+                        continue;
+                    } else {
+                        inPoisonedBlock = false;
+                    }
+                }
+                
+                if (inPoisonedBlock && line.startsWith('**CONSTRAINT')) {
+                    healedContent += `**CONSTRAINT (Model Generalization):** [STRUCK] Original constraint invalidated. Artifact of isolated compilation missing project context.\n`;
+                } else {
+                    healedContent += line + '\n';
+                }
+            }
+            
+            const filteredContent = healedContent.trim() + '\n';
+            
+            if (filteredContent !== content && !config.dryRun && config.ghToken) {
+               pushLog(`[LEDGER HEAL] Found and re-tagged ${healCount} poisoned isolated-compile constraints in ${postmortemItem.path}. Self-healing repository...`, 'warning');
+               await commitFileUpdate(
+                 config.targetRepo,
+                 postmortemItem.path,
+                 filteredContent,
+                 pmData.sha,
+                 config.ghToken,
+                 `EMG Core: Purging poisoned isolated-compile constraints from ledger`,
+                 branch
+               );
+               content = filteredContent;
+            }
+
+            const sha256Hash = await computeSHA256(content);
             
             if (sha256Hash !== config.postmortemHash) {
               const prevHashShort = config.postmortemHash ? config.postmortemHash.slice(0, 12) : 'NONE';
@@ -589,14 +652,16 @@ export default function App() {
               );
               
               // Invalidate skip list for candidate code re-evaluation, preserving permanent fixture locks
+              // PM#12: Do NOT reset the 0-diff saturation cache. Only re-arm files if we want to.
+              // We will just update the constraints and hash, but KEEP the skippedFiles list intact
+              // so saturated files (0-diffs) don't get needlessly re-optimized.
               setConfig(prev => ({
                 ...prev,
                 postmortemHash: sha256Hash,
-                postmortemConstraints: pmData.content,
-                skippedFiles: protectedFixtures,
+                postmortemConstraints: pmData.content
               }));
-              skippedSet = new Set(protectedFixtures);
-              pushLog(`[LEARNING] Skip-list invalidated due to ledger hash mutation (${sha256Hash}). All candidate files re-armed (Lab fixtures remain write-protected).`, 'warning');
+              consecutiveFailuresRef.current = {};
+              pushLog(`[LEARNING] Ingested ledger hash mutation (${sha256Hash}). 0-diff saturation cache remains active, failed files re-armed.`, 'warning');
             }
           } catch (e) {
             pushLog(`Failed to fetch postmortems: ${String(e)}`, 'error');
@@ -864,42 +929,118 @@ export default function App() {
         // --- HEURISTIC LINTING AND WRITE-BACK ---
         setStatus('LINTING');
         pushLog(`Running heuristic linting for [${target.path}]...`, 'info', undefined, target.path);
-        const extVal = await lintSourceCode(cleanCode, target.path);
         
-        if (!extVal.valid) {
-          pushLog(`[HEURISTIC LINT REJECTED] Gate fired on [${target.path}]: ${extVal.lintEvidence}`, 'error', undefined, target.path);
-          if (!config.dryRun && config.ghToken) {
-            try {
-              const pmResult = await writePostmortem(
-                config.targetRepo,
-                target.path,
-                'Failure',
-                extVal.lintEvidence,
-                config.ghToken,
-                branch,
-                {
-                  source: 'mutation-cycle',
-                  symptom: 'Active Linter / Compiler Gate Rejection on LLM Output (Option B)',
-                }
-              );
-              if (pmResult?.hash) {
-                setConfig((prev) => ({
-                  ...prev,
-                  postmortemHash: pmResult.hash,
-                  postmortemConstraints: pmResult.content,
-                }));
-                pushLog(`[LEARN] Logged failure to docs/POSTMORTEMS.md. Ingested negative constraint for next cycle.`, 'warning');
+        // Pre-fetch local includes for project-aware compiling (C/C++)
+        const projectFiles: Record<string, string> = {};
+        const isC = target.path.endsWith('.c') || target.path.endsWith('.cpp') || target.path.endsWith('.h') || target.path.endsWith('.hpp');
+        
+        if (isC) {
+           const localIncludes = [...cleanCode.matchAll(/#include\s+"([^"]+)"/g)].map(m => m[1]);
+           for (const inc of localIncludes) {
+              const basename = inc.split('/').pop();
+              if (basename) {
+                 const found = tree.find(i => i.path.endsWith('/' + basename) || i.path === basename);
+                 if (found) {
+                     try {
+                        const hData = await fetchFileContent(config.targetRepo, found.path, config.ghToken, branch);
+                        projectFiles[basename] = hData.content;
+                     } catch (e) {
+                        pushLog(`Warning: Failed to fetch local header ${basename} for linting`, 'warning');
+                     }
+                 }
               }
-            } catch (pmErr) {
-              pushLog(`Failed to write postmortem: ${String(pmErr)}`, 'error');
-            }
-          }
-          consecutiveFailuresRef.current[target.path] = (consecutiveFailuresRef.current[target.path] || 0) + 1;
-          setStatus('IDLE');
-          return;
+           }
         }
 
-        pushLog(`[HEURISTIC LINT PASSED] Linting passed.`, 'success', undefined, target.path);
+        const extVal = await lintSourceCode(cleanCode, target.path, projectFiles);
+        
+        if (!extVal.valid) {
+          let verdict = extVal.verdict;
+          
+          if (extVal.hitRecursionCap) {
+             pushLog(`[LINTER WARN] Splicing recursion cap reached for ${target.path}. Possible circular dependency.`, 'warning');
+          }
+
+          if (verdict === 'NOT_VERIFIABLE_IN_ISOLATION' && extVal.undeclaredSymbol) {
+             // Let's check if the symbol exists ANYWHERE in the fetched project files.
+             // If not, it's a true hallucination, not an isolation error.
+             const symbolPattern = new RegExp(`\\b${extVal.undeclaredSymbol}\\b`);
+             let foundInHeaders = false;
+             for (const content of Object.values(projectFiles)) {
+                 if (symbolPattern.test(content)) {
+                     foundInHeaders = true;
+                     break;
+                 }
+             }
+             
+             // If we didn't find it in the local included headers, it's a true REJECT
+             if (!foundInHeaders) {
+                 pushLog(`[HEURISTIC LINT OVERRIDE] Symbol '${extVal.undeclaredSymbol}' not found in any local headers. Treating as genuine hallucination/defect.`, 'error');
+                 verdict = 'INVALID';
+             }
+          }
+
+          if (verdict === 'NOT_VERIFIABLE_IN_ISOLATION') {
+            pushLog(`[HEURISTIC LINT SKIPPED] Gate bypassed on [${target.path}]: Not verifiable in isolation (missing cross-file include or macro dependency). Treating as structurally sound but will NOT commit unverified code. Auto-skipping file to prevent loops.`, 'warning', undefined, target.path);
+            
+            setConfig((prev) => ({
+              ...prev,
+              skippedFiles: [...(prev.skippedFiles || []), target.path],
+            }));
+            
+            setStatus('IDLE');
+            return;
+          } else {
+            pushLog(`[HEURISTIC LINT REJECTED] Gate fired on [${target.path}]: ${extVal.lintEvidence}`, 'error', undefined, target.path);
+            
+            // Push to rolling window for circuit breaker
+            const now = Date.now();
+            globalFailuresRef.current.push(now);
+            
+            // Clean up failures older than 5 minutes
+            globalFailuresRef.current = globalFailuresRef.current.filter(t => now - t < 5 * 60 * 1000);
+            
+            if (!config.dryRun && config.ghToken) {
+              try {
+                const pmResult = await writePostmortem(
+                  config.targetRepo,
+                  target.path,
+                  'Failure',
+                  extVal.lintEvidence,
+                  config.ghToken,
+                  branch,
+                  {
+                    source: 'mutation-cycle',
+                    symptom: 'Active Linter / Compiler Gate Rejection on LLM Output (Option B)',
+                  }
+                );
+                if (pmResult?.hash) {
+                  setConfig((prev) => ({
+                    ...prev,
+                    postmortemHash: pmResult.hash,
+                    postmortemConstraints: pmResult.content,
+                  }));
+                  pushLog(`[LEARN] Logged failure to docs/POSTMORTEMS.md. Ingested negative constraint for next cycle.`, 'warning');
+                }
+              } catch (pmErr) {
+                pushLog(`Failed to write postmortem: ${String(pmErr)}`, 'error');
+              }
+            }
+            consecutiveFailuresRef.current[target.path] = (consecutiveFailuresRef.current[target.path] || 0) + 1;
+            
+            // Quota circuit-breaker (5 failures in 5 minutes)
+            if (globalFailuresRef.current.length >= 5) {
+                pushLog(`[CIRCUIT BREAKER] 5 gate failures within a 5-minute window. Halting live loop to prevent API quota burn.`, 'error');
+                if (isLive) setIsLive(false);
+            }
+            
+            setStatus('IDLE');
+            return;
+          }
+        } else {
+          pushLog(`[HEURISTIC LINT PASSED] Linting passed.`, 'success', undefined, target.path);
+          consecutiveFailuresRef.current[target.path] = 0;
+        }
         // Successful optimizations do not generate failure postmortems, avoiding commit loops
 
         const originalLines = originalContent.split('\n').length;

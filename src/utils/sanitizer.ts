@@ -152,6 +152,34 @@ export function sanitizeCode(
   }
 
   let code = rawCode;
+  
+  // 0. Extract from LLM transport envelope and markdown code blocks
+  const startEnvelope = '@@@START';
+  const endEnvelope = '@@@';
+  
+  const startIdx = code.indexOf(startEnvelope);
+  if (startIdx !== -1) {
+    const afterStart = code.substring(startIdx + startEnvelope.length);
+    const endIdx = afterStart.indexOf(endEnvelope);
+    if (endIdx !== -1) {
+       code = afterStart.substring(0, endIdx).trim();
+    } else {
+       code = afterStart.trim();
+    }
+  }
+
+  // Strip ```c ... ``` or similar markdown blocks if present
+  if (code.startsWith('```')) {
+     const lines = code.split('\n');
+     if (lines.length > 0 && lines[0].startsWith('```')) {
+         lines.shift();
+     }
+     if (lines.length > 0 && lines[lines.length - 1].startsWith('```')) {
+         lines.pop();
+     }
+     code = lines.join('\n').trim();
+  }
+
   let redactedCount = 0;
   const redactedTypesSet = new Set<string>();
   const findings: SanitizationResult['findings'] = [];

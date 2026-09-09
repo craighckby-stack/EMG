@@ -510,11 +510,35 @@ CRITICAL Requirements:
   // External Compile / Verification Endpoint with Real Compiler & Active Output Linting Rules
   app.post('/api/lint', async (req, res) => {
     try {
-      const { code, filePath } = req.body;
+      const { code, filePath, projectFiles } = req.body;
       if (!code) return res.status(400).json({ valid: false, lintEvidence: 'No code provided' });
       
       const isC = filePath.endsWith('.c') || filePath.endsWith('.cpp') || filePath.endsWith('.h') || filePath.endsWith('.hpp');
       
+      let processedCode = code;
+      let spliceDepth = 0;
+      let hitRecursionCap = false;
+      
+      if (isC && projectFiles && Object.keys(projectFiles).length > 0) {
+        // Splice up to 5 levels of includes to simulate a project-aware compile
+        for (let i = 0; i < 5; i++) {
+          const prev = processedCode;
+          processedCode = processedCode.replace(/#include\s+"([^"]+)"/g, (match: string, p1: string) => {
+             const basename = p1.split('/').pop();
+             if (basename && projectFiles[basename]) {
+                 return `/* Spliced ${p1} */\n${projectFiles[basename]}\n/* End ${p1} */`;
+             }
+             return match;
+          });
+          if (prev === processedCode) break;
+          spliceDepth++;
+        }
+        if (spliceDepth >= 5) {
+            hitRecursionCap = true;
+            console.warn(`[LINTER] Splice recursion cap (5) reached for ${filePath}. Possible circular dependency or deep include chain.`);
+        }
+      }
+
       // Rule 1: NO UNVERIFIABLE SELF-DESCRIPTION / MARKETING CLAIMS IN COMMENTS
       // Catches: "Hardened Write-Protect Module", "Optimized, type-safe", "Fully optimized", "Leak-free", "Hardened", "Bulletproof", "Production-grade"
       const selfPraisePatterns = [
@@ -597,7 +621,7 @@ CRITICAL Requirements:
         const isCpp = filePath.endsWith('.cpp') || filePath.endsWith('.hpp') || filePath.endsWith('.cc');
         const compilerId = isCpp ? 'g132' : 'cg132';
         const payload = {
-            source: code,
+            source: processedCode,
             compiler: compilerId,
             options: {
                 userArguments: "-Wall -Wextra -fsyntax-only -fdiagnostics-color=never",
@@ -631,7 +655,25 @@ CRITICAL Requirements:
             if (gbData.stderr && Array.isArray(gbData.stderr)) {
                 stderr = gbData.stderr.map((e: any) => e.text).join('\n');
             }
-            return res.json({ valid: false, lintEvidence: stderr || 'Compilation failed with no stderr output.' });
+            
+            const lintEvidence = stderr || 'Compilation failed with no stderr output.';
+            let verdict = 'INVALID';
+            
+            const isMissingInclude = lintEvidence.includes('No such file or directory') && lintEvidence.includes('fatal error:');
+            const isUndeclared = lintEvidence.includes('undeclared') || lintEvidence.includes('unknown type name') || lintEvidence.includes('implicit declaration');
+            
+            let undeclaredSymbol = null;
+            if (isUndeclared) {
+                // Try to extract the symbol, e.g., "error: use of undeclared identifier 'foo'" or "unknown type name 'bar'"
+                const match = lintEvidence.match(/(?:undeclared identifier|unknown type name|implicit declaration of function) '([^']+)'/);
+                if (match) undeclaredSymbol = match[1];
+            }
+            
+            if (isMissingInclude || isUndeclared) {
+               verdict = 'NOT_VERIFIABLE_IN_ISOLATION';
+            }
+            
+            return res.json({ valid: false, lintEvidence, verdict, undeclaredSymbol, hitRecursionCap });
         }
       }
       

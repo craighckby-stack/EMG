@@ -41,18 +41,6 @@ export async function writePostmortem(
   }
 ): Promise<{ content: string; hash: string }> {
   const pmPath = 'docs/POSTMORTEMS.md';
-  let pmContent = '';
-  let pmSha = '';
-
-  try {
-    const fileData = await fetchFileContent(repo, pmPath, token, branch);
-    pmContent = fileData.content;
-    pmSha = fileData.sha;
-  } catch (e) {
-    // File doesn't exist, start fresh
-    pmContent = '# Neural Engine Post-Mortems\n\n## Auto-Generated Lessons & Negative Constraints\n';
-  }
-
   const timestamp = new Date().toISOString().split('T')[0];
   const flag = type === 'Success' ? '✅' : '❌';
   const source = options?.source || 'mutation-cycle';
@@ -70,24 +58,54 @@ export async function writePostmortem(
     newEntry += `**CONSTRAINT:** ${options?.constraintRule || lintEvidence}\n`;
   }
 
-  const updatedContent = pmContent + newEntry;
-  const hash = await computeSHA256(updatedContent);
+  let retries = 5;
+  while (retries > 0) {
+      let pmContent = '';
+      let pmSha = '';
 
-  await commitFileUpdate(
-    repo,
-    pmPath,
-    updatedContent,
-    pmSha,
-    token,
-    `EMG Core [${source}]: Auto-logged ${type.toLowerCase()} post-mortem for ${filePath}`,
-    branch
-  );
+      try {
+        const fileData = await fetchFileContent(repo, pmPath, token, branch);
+        pmContent = fileData.content;
+        pmSha = fileData.sha;
+      } catch (e) {
+        pmContent = '# Neural Engine Post-Mortems\n\n## Auto-Generated Lessons & Negative Constraints\n';
+      }
 
-  return { content: updatedContent, hash };
+      const updatedContent = pmContent + newEntry;
+      const hash = await computeSHA256(updatedContent);
+
+      try {
+          await commitFileUpdate(
+            repo,
+            pmPath,
+            updatedContent,
+            pmSha,
+            token,
+            `EMG Core [${source}]: Auto-logged ${type.toLowerCase()} post-mortem for ${filePath}`,
+            branch
+          );
+          return { content: updatedContent, hash };
+      } catch (commitErr: any) {
+          if (commitErr.message && commitErr.message.includes('409') && retries > 1) {
+              retries--;
+              await new Promise(r => setTimeout(r, 1000 + Math.random() * 1000)); // Add jitter
+              continue;
+          }
+          throw commitErr;
+      }
+  }
+  
+  throw new Error('Failed to write postmortem: Max retries exceeded on 409 Conflict.');
 }
 
 function deriveConstraintFromEvidence(evidence: string, filePath: string): string {
   const evLower = evidence.toLowerCase();
+  
+  // Refuse to log isolation-caused compiler errors
+  if (evLower.includes('no such file or directory') || evLower.includes('undeclared') || evLower.includes('unknown type name') || evLower.includes('implicit declaration')) {
+     return '[MANUAL_OVERRIDE] Isolated compilation context missing dependencies. Ignoring error.';
+  }
+
   if (evLower.includes('noexcept') || evLower.includes('expected \';\' after top level declarator')) {
     return 'Do NOT emit C++ keywords (e.g. noexcept, constexpr) in pure C translation units.';
   }
