@@ -155,10 +155,10 @@ export async function optimizeSourceCode(
       const sanitized = sanitizeCode(sim.code, filePath);
       return {
         optimizedCode: sanitized.sanitized,
-        summary: `${sanitizeText(sim.summary)} (Sovereign Neural Fallback)`,
+        summary: `${sanitizeText(sim.summary)} (EMG Neural Fallback)`,
         latencyMs: latency,
         tokensEstimate: Math.round(code.length / 3.8),
-        modelUsed: 'sovereign-neural-v49',
+        modelUsed: 'emg-neural-fallback',
         redactedSecretsCount: sanitized.redactedCount,
       };
     }
@@ -172,10 +172,10 @@ export async function optimizeSourceCode(
       const sanitized = sanitizeCode(sim.code, filePath);
       return {
         optimizedCode: sanitized.sanitized,
-        summary: `${sanitizeText(sim.summary)} (Sovereign Neural Fallback)`,
+        summary: `${sanitizeText(sim.summary)} (EMG Neural Fallback)`,
         latencyMs: latency,
         tokensEstimate: Math.round(code.length / 3.8),
-        modelUsed: 'sovereign-neural-v49',
+        modelUsed: 'emg-neural-fallback',
         redactedSecretsCount: sanitized.redactedCount,
       };
     }

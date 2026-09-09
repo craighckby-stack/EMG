@@ -93,6 +93,7 @@ export default function App() {
   const consecutiveFailuresRef = useRef<Record<string, number>>({});
   const globalFailuresRef = useRef<number[]>([]);
   const cooldownUntilRef = useRef<number>(0);
+  const fileCacheRef = useRef<Record<string, string>>({});
 
   // Push structured log
   const pushLog = useCallback(
@@ -392,7 +393,8 @@ export default function App() {
 
         // --- SAME-FILE CHECK BEFORE COMMIT ---
         const originalContent = targetFile.content;
-        const isIdentical = cleanCode.trim() === originalContent.trim();
+        const normalizeCode = (c: string) => c.split('\n').map(l => l.trimEnd()).join('\n').trim();
+        const isIdentical = normalizeCode(cleanCode) === normalizeCode(originalContent);
 
         if (isIdentical) {
           // Log no-op event
@@ -605,6 +607,7 @@ export default function App() {
                         const l = oldLines[lookahead].toLowerCase();
                         if (l.includes('fatal error:') && l.includes('no such file or directory')) isPoisoned = true;
                         if (l.includes('error:') && (l.includes('undeclared') || l.includes('unknown type name') || l.includes('implicit declaration'))) isPoisoned = true;
+                        if (l.includes('lint reject: no_unused_macros') || l.includes('never applied')) isPoisoned = true;
                         lookahead++;
                     }
                     if (isPoisoned) {
@@ -629,15 +632,31 @@ export default function App() {
             
             if (filteredContent !== content && !config.dryRun && config.ghToken) {
                pushLog(`[LEDGER HEAL] Found and re-tagged ${healCount} poisoned isolated-compile constraints in ${postmortemItem.path}. Self-healing repository...`, 'warning');
-               await commitFileUpdate(
-                 config.targetRepo,
-                 postmortemItem.path,
-                 filteredContent,
-                 pmData.sha,
-                 config.ghToken,
-                 `EMG Core: Purging poisoned isolated-compile constraints from ledger`,
-                 branch
-               );
+               let healRetries = 5;
+               let currentSha = pmData.sha;
+               while (healRetries > 0) {
+                   try {
+                       await commitFileUpdate(
+                         config.targetRepo,
+                         postmortemItem.path,
+                         filteredContent,
+                         currentSha,
+                         config.ghToken,
+                         `EMG Core: Purging poisoned isolated-compile constraints from ledger`,
+                         branch
+                       );
+                       break;
+                   } catch (commitErr: any) {
+                       if (commitErr.message && commitErr.message.includes('409') && healRetries > 1) {
+                           healRetries--;
+                           await new Promise(r => setTimeout(r, 1000 + Math.random() * 1000));
+                           const freshData = await fetchFileContent(config.targetRepo, postmortemItem.path, config.ghToken, branch);
+                           currentSha = freshData.sha;
+                           continue;
+                       }
+                       throw commitErr;
+                   }
+               }
                content = filteredContent;
             }
 
@@ -664,7 +683,7 @@ export default function App() {
               pushLog(`[LEARNING] Ingested ledger hash mutation (${sha256Hash}). 0-diff saturation cache remains active, failed files re-armed.`, 'warning');
             }
           } catch (e) {
-            pushLog(`Failed to fetch postmortems: ${String(e)}`, 'error');
+            pushLog(`Failed to sync ledger: ${String(e)}`, 'error');
           }
         }
 
@@ -870,7 +889,8 @@ export default function App() {
 
         // --- SAME-FILE CHECK BEFORE COMMIT ---
         const originalContent = fileData.content;
-        const isIdentical = cleanCode.trim() === originalContent.trim();
+        const normalizeCode = (c: string) => c.split('\n').map(l => l.trimEnd()).join('\n').trim();
+        const isIdentical = normalizeCode(cleanCode) === normalizeCode(originalContent);
 
         if (isIdentical) {
           // Log no-op event
@@ -935,17 +955,19 @@ export default function App() {
         const isC = target.path.endsWith('.c') || target.path.endsWith('.cpp') || target.path.endsWith('.h') || target.path.endsWith('.hpp');
         
         if (isC) {
-           const localIncludes = [...cleanCode.matchAll(/#include\s+"([^"]+)"/g)].map(m => m[1]);
-           for (const inc of localIncludes) {
-              const basename = inc.split('/').pop();
+           const cAndHFiles = tree.filter(i => i.path.endsWith('.c') || i.path.endsWith('.h') || i.path.endsWith('.cpp') || i.path.endsWith('.hpp'));
+           for (const f of cAndHFiles) {
+              const basename = f.path.split('/').pop();
               if (basename) {
-                 const found = tree.find(i => i.path.endsWith('/' + basename) || i.path === basename);
-                 if (found) {
+                 if (fileCacheRef.current[f.path]) {
+                     projectFiles[basename] = fileCacheRef.current[f.path];
+                 } else {
                      try {
-                        const hData = await fetchFileContent(config.targetRepo, found.path, config.ghToken, branch);
-                        projectFiles[basename] = hData.content;
+                        const fData = await fetchFileContent(config.targetRepo, f.path, config.ghToken, branch);
+                        fileCacheRef.current[f.path] = fData.content;
+                        projectFiles[basename] = fData.content;
                      } catch (e) {
-                        pushLog(`Warning: Failed to fetch local header ${basename} for linting`, 'warning');
+                        pushLog(`Warning: Failed to fetch ${basename} for linting context`, 'warning');
                      }
                  }
               }
@@ -1061,7 +1083,7 @@ export default function App() {
           }
 
           setStatus('COMMITTING');
-          pushLog(`Pushing sovereign commit for ${target.path}...`, 'info');
+          pushLog(`Pushing optimized commit for ${target.path}...`, 'info');
           const commitRes = await commitFileUpdate(
             config.targetRepo,
             target.path,
@@ -1219,7 +1241,7 @@ export default function App() {
   // Initial welcome event on initialization
   const handleInitializeSystem = () => {
     setIsAcknowledged(true);
-    pushLog('EMG Core v49 Sovereign Engine initialized.', 'info');
+    pushLog('EMG Core C-Dialect Verifier initialized.', 'info');
     pushLog('Autonomous memory bus & telemetry systems online.', 'success');
   };
 
@@ -1371,7 +1393,7 @@ export default function App() {
       {/* Sovereign Footer */}
       <footer className="text-[10px] font-mono text-neutral-500 uppercase tracking-[0.2em] py-4 border-t border-neutral-900 mt-4 flex flex-col sm:flex-row items-center justify-between gap-2">
         <div className="flex items-center gap-3">
-          <span>EMG CORE // v49 // SOVEREIGN ENGINE</span>
+          <span>EMG Core // C-Dialect Verifier</span>
           <span>•</span>
           <span>CRAIGHCKBY @ 2026</span>
         </div>

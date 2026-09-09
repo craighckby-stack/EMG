@@ -27,7 +27,9 @@ export function computeStringHash(str: string): string {
 
 export type PostmortemSource = 'oracle-harness' | 'mutation-cycle';
 
-export async function writePostmortem(
+let writeQueue: Promise<any> = Promise.resolve();
+
+export function writePostmortem(
   repo: string,
   filePath: string,
   type: 'Success' | 'Failure',
@@ -40,62 +42,68 @@ export async function writePostmortem(
     symptom?: string;
   }
 ): Promise<{ content: string; hash: string }> {
-  const pmPath = 'docs/POSTMORTEMS.md';
-  const timestamp = new Date().toISOString().split('T')[0];
-  const flag = type === 'Success' ? '✅' : '❌';
-  const source = options?.source || 'mutation-cycle';
-  const tag = `\`source: ${source}\``;
-  
-  let newEntry = `\n### ${flag} [${timestamp}] ${filePath} ${tag}\n`;
-  if (type === 'Failure') {
-    newEntry += `**Symptom:** ${options?.symptom || 'Verification Gate / Linting Rejected'}\n`;
-    newEntry += `**EVIDENCE (Machine-Copied Fact):**\n\`\`\`\n${lintEvidence.trim()}\n\`\`\`\n`;
-    const rule = options?.constraintRule || deriveConstraintFromEvidence(lintEvidence, filePath);
-    newEntry += `**CONSTRAINT (Model Generalization):** ${rule}\n`;
-  } else {
-    newEntry += `**Symptom:** Successful Verification Pass\n`;
-    newEntry += `**EVIDENCE:** Pattern survived compiler and heuristic gates.\n`;
-    newEntry += `**CONSTRAINT:** ${options?.constraintRule || lintEvidence}\n`;
-  }
+  const executeWrite = async () => {
+    const pmPath = 'docs/POSTMORTEMS.md';
+    const timestamp = new Date().toISOString().split('T')[0];
+    const flag = type === 'Success' ? '✅' : '❌';
+    const source = options?.source || 'mutation-cycle';
+    const tag = `\`source: ${source}\``;
+    
+    let newEntry = `\n### ${flag} [${timestamp}] ${filePath} ${tag}\n`;
+    if (type === 'Failure') {
+      newEntry += `**Symptom:** ${options?.symptom || 'Verification Gate / Linting Rejected'}\n`;
+      newEntry += `**EVIDENCE (Machine-Copied Fact):**\n\`\`\`\n${lintEvidence.trim()}\n\`\`\`\n`;
+      const rule = options?.constraintRule || deriveConstraintFromEvidence(lintEvidence, filePath);
+      newEntry += `**CONSTRAINT (Model Generalization):** ${rule}\n`;
+    } else {
+      newEntry += `**Symptom:** Successful Verification Pass\n`;
+      newEntry += `**EVIDENCE:** Pattern survived compiler and heuristic gates.\n`;
+      newEntry += `**CONSTRAINT:** ${options?.constraintRule || lintEvidence}\n`;
+    }
 
-  let retries = 5;
-  while (retries > 0) {
-      let pmContent = '';
-      let pmSha = '';
+    let retries = 5;
+    while (retries > 0) {
+        let pmContent = '';
+        let pmSha = '';
 
-      try {
-        const fileData = await fetchFileContent(repo, pmPath, token, branch);
-        pmContent = fileData.content;
-        pmSha = fileData.sha;
-      } catch (e) {
-        pmContent = '# Neural Engine Post-Mortems\n\n## Auto-Generated Lessons & Negative Constraints\n';
-      }
+        try {
+          const fileData = await fetchFileContent(repo, pmPath, token, branch);
+          pmContent = fileData.content;
+          pmSha = fileData.sha;
+        } catch (e) {
+          pmContent = '# Neural Engine Post-Mortems\n\n## Auto-Generated Lessons & Negative Constraints\n';
+        }
 
-      const updatedContent = pmContent + newEntry;
-      const hash = await computeSHA256(updatedContent);
+        const updatedContent = pmContent + newEntry;
+        const hash = await computeSHA256(updatedContent);
 
-      try {
-          await commitFileUpdate(
-            repo,
-            pmPath,
-            updatedContent,
-            pmSha,
-            token,
-            `EMG Core [${source}]: Auto-logged ${type.toLowerCase()} post-mortem for ${filePath}`,
-            branch
-          );
-          return { content: updatedContent, hash };
-      } catch (commitErr: any) {
-          if (commitErr.message && commitErr.message.includes('409') && retries > 1) {
-              retries--;
-              await new Promise(r => setTimeout(r, 1000 + Math.random() * 1000)); // Add jitter
-              continue;
-          }
-          throw commitErr;
-      }
-  }
-  
-  throw new Error('Failed to write postmortem: Max retries exceeded on 409 Conflict.');
+        try {
+            await commitFileUpdate(
+              repo,
+              pmPath,
+              updatedContent,
+              pmSha,
+              token,
+              `EMG Core [${source}]: Auto-logged ${type.toLowerCase()} post-mortem for ${filePath}`,
+              branch
+            );
+            return { content: updatedContent, hash };
+        } catch (commitErr: any) {
+            if (commitErr.message && commitErr.message.includes('409') && retries > 1) {
+                retries--;
+                await new Promise(r => setTimeout(r, 1000 + Math.random() * 1000)); // Add jitter
+                continue;
+            }
+            throw commitErr;
+        }
+    }
+    
+    throw new Error('Failed to write postmortem: Max retries exceeded on 409 Conflict.');
+  };
+
+  const op = writeQueue.then(() => executeWrite()).catch(() => executeWrite());
+  writeQueue = op;
+  return op;
 }
 
 function deriveConstraintFromEvidence(evidence: string, filePath: string): string {

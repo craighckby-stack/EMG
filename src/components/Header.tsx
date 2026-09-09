@@ -71,10 +71,10 @@ export const Header: React.FC<HeaderProps> = ({
         <div>
           <div className="flex items-center gap-2">
             <h1 className="font-extrabold text-white text-base tracking-tight">
-              EMG CORE <span className="text-blue-400">v49</span>
+              EMG Core
             </h1>
             <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-neutral-800 border border-neutral-700 text-neutral-300">
-              SOVEREIGN
+              C-DIALECT VERIFIER
             </span>
           </div>
 

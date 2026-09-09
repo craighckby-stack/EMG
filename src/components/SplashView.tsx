@@ -74,7 +74,7 @@ export const SplashView: React.FC<SplashViewProps> = ({ onInitialize, onOpenLice
             </span>
           </div>
           <p className="text-xs font-semibold text-neutral-400 uppercase tracking-widest">
-            Sovereign Autonomous Dashboard
+            C-Dialect Verification Dashboard
           </p>
         </div>
 
@@ -105,7 +105,7 @@ export const SplashView: React.FC<SplashViewProps> = ({ onInitialize, onOpenLice
           <div className="flex items-start gap-3 text-xs">
             <ShieldCheck className="w-4 h-4 text-emerald-400 shrink-0 mt-0.5" />
             <div>
-              <span className="font-semibold text-white">Sovereign Security:</span>{' '}
+              <span className="font-semibold text-white">Engine Security:</span>{' '}
               <span className="text-neutral-400">
                 In-memory volatile credential management and dry-run safety modes.
               </span>

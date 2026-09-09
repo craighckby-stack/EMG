@@ -79,7 +79,7 @@ async function startServer() {
   app.get('/api/diagnostic', (_req, res) => {
     const check = validateEnv();
     res.json({
-      kernel: 'EMG Core v49',
+      kernel: 'EMG Core',
       status: check.valid ? 'HEALTHY' : 'DEGRADED',
       missing: check.missing,
       nodeEnv: process.env.NODE_ENV || 'development',
@@ -120,7 +120,7 @@ async function startServer() {
           headers: {
             Accept: 'application/vnd.github.v3+json',
             Authorization: `Bearer ${token.trim()}`,
-            'User-Agent': 'EMG-Sovereign-Engine',
+            'User-Agent': 'EMG-Core',
           },
         }
       );
@@ -149,7 +149,7 @@ async function startServer() {
       const cleanRepo = repo.trim().replace(/^https:\/\/github\.com\//, '').replace(/\/$/, '');
       const headers: Record<string, string> = {
         Accept: 'application/vnd.github.v3+json',
-        'User-Agent': 'EMG-Sovereign-Engine',
+        'User-Agent': 'EMG-Core',
       };
       if (token && typeof token === 'string' && token.trim()) {
         headers.Authorization = `Bearer ${token.trim()}`;
@@ -180,7 +180,7 @@ async function startServer() {
       const targetBranch = branch || 'main';
       const headers: Record<string, string> = {
         Accept: 'application/vnd.github.v3+json',
-        'User-Agent': 'EMG-Sovereign-Engine',
+        'User-Agent': 'EMG-Core',
       };
       if (token && typeof token === 'string' && token.trim()) {
         headers.Authorization = `Bearer ${token.trim()}`;
@@ -213,7 +213,7 @@ async function startServer() {
       const cleanRepo = repo.trim().replace(/^https:\/\/github\.com\//, '').replace(/\/$/, '');
       const headers: Record<string, string> = {
         Accept: 'application/vnd.github.v3+json',
-        'User-Agent': 'EMG-Sovereign-Engine',
+        'User-Agent': 'EMG-Core',
       };
       if (token && typeof token === 'string' && token.trim()) {
         headers.Authorization = `Bearer ${token.trim()}`;
@@ -250,7 +250,7 @@ async function startServer() {
         'Content-Type': 'application/json',
         Accept: 'application/vnd.github.v3+json',
         Authorization: `Bearer ${token.trim()}`,
-        'User-Agent': 'EMG-Sovereign-Engine',
+        'User-Agent': 'EMG-Core',
       };
 
       const reqBody: any = {
@@ -325,7 +325,7 @@ async function startServer() {
         security: 'Focus on defensive input validation, eliminating potential injection/overflow vulnerabilities, volatile memory safety, and strict bounds checking.',
         'type-safety': 'Focus on exhaustive TypeScript types, eliminating "any", strict generic constraints, narrowing, and robust runtime contracts.',
         readability: 'Focus on pristine modern idioms, descriptive naming, modular decomposition, and clean architectural clarity.',
-        comprehensive: 'Perform a comprehensive sovereign overhaul: optimize performance, maximize type-safety, enhance memory efficiency, and ensure robust error handling.',
+        comprehensive: 'Perform a comprehensive overhaul: optimize performance, maximize type-safety, enhance memory efficiency, and ensure robust error handling.',
       };
 
       const markdownDirectives: Record<string, string> = {
@@ -344,7 +344,7 @@ async function startServer() {
         ? `\nCRITICAL CONSTRAINTS FROM PAST POST-MORTEMS (MUST FOLLOW):\n${postmortemConstraints}\n`
         : '';
 
-      const prompt = `You are EMG Core v49 Neural Code and Documentation Optimizer Engine.
+      const prompt = `You are EMG Core Neural Code and Documentation Optimizer Engine.
 File Path: "${filePath || (isMarkdown ? 'README.md' : 'source.ts')}"
 Optimization Goal: ${(goal || 'comprehensive').toUpperCase()} - ${directive}
 ${postmortemBlock}
@@ -594,7 +594,17 @@ CRITICAL Requirements:
           const macroName = def.replace(/#define\s+/, '').trim();
           // Count occurrences in code
           const regex = new RegExp(`\\b${macroName}\\b`, 'g');
-          const occurrences = (code.match(regex) || []).length;
+          let occurrences = (code.match(regex) || []).length;
+          
+          if (projectFiles) {
+              const currentBasename = filePath.split('/').pop();
+              for (const [basename, content] of Object.entries(projectFiles)) {
+                  if (basename !== currentBasename) {
+                      occurrences += (String(content).match(regex) || []).length;
+                  }
+              }
+          }
+          
           // If only 1 occurrence (the #define itself), it is unused
           if (occurrences === 1) {
             return res.json({

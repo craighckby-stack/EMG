@@ -467,7 +467,7 @@ export const ConfigPanel: React.FC<ConfigPanelProps> = ({
             className="w-full bg-neutral-950/70 border border-neutral-800 rounded-xl p-2.5 text-xs text-white outline-none focus:border-blue-500 transition-colors cursor-pointer font-sans"
           >
             <option value="comprehensive" className="bg-neutral-900">
-              ⚡ Comprehensive Sovereign (Speed + Safety + Quality)
+              ⚡ Comprehensive (Speed + Safety + Quality)
             </option>
             <option value="performance" className="bg-neutral-900">
               🚀 High-Throughput Performance & Zero-Alloc Memory

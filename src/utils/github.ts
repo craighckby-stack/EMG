@@ -267,6 +267,8 @@ export async function fetchFileContent(
   const cleanRepo = repo.trim().replace(/^https:\/\/github\.com\//, '').replace(/\/$/, '');
   const headers: Record<string, string> = {
     Accept: 'application/vnd.github.v3+json',
+    'Cache-Control': 'no-cache, no-store, must-revalidate',
+    Pragma: 'no-cache'
   };
   if (token && token.trim()) {
     headers.Authorization = `Bearer ${token.trim()}`;
@@ -275,9 +277,9 @@ export async function fetchFileContent(
   let data: any = null;
 
   try {
-    let url = `https://api.github.com/repos/${cleanRepo}/contents/${filePath}`;
+    let url = `https://api.github.com/repos/${cleanRepo}/contents/${filePath}?t=${Date.now()}`;
     if (branch && branch.trim()) {
-      url += `?ref=${encodeURIComponent(branch.trim())}`;
+      url += `&ref=${encodeURIComponent(branch.trim())}`;
     }
     const res = await fetch(url, { headers });
     if (res.ok) {

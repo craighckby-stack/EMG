@@ -78,7 +78,7 @@ export const StatsGrid: React.FC<StatsGridProps> = ({
           {isSandbox ? 'SANDBOX' : hasGhToken ? 'SECURE' : 'PUBLIC'}
         </div>
         <div className="text-[10px] text-neutral-500 mt-1 font-mono flex items-center justify-between">
-          <span>{(metrics.sanitizedSecretsCount || 0) > 0 ? `${metrics.sanitizedSecretsCount} keys scrubbed` : 'Sovereign Bus'}</span>
+          <span>{(metrics.sanitizedSecretsCount || 0) > 0 ? `${metrics.sanitizedSecretsCount} keys scrubbed` : 'EMG Event Bus'}</span>
           {onOpenDiagnostics && <span className="text-[9px] text-emerald-400/70 font-bold">PROBE &rarr;</span>}
         </div>
       </div>
