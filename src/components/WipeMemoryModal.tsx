@@ -33,7 +33,7 @@ export const WipeMemoryModal: React.FC<WipeMemoryModalProps> = ({
   const [resetConfig, setResetConfig] = useState<boolean>(true);
 
   const handleKeyDown = useCallback(
-    (e: KeyboardEvent) => {
+    (e: KeyboardEvent): void => {
       if (e.key === 'Escape' && isOpen) {
         onClose();
       }
@@ -50,7 +50,7 @@ export const WipeMemoryModal: React.FC<WipeMemoryModalProps> = ({
     };
   }, [isOpen, handleKeyDown]);
 
-  const handleConfirm = useCallback(() => {
+  const handleConfirm = useCallback((): void => {
     try {
       onConfirmWipe({ resetConfig });
       onClose();
@@ -69,7 +69,7 @@ export const WipeMemoryModal: React.FC<WipeMemoryModalProps> = ({
     >
       <div
         id="emg-wipe-memory-modal"
-        onClick={(e) => e.stopPropagation()}
+        onClick={(e): void => e.stopPropagation()}
         className="bg-neutral-900 border border-neutral-700/80 rounded-3xl w-full max-w-lg shadow-2xl overflow-hidden flex flex-col max-h-[90vh] animate-scaleUp"
       >
         {/* Header */}
@@ -157,7 +157,7 @@ export const WipeMemoryModal: React.FC<WipeMemoryModalProps> = ({
               id="chk-reset-config"
               type="checkbox"
               checked={resetConfig}
-              onChange={(e) => setResetConfig(e.target.checked)}
+              onChange={(e): void => setResetConfig(e.target.checked)}
               className="w-4 h-4 rounded accent-rose-600 cursor-pointer shrink-0"
             />
           </div>
