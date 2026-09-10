@@ -1,5 +1,4 @@
 /**
- * DARLEK CANN ARCHITECTURAL HEADER
  * File: src/utils/github.ts
  * Role: Core system component participating in autonomous cognitive evolution cycles.
  * Architecture: Type-safe modular unit with resilient state interfaces.
@@ -83,7 +82,7 @@ export class GitHubError extends Error {
     this.name = 'GitHubError';
     this.status = status;
     this.isNotFound = status === 404;
-    this.isRateLimit = status === 429 || status === 403 && message.toLowerCase().includes('rate limit');
+    this.isRateLimit = status === 429 || (status === 403 && message.toLowerCase().includes('rate limit'));
     this.isAuth = status === 401 || (status === 403 && !this.isRateLimit);
     this.isConflict = status === 409;
   }
@@ -123,7 +122,7 @@ async function parseJsonResponse<T = any>(res: Response, fallbackError: string):
       throw new GitHubError(`[HTTP ${res.status}] ${errMsg}`, res.status);
     }
     return parsed as T;
-  } catch (err: any) {
+  } catch (err: unknown) {
     if (err instanceof GitHubError) throw err;
     if (!res.ok) {
       throw new GitHubError(`${fallbackError} (HTTP ${res.status}): ${trimmed.slice(0, 120)}`, res.status);
@@ -138,7 +137,6 @@ export async function fetchUserRepositories(token: string): Promise<GitHubUserRe
   }
   const cleanToken = token.trim();
   
-  // Try client-side direct request first with fallback to server proxy
   try {
     const headers: Record<string, string> = {
       Accept: 'application/vnd.github.v3+json',
@@ -160,13 +158,13 @@ export async function fetchUserRepositories(token: string): Promise<GitHubUserRe
     if (res.status === 403) {
       throw new Error('GitHub Authorization Error: Rate limit or missing "repo" scope.');
     }
-  } catch (err: any) {
-    if (err.message && (err.message.includes('Authorization') || err.message.includes('Rate limit'))) {
-      throw err;
+  } catch (err: unknown) {
+    const errorInstance = err as Error;
+    if (errorInstance.message && (errorInstance.message.includes('Authorization') || errorInstance.message.includes('Rate limit'))) {
+      throw errorInstance;
     }
   }
 
-  // Server proxy fallback
   try {
     const proxyRes = await fetch('/api/github/user-repos', {
       method: 'POST',
@@ -174,8 +172,9 @@ export async function fetchUserRepositories(token: string): Promise<GitHubUserRe
       body: JSON.stringify({ token: cleanToken }),
     });
     return await parseJsonResponse<GitHubUserRepo[]>(proxyRes, 'GitHub repository handshake failed');
-  } catch (proxyErr: any) {
-    throw new Error(proxyErr.message || 'Unable to fetch GitHub repositories.');
+  } catch (proxyErr: unknown) {
+    const proxyErrorInstance = proxyErr as Error;
+    throw new Error(proxyErrorInstance.message || 'Unable to fetch GitHub repositories.');
   }
 }
 
@@ -188,7 +187,6 @@ export async function fetchRepoDetails(repo: string, token: string): Promise<Git
     headers.Authorization = `Bearer ${token.trim()}`;
   }
 
-  // Try direct GitHub API call
   try {
     const res = await fetch(`https://api.github.com/repos/${cleanRepo}`, { headers });
     if (res.ok) {
@@ -197,13 +195,13 @@ export async function fetchRepoDetails(repo: string, token: string): Promise<Git
     if (res.status === 404) throw new Error(`Repository "${cleanRepo}" not found (check name or token scope).`);
     if (res.status === 401) throw new Error('GitHub Authorization Failed: Invalid token.');
     if (res.status === 403) throw new Error('GitHub Rate Limit exceeded or insufficient repo permissions.');
-  } catch (err: any) {
-    if (err.message && (err.message.includes('not found') || err.message.includes('Authorization') || err.message.includes('Rate Limit'))) {
-      throw err;
+  } catch (err: unknown) {
+    const errorInstance = err as Error;
+    if (errorInstance.message && (errorInstance.message.includes('not found') || errorInstance.message.includes('Authorization') || errorInstance.message.includes('Rate Limit'))) {
+      throw errorInstance;
     }
   }
 
-  // Fallback to server proxy
   const proxyRes = await fetch('/api/github/repo-details', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
@@ -232,7 +230,7 @@ export async function fetchRepoTree(repo: string, branch: string, token: string)
       rawData = await parseJsonResponse<{ tree?: GitHubFileItem[] }>(res, `Failed to fetch file tree for ${branch}`);
     }
   } catch {
-    // Proxy fallback below
+    // Fallback handled below
   }
 
   if (!rawData) {
@@ -286,7 +284,7 @@ export async function fetchFileContent(
       data = await parseJsonResponse(res, `Failed to retrieve file contents for ${filePath}`);
     }
   } catch {
-    // Proxy fallback
+    // Fallback handled below
   }
 
   if (!data) {
@@ -322,7 +320,7 @@ export async function commitFileUpdate(
   const sanitizedContent = sanitizeCode(content, filePath).sanitized;
   const sanitizedMessage = sanitizeText(commitMessage);
 
-  const body: any = {
+  const body: Record<string, any> = {
     message: sanitizedMessage,
     content: utf8ToB64(sanitizedContent),
     sha: sha,
@@ -331,7 +329,6 @@ export async function commitFileUpdate(
     body.branch = branch.trim();
   }
 
-  // Try direct GitHub API call first
   try {
     const headers: Record<string, string> = {
       'Content-Type': 'application/json',
@@ -353,10 +350,9 @@ export async function commitFileUpdate(
       return { commitSha: data.commit?.sha || 'unknown' };
     }
   } catch {
-    // Proxy fallback below
+    // Fallback handled below
   }
 
-  // Server proxy fallback
   const proxyRes = await fetch('/api/github/commit-file', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
