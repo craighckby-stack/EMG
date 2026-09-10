@@ -11,6 +11,8 @@ export interface WPTarget {
     readonly region: number;
 }
 
+const INVALID_DESCRIPTOR_BYTE = 0xFF;
+
 /**
  * Verifies the locked state of the target device.
  *
@@ -18,7 +20,7 @@ export interface WPTarget {
  * @returns true if verified and locked, false otherwise.
  */
 export function wpVerifyLockedState(target: WPTarget): boolean {
-    return target.wlun !== 0xFF && target.region !== 0xFF;
+    return target.wlun !== INVALID_DESCRIPTOR_BYTE && target.region !== INVALID_DESCRIPTOR_BYTE;
 }
 
 /**
