@@ -1,5 +1,5 @@
 /**
- * DARLEK CANN ARCHITECTURAL HEADER
+ * EMG Core Neural Code and Documentation Optimizer Engine
  * File: src/components/WipeMemoryModal.tsx
  * Role: System memory purge and state reset confirmation dialog.
  * Architecture: Type-safe modular unit with resilient state interfaces.
