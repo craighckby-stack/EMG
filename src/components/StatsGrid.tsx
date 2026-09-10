@@ -5,7 +5,7 @@
  * Architecture: Modular presentational unit with strict type definitions and accessible interaction handlers.
  */
 
-import React from 'react';
+import React, { memo, useCallback } from 'react';
 import { Cpu, ShieldCheck, Activity, FileCode2, Sparkles, ShieldAlert } from 'lucide-react';
 import { EngineMetrics } from '../types';
 
@@ -16,18 +16,22 @@ export interface StatsGridProps {
   onOpenDiagnostics?: () => void;
 }
 
-export const StatsGrid: React.FC<StatsGridProps> = ({
+export const StatsGrid: React.FC<StatsGridProps> = memo(({
   metrics,
   isSandbox,
   hasGhToken,
   onOpenDiagnostics,
 }) => {
-  const handleKeyDown = (event: React.KeyboardEvent<HTMLDivElement>) => {
+  const handleKeyDown = useCallback((event: React.KeyboardEvent<HTMLDivElement>) => {
     if (onOpenDiagnostics && (event.key === 'Enter' || event.key === ' ')) {
       event.preventDefault();
       onOpenDiagnostics();
     }
-  };
+  }, [onOpenDiagnostics]);
+
+  const formattedTokens = metrics.tokensProcessed > 1000
+    ? `${(metrics.tokensProcessed / 1000).toFixed(1)}k`
+    : metrics.tokensProcessed;
 
   return (
     <div id="emg-stats-grid" className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3 md:gap-4">
@@ -124,12 +128,12 @@ export const StatsGrid: React.FC<StatsGridProps> = ({
           <Sparkles className="w-4 h-4 text-cyan-400" aria-hidden="true" />
         </div>
         <div className="text-2xl md:text-3xl font-black text-cyan-400 tracking-tight">
-          {metrics.tokensProcessed > 1000
-            ? `${(metrics.tokensProcessed / 1000).toFixed(1)}k`
-            : metrics.tokensProcessed}
+          {formattedTokens}
         </div>
         <div className="text-[10px] text-neutral-500 mt-1 font-mono">Tokens analyzed</div>
       </div>
     </div>
   );
-};
+});
+
+StatsGrid.displayName = 'StatsGrid';
