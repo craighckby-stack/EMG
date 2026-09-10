@@ -62,3 +62,11 @@ Line 40, Col 8: Property declaration is missing its type annotation.
 [LINT REJECT: NO_UNVERIFIABLE_SELF_PRAISE] Detected unsubstantiated self-description in commentary: "Hardened". Output must adhere to neutral, factual documentation without marketing adjectives.
 ```
 **CONSTRAINT (Model Generalization):** Never repeat code patterns that produce this compiler/linter error on src/utils/postmortem.ts.
+
+### ❌ [2026-09-10] src/utils/sanitizer.ts `source: mutation-cycle`
+**Symptom:** AST / TypeScript Compiler Validation Rejected
+**EVIDENCE (Machine-Copied Fact):**
+```
+Line 139, Col 26: Unterminated string literal.
+```
+**CONSTRAINT (Model Generalization):** Never repeat code patterns that produce this compiler/linter error on src/utils/sanitizer.ts.
