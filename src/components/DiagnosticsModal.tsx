@@ -5,7 +5,7 @@
  * Architecture: Type-safe modular unit with resilient state interfaces.
  */
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Activity, ShieldCheck, AlertTriangle, RefreshCw, X, Server, Database, Key } from 'lucide-react';
 
 interface DiagnosticData {
@@ -25,33 +25,39 @@ interface DiagnosticsModalProps {
 
 export const DiagnosticsModal: React.FC<DiagnosticsModalProps> = ({ isOpen, onClose }) => {
   const [data, setData] = useState<DiagnosticData | null>(null);
-  const [isLoading, setIsLoading] = useState(false);
+  const [isLoading, setIsLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
 
-  const fetchDiagnostics = async () => {
+  const fetchDiagnostics = useCallback(async (): Promise<void> => {
     setIsLoading(true);
     setError(null);
     try {
       const res = await fetch('/api/diagnostic');
-      if (!res.ok) throw new Error(`Diagnostic service returned HTTP ${res.status}`);
+      if (!res.ok) {
+        throw new Error(`Diagnostic service returned HTTP ${res.status}`);
+      }
       const text = await res.text();
       if (!text || text.trim().startsWith('<')) {
         throw new Error('Diagnostic endpoint returned non-JSON response.');
       }
-      const json = JSON.parse(text);
+      const json = JSON.parse(text) as DiagnosticData;
       setData(json);
-    } catch (err: any) {
-      setError(err?.message || 'Failed to fetch diagnostic telemetry');
+    } catch (err: unknown) {
+      if (err instanceof Error) {
+        setError(err.message);
+      } else {
+        setError('Failed to fetch diagnostic telemetry');
+      }
     } finally {
       setIsLoading(false);
     }
-  };
+  }, []);
 
   useEffect(() => {
     if (isOpen) {
       fetchDiagnostics();
     }
-  }, [isOpen]);
+  }, [isOpen, fetchDiagnostics]);
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
