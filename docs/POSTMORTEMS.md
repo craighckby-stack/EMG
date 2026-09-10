@@ -107,3 +107,11 @@ Line 38, Col 22: Type annotations can only be used in TypeScript files.
 [LINT REJECT: NO_UNVERIFIABLE_SELF_PRAISE] Detected unsubstantiated self-description in commentary: "production-grade". Output must adhere to neutral, factual documentation without marketing adjectives.
 ```
 **CONSTRAINT (Model Generalization):** Never repeat code patterns that produce this compiler/linter error on PREDICTIONS.md.
+
+### ❌ [2026-09-10] seed_orchestrator.c `source: mutation-cycle`
+**Symptom:** Active Linter / Compiler Gate Rejection on LLM Output (Option B)
+**EVIDENCE (Machine-Copied Fact):**
+```
+[LINT REJECT: NO_UNUSED_MACROS] Macro 'ERR_OUT_OF_MEMORY' was defined but never applied in any function or type signature.
+```
+**CONSTRAINT (Model Generalization):** Never repeat code patterns that produce this compiler/linter error on seed_orchestrator.c.
