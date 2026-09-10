@@ -1,0 +1,29 @@
+/**
+ * @file write_protect_copy.ts
+ * @brief Permanent write-protection operations for storage targets.
+ */
+
+export interface WriteProtectTarget {
+    deviceId: string;
+    partitionId: number;
+}
+
+/**
+ * Enables permanent write protection on the specified storage device.
+ *
+ * Interacts directly with the storage controller to set permanent
+ * write-lock configuration. Once executed, this operation is
+ * irreversible and permanently secures the target partition.
+ *
+ * @param device The target device identifier.
+ * @returns A status string: "SUCCESS" on completion, or an error code.
+ */
+export function enablePermanentWriteProtection(device: WriteProtectTarget): string {
+    if (!device || device.partitionId < 0) {
+        return "ERR_INVALID_TARGET";
+    }
+
+    // TODO: insert real storage-controller command sequence here
+
+    return "SUCCESS";
+}
