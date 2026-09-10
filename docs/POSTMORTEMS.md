@@ -757,3 +757,28 @@ Line 129, Col 26: Unterminated string literal.
 [OUTPUT_LIKELY_TRUNCATED] The output is < 80% of original length and syntactically invalid. The model likely hit its output token limit.
 ```
 **CONSTRAINT (Model Generalization):** Never repeat code patterns that produce this compiler/linter error on src/utils/sanitizer.ts.
+
+### ❌ [2026-09-10] src/components/Header.tsx `source: mutation-cycle`
+**Symptom:** AST / TypeScript Compiler Validation Rejected
+**EVIDENCE (Machine-Copied Fact):**
+```
+Line 198, Col 10: Expression expected.
+Line 198, Col 12: Unexpected keyword or identifier.
+Line 198, Col 23: Unexpected keyword or identifier.
+Line 198, Col 30: Unexpected keyword or identifier.
+Line 198, Col 45: '(' expected.
+Line 198, Col 54: ')' expected.
+Line 198, Col 77: ';' expected.
+Line 198, Col 89: Unexpected keyword or identifier.
+Line 198, Col 92: Unexpected keyword or identifier.
+Line 198, Col 99: Unknown keyword or identifier. Did you mean 'function'?
+Line 198, Col 109: Unexpected keyword or identifier.
+Line 198, Col 113: Unexpected keyword or identifier.
+Line 198, Col 119: Unexpected keyword or identifier.
+Line 198, Col 142: ';' expected.
+Line 198, Col 152: Unexpected keyword or identifier.
+Line 198, Col 169: ';' expected.
+Line 198, Col 181: Identifier expected.
+Line 52, Col 8: Property declaration is missing its type annotation.
+```
+**CONSTRAINT (Model Generalization):** Never repeat code patterns that produce this compiler/linter error on src/components/Header.tsx.
