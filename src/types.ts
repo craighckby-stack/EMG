@@ -1,51 +1,61 @@
 /**
- * DARLEK CANN ARCHITECTURAL HEADER
  * File: src/types.ts
- * Role: Core system component participating in autonomous cognitive evolution cycles.
- * Architecture: Type-safe modular unit with resilient state interfaces.
+ * Role: Core system component providing type definitions for telemetry, configuration, and metrics.
+ * Architecture: Modular TypeScript definitions with strict type-safety.
  */
 
-export type EngineStatus = 'IDLE' | 'SCANNING' | 'FETCHING' | 'OPTIMIZING' | 'VERIFYING' | 'LINTING' | 'COMMITTING' | 'COOLDOWN' | 'ERROR';
+export type EngineStatus = 
+  | 'IDLE' 
+  | 'SCANNING' 
+  | 'FETCHING' 
+  | 'OPTIMIZING' 
+  | 'VERIFYING' 
+  | 'LINTING' 
+  | 'COMMITTING' 
+  | 'COOLDOWN' 
+  | 'ERROR';
 
 export type LogType = 'info' | 'success' | 'warning' | 'error' | 'neural' | 'noop';
 
 export interface TelemetryLog {
-  id: string;
-  timestamp: string;
-  type: LogType;
-  msg: string;
-  path?: string;
-  latencyMs?: number;
-  tokens?: number;
+  readonly id: string;
+  readonly timestamp: string;
+  readonly type: LogType;
+  readonly msg: string;
+  readonly path?: string;
+  readonly latencyMs?: number;
+  readonly tokens?: number;
 }
 
+export type MutationStatus = 'applied' | 'dry-run' | 'failed' | 'noop';
+
 export interface MutationRecord {
-  id: string;
-  timestamp: string;
-  path: string;
-  originalCode: string;
-  optimizedCode: string;
-  originalLines: number;
-  optimizedLines: number;
-  latencyMs: number;
-  commitSha?: string;
-  optimizationSummary?: string;
-  status: 'applied' | 'dry-run' | 'failed' | 'noop';
-  validationErrors?: string[];
-  redactedCount?: number;
-  typeChecked?: boolean;
+  readonly id: string;
+  readonly timestamp: string;
+  readonly path: string;
+  readonly originalCode: string;
+  readonly optimizedCode: string;
+  readonly originalLines: number;
+  readonly optimizedLines: number;
+  readonly latencyMs: number;
+  readonly commitSha?: string;
+  readonly optimizationSummary?: string;
+  readonly status: MutationStatus;
+  readonly validationErrors?: readonly string[];
+  readonly redactedCount?: number;
+  readonly typeChecked?: boolean;
 }
 
 export interface EngineMetrics {
-  enhancements: number;
-  validations: number;
-  retries: number;
-  noops: number;
-  totalScannedFiles: number;
-  avgLatencyMs: number;
-  tokensProcessed: number;
-  sanitizedSecretsCount?: number;
-  syntaxErrorsPrevented?: number;
+  readonly enhancements: number;
+  readonly validations: number;
+  readonly retries: number;
+  readonly noops: number;
+  readonly totalScannedFiles: number;
+  readonly avgLatencyMs: number;
+  readonly tokensProcessed: number;
+  readonly sanitizedSecretsCount?: number;
+  readonly syntaxErrorsPrevented?: number;
 }
 
 export type OptimizationGoal = 'performance' | 'security' | 'readability' | 'type-safety' | 'comprehensive';
@@ -60,37 +70,37 @@ export type GeminiModelId =
 export type FileScopeFilter = 'all' | 'markdown-only' | 'specific';
 
 export interface EngineConfig {
-  targetRepo: string;
-  ghToken: string;
-  geminiKey: string;
-  model: GeminiModelId;
-  isSandboxMode: boolean;
-  dryRun: boolean;
-  goal: OptimizationGoal;
-  loopIntervalSec: number;
-  branch: string;
-  fileScope?: FileScopeFilter;
-  specificFilePath?: string;
-  skippedFiles?: string[];
-  autoSanitize?: boolean;
-  strictTypeCheck?: boolean;
-  autoApproveSaturated?: boolean;
-  postmortemHash?: string;
-  postmortemConstraints?: string;
-  saturatedTreeHash?: string;
-  saturatedGoal?: string;
+  readonly targetRepo: string;
+  readonly ghToken: string;
+  readonly geminiKey: string;
+  readonly model: GeminiModelId;
+  readonly isSandboxMode: boolean;
+  readonly dryRun: boolean;
+  readonly goal: OptimizationGoal;
+  readonly loopIntervalSec: number;
+  readonly branch: string;
+  readonly fileScope?: FileScopeFilter;
+  readonly specificFilePath?: string;
+  readonly skippedFiles?: readonly string[];
+  readonly autoSanitize?: boolean;
+  readonly strictTypeCheck?: boolean;
+  readonly autoApproveSaturated?: boolean;
+  readonly postmortemHash?: string;
+  readonly postmortemConstraints?: string;
+  readonly saturatedTreeHash?: string;
+  readonly saturatedGoal?: string;
 }
 
 export interface SaturationAlert {
-  path: string;
-  content: string;
-  summary?: string;
-  latencyMs?: number;
-  timestamp?: string;
+  readonly path: string;
+  readonly content: string;
+  readonly summary?: string;
+  readonly latencyMs?: number;
+  readonly timestamp?: string;
 }
 
 export interface SimulatedFile {
-  path: string;
-  content: string;
-  language: string;
+  readonly path: string;
+  readonly content: string;
+  readonly language: string;
 }
