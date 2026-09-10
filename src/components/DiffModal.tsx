@@ -4,7 +4,7 @@
  * Architecture: Type-safe modular unit with resilient state interfaces.
  */
 
-import React, { useState, useEffect, useCallback, FC, MouseEvent } from 'react';
+import React, { useState, useEffect, useCallback, FC, MouseEvent, JSX } from 'react';
 import { X, Copy, Check, FileCode, AlertTriangle, KeyRound } from 'lucide-react';
 import { MutationRecord } from '../types';
 
@@ -13,8 +13,8 @@ export interface DiffModalProps {
   readonly onClose: () => void;
 }
 
-export const DiffModal: FC<DiffModalProps> = ({ record, onClose }) => {
-  const [copied, setCopied] = useState<boolean>(false);
+export const DiffModal: FC<DiffModalProps> = ({ record, onClose }): JSX.Element | null => {
+  const [isCopied, setIsCopied] = useState<boolean>(false);
   const [viewMode, setViewMode] = useState<'split' | 'unified'>('split');
 
   const handleKeyDown = useCallback(
@@ -39,8 +39,8 @@ export const DiffModal: FC<DiffModalProps> = ({ record, onClose }) => {
   const handleCopy = async (): Promise<void> => {
     try {
       await navigator.clipboard.writeText(record.optimizedCode);
-      setCopied(true);
-      const timer = setTimeout(() => setCopied(false), 2000);
+      setIsCopied(true);
+      const timer = setTimeout(() => setIsCopied(false), 2000);
       return () => clearTimeout(timer);
     } catch {
       // Fallback or silent catch for clipboard permission failures
@@ -137,7 +137,7 @@ export const DiffModal: FC<DiffModalProps> = ({ record, onClose }) => {
               title="Copy optimized code"
               aria-label="Copy optimized code"
             >
-              {copied ? <Check className="w-4 h-4 text-emerald-400" /> : <Copy className="w-4 h-4" />}
+              {isCopied ? <Check className="w-4 h-4 text-emerald-400" /> : <Copy className="w-4 h-4" />}
             </button>
 
             <button
