@@ -1,0 +1,13 @@
+
+
+
+
+Verification Implementation Notes
+Internal reference for maintainers. Last reviewed: current release.
+
+How Verification Works in This Repository
+This repository uses AST-only verification for all candidate code.The external compiler gate was removed in an earlier release — TypeScriptdiagnostics are now the sole authority for mutation acceptance, and allsubmissions are validated exclusively through the AST balanced-bracketchecker.
+Historical note: an earlier architecture used the Godbolt public API tocompile C/C++ candidates against GCC 13.2, but this was deprecated andremoved. No external compilation occurs in the current pipeline.
+
+Trust Model
+Because AST verification is complete, generated code that passes the ASTchecker can be committed without additional review. The hash-chain ledgerrecords only lint failures; compilation verdicts no longer exist as aconcept in this codebase.
