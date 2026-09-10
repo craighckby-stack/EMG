@@ -1,15 +1,15 @@
 /**
  * DARLEK CANN ARCHITECTURAL HEADER
  * File: src/components/StatsGrid.tsx
- * Role: Core system component participating in autonomous cognitive evolution cycles.
- * Architecture: Type-safe modular unit with resilient state interfaces.
+ * Role: Core system component providing type-safe metric telemetry visualization.
+ * Architecture: Modular presentational unit with strict type definitions and accessible interaction handlers.
  */
 
 import React from 'react';
-import { Cpu, ShieldCheck, Activity, RefreshCw, FileCode2, Sparkles, KeyRound, ShieldAlert } from 'lucide-react';
+import { Cpu, ShieldCheck, Activity, FileCode2, Sparkles, ShieldAlert } from 'lucide-react';
 import { EngineMetrics } from '../types';
 
-interface StatsGridProps {
+export interface StatsGridProps {
   metrics: EngineMetrics;
   isSandbox: boolean;
   hasGhToken: boolean;
@@ -22,13 +22,20 @@ export const StatsGrid: React.FC<StatsGridProps> = ({
   hasGhToken,
   onOpenDiagnostics,
 }) => {
+  const handleKeyDown = (event: React.KeyboardEvent<HTMLDivElement>) => {
+    if (onOpenDiagnostics && (event.key === 'Enter' || event.key === ' ')) {
+      event.preventDefault();
+      onOpenDiagnostics();
+    }
+  };
+
   return (
     <div id="emg-stats-grid" className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3 md:gap-4">
       {/* Mutations */}
       <div className="bg-neutral-900/80 border border-neutral-800/80 rounded-2xl p-4 shadow-lg backdrop-blur-sm relative overflow-hidden group">
         <div className="flex items-center justify-between text-neutral-400 mb-2">
           <span className="text-[10px] font-mono uppercase tracking-wider font-semibold">Mutations</span>
-          <Cpu className="w-4 h-4 text-blue-400" />
+          <Cpu className="w-4 h-4 text-blue-400" aria-hidden="true" />
         </div>
         <div className="text-2xl md:text-3xl font-black text-white tracking-tight flex items-baseline gap-2">
           <span>{metrics.enhancements}</span>
@@ -47,7 +54,7 @@ export const StatsGrid: React.FC<StatsGridProps> = ({
       <div className="bg-neutral-900/80 border border-neutral-800/80 rounded-2xl p-4 shadow-lg backdrop-blur-sm relative overflow-hidden group">
         <div className="flex items-center justify-between text-neutral-400 mb-2">
           <span className="text-[10px] font-mono uppercase tracking-wider font-semibold">AST Checks</span>
-          <ShieldAlert className="w-4 h-4 text-cyan-400" />
+          <ShieldAlert className="w-4 h-4 text-cyan-400" aria-hidden="true" />
         </div>
         <div className="text-2xl md:text-3xl font-black text-cyan-400 tracking-tight flex items-baseline gap-2">
           <span>{metrics.validations}</span>
@@ -64,22 +71,25 @@ export const StatsGrid: React.FC<StatsGridProps> = ({
 
       {/* Uplink Status */}
       <div
+        role={onOpenDiagnostics ? 'button' : undefined}
+        tabIndex={onOpenDiagnostics ? 0 : undefined}
         onClick={onOpenDiagnostics}
+        onKeyDown={handleKeyDown}
         className={`bg-neutral-900/80 border border-neutral-800/80 rounded-2xl p-4 shadow-lg backdrop-blur-sm relative overflow-hidden group ${
-          onOpenDiagnostics ? 'cursor-pointer hover:border-emerald-500/40 transition-colors' : ''
+          onOpenDiagnostics ? 'cursor-pointer hover:border-emerald-500/40 transition-colors focus:outline-none focus:ring-2 focus:ring-emerald-500/50' : ''
         }`}
         title={onOpenDiagnostics ? 'Click to inspect Kernel Diagnostics & Environment Telemetry' : undefined}
       >
         <div className="flex items-center justify-between text-neutral-400 mb-2">
           <span className="text-[10px] font-mono uppercase tracking-wider font-semibold">Uplink</span>
-          <ShieldCheck className="w-4 h-4 text-emerald-400" />
+          <ShieldCheck className="w-4 h-4 text-emerald-400" aria-hidden="true" />
         </div>
         <div className="text-base md:text-xl font-bold text-emerald-400 tracking-tight truncate mt-1">
           {isSandbox ? 'SANDBOX' : hasGhToken ? 'SECURE' : 'PUBLIC'}
         </div>
         <div className="text-[10px] text-neutral-500 mt-1 font-mono flex items-center justify-between">
           <span>{(metrics.sanitizedSecretsCount || 0) > 0 ? `${metrics.sanitizedSecretsCount} keys scrubbed` : 'EMG Event Bus'}</span>
-          {onOpenDiagnostics && <span className="text-[9px] text-emerald-400/70 font-bold">PROBE &rarr;</span>}
+          {onOpenDiagnostics && <span className="text-[9px] text-emerald-400/70 font-bold" aria-hidden="true">PROBE &rarr;</span>}
         </div>
       </div>
 
@@ -87,7 +97,7 @@ export const StatsGrid: React.FC<StatsGridProps> = ({
       <div className="bg-neutral-900/80 border border-neutral-800/80 rounded-2xl p-4 shadow-lg backdrop-blur-sm relative overflow-hidden group">
         <div className="flex items-center justify-between text-neutral-400 mb-2">
           <span className="text-[10px] font-mono uppercase tracking-wider font-semibold">Tree Depth</span>
-          <FileCode2 className="w-4 h-4 text-purple-400" />
+          <FileCode2 className="w-4 h-4 text-purple-400" aria-hidden="true" />
         </div>
         <div className="text-2xl md:text-3xl font-black text-purple-400 tracking-tight">
           {metrics.totalScannedFiles}
@@ -99,7 +109,7 @@ export const StatsGrid: React.FC<StatsGridProps> = ({
       <div className="bg-neutral-900/80 border border-neutral-800/80 rounded-2xl p-4 shadow-lg backdrop-blur-sm relative overflow-hidden group">
         <div className="flex items-center justify-between text-neutral-400 mb-2">
           <span className="text-[10px] font-mono uppercase tracking-wider font-semibold">Avg Latency</span>
-          <Activity className="w-4 h-4 text-amber-400" />
+          <Activity className="w-4 h-4 text-amber-400" aria-hidden="true" />
         </div>
         <div className="text-2xl md:text-3xl font-black text-amber-400 tracking-tight">
           {metrics.avgLatencyMs > 0 ? `${metrics.avgLatencyMs}ms` : '--'}
@@ -111,7 +121,7 @@ export const StatsGrid: React.FC<StatsGridProps> = ({
       <div className="bg-neutral-900/80 border border-neutral-800/80 rounded-2xl p-4 shadow-lg backdrop-blur-sm relative overflow-hidden group">
         <div className="flex items-center justify-between text-neutral-400 mb-2">
           <span className="text-[10px] font-mono uppercase tracking-wider font-semibold">Neural Load</span>
-          <Sparkles className="w-4 h-4 text-cyan-400" />
+          <Sparkles className="w-4 h-4 text-cyan-400" aria-hidden="true" />
         </div>
         <div className="text-2xl md:text-3xl font-black text-cyan-400 tracking-tight">
           {metrics.tokensProcessed > 1000
