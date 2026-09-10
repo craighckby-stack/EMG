@@ -1,5 +1,4 @@
 /**
- * DARLEK CANN ARCHITECTURAL HEADER
  * File: src/components/DiagnosticsModal.tsx
  * Role: System diagnostic health telemetry monitor.
  * Architecture: Type-safe modular unit with resilient state interfaces.
@@ -60,7 +59,7 @@ export const DiagnosticsModal: React.FC<DiagnosticsModalProps> = ({ isOpen, onCl
   }, [isOpen, fetchDiagnostics]);
 
   useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
+    const handleKeyDown = (e: KeyboardEvent): void => {
       if (e.key === 'Escape') {
         onClose();
       }
