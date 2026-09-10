@@ -6,10 +6,10 @@
  */
 
 import React, { useState } from 'react';
-import { ShieldAlert, Ban, RotateCcw, X, FileCode2, Check, Sparkles, AlertCircle, CheckCheck } from 'lucide-react';
+import { ShieldAlert, Ban, RotateCcw, X, FileCode2, AlertCircle, CheckCheck, Sparkles } from 'lucide-react';
 import { SaturationAlert } from '../types';
 
-interface SaturationModalProps {
+export interface SaturationModalProps {
   alert: SaturationAlert | null;
   onClose: () => void;
   onAddToSkipList: (path: string, resumeLoop?: boolean, autoApproveFuture?: boolean) => void;
@@ -24,20 +24,40 @@ export const SaturationModal: React.FC<SaturationModalProps> = ({
   onKeepInRotation,
   autoApproveSaturated = false,
 }) => {
-  const [resumeLoop, setResumeLoop] = useState(true);
-  const [autoApproveFuture, setAutoApproveFuture] = useState(autoApproveSaturated);
+  const [resumeLoop, setResumeLoop] = useState<boolean>(true);
+  const [autoApproveFuture, setAutoApproveFuture] = useState<boolean>(autoApproveSaturated);
 
-  if (!alert) return null;
+  if (!alert) {
+    return null;
+  }
+
+  const handleBackdropClick = (e: React.MouseEvent<HTMLDivElement>): void => {
+    if (e.target === e.currentTarget) {
+      onClose();
+    }
+  };
+
+  const handleModalClick = (e: React.MouseEvent<HTMLDivElement>): void => {
+    e.stopPropagation();
+  };
+
+  const handleKeepRotationClick = (): void => {
+    onKeepInRotation(resumeLoop);
+  };
+
+  const handleAddToSkipListClick = (): void => {
+    onAddToSkipList(alert.path, resumeLoop, autoApproveFuture);
+  };
 
   return (
     <div
       id="emg-saturation-backdrop"
-      onClick={onClose}
+      onClick={handleBackdropClick}
       className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-fadeIn"
     >
       <div
         id="emg-saturation-modal"
-        onClick={(e) => e.stopPropagation()}
+        onClick={handleModalClick}
         className="bg-neutral-900 border border-neutral-700/80 rounded-3xl w-full max-w-xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh] animate-scaleUp"
       >
         {/* Header */}
@@ -58,6 +78,7 @@ export const SaturationModal: React.FC<SaturationModalProps> = ({
 
           <button
             id="btn-close-saturation"
+            type="button"
             onClick={onClose}
             className="p-1.5 rounded-xl text-neutral-400 hover:text-white hover:bg-neutral-800 transition-colors cursor-pointer"
           >
@@ -140,7 +161,7 @@ export const SaturationModal: React.FC<SaturationModalProps> = ({
           <button
             id="btn-keep-rotation"
             type="button"
-            onClick={() => onKeepInRotation(resumeLoop)}
+            onClick={handleKeepRotationClick}
             className="w-full sm:w-auto px-4 py-2.5 rounded-xl border border-neutral-700 bg-neutral-800 hover:bg-neutral-700 text-neutral-200 text-xs font-mono font-semibold transition-colors flex items-center justify-center gap-2 cursor-pointer"
           >
             <RotateCcw className="w-3.5 h-3.5 text-neutral-400" />
@@ -150,7 +171,7 @@ export const SaturationModal: React.FC<SaturationModalProps> = ({
           <button
             id="btn-add-skiplist"
             type="button"
-            onClick={() => onAddToSkipList(alert.path, resumeLoop, autoApproveFuture)}
+            onClick={handleAddToSkipListClick}
             className="w-full sm:w-auto px-5 py-2.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-black text-xs font-mono font-bold transition-all shadow-lg shadow-amber-500/20 flex items-center justify-center gap-2 cursor-pointer"
           >
             <Ban className="w-3.5 h-3.5" />
