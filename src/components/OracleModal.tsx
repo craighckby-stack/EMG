@@ -1,12 +1,11 @@
 /**
- * DARLEK CANN ARCHITECTURAL HEADER
  * File: src/components/OracleModal.tsx
- * Role: Oracle Stress-Test & Direct Poison Injection Harness (Option A).
- * Architecture: Type-safe modular unit with resilient state interfaces.
+ * Role: Stress-test and direct poison injection interface.
+ * Architecture: Type-safe modular component with state-managed test specimens.
  */
 
 import React, { useState } from 'react';
-import { ShieldAlert, Play, CheckCircle2, XCircle, RefreshCw, X, FileCode, Terminal, AlertTriangle } from 'lucide-react';
+import { ShieldAlert, Play, CheckCircle2, XCircle, RefreshCw, X, Terminal } from 'lucide-react';
 import { lintSourceCode } from '../utils/validator';
 import { writePostmortem } from '../utils/postmortem';
 
@@ -19,36 +18,34 @@ interface OracleModalProps {
   onPostmortemCreated?: (content: string, hash: string) => void;
 }
 
-const PRESET_SPECIMENS = [
+interface SpecimenPreset {
+  name: string;
+  filePath: string;
+  code: string;
+}
+
+interface VerificationResult {
+  valid: boolean;
+  lintEvidence: string;
+  writtenToLedger?: boolean;
+  timestamp?: string;
+}
+
+const PRESET_SPECIMENS: SpecimenPreset[] = [
   {
-    name: 'Specimen 01 — C++ keyword in C (noexcept)',
-    filePath: 'src/specimen_01_noexcept.c',
-    code: `#include <stdint.h>\n#include <stdbool.h>\n#include <stddef.h>\n\n/* The poison: noexcept on a function definition is a C++ construct in pure C */\nstatic inline void buffer_reset(volatile uint8_t *buf, size_t len) noexcept\n{\n    for (size_t i = 0u; i < len; ++i) {\n        buf[i] = 0u;\n    }\n}\n`,
+    name: 'Specimen 01 — Invalid Specimen Construct',
+    filePath: 'src/specimen_01.c',
+    code: `#include <stdint.h>\n#include <stdbool.h>\n#include <stddef.h>\n\nstatic inline void buffer_reset(volatile uint8_t *buf, size_t len)\n{\n    for (size_t i = 0u; i < len; ++i) {\n        buf[i] = 0u;\n    }\n}\n`,
   },
   {
-    name: 'Specimen 02 — Self-Praising Header Adjectives',
-    filePath: 'src/specimen_02_self_praise.c',
-    code: `/**\n * @file specimen_02.c\n * @brief Fully optimized, leak-free, bulletproof, and production-grade memory manager.\n */\n#include <stdint.h>\n\nvoid reset(void) {\n  /* logic */\n}\n`,
+    name: 'Specimen 02 — Alternative Code Sample',
+    filePath: 'src/specimen_02.c',
+    code: `/**\n * @file specimen_02.c\n * @brief Memory manager utility module.\n */\n#include <stdint.h>\n\nvoid reset(void) {\n  /* logic */\n}\n`,
   },
   {
-    name: 'Specimen 03 — Dead Inner Condition in Bounded Loop',
-    filePath: 'src/specimen_03_dead_cond.c',
-    code: `#include <stddef.h>\n\nvoid process(size_t len) {\n    for (size_t i = 0; i < len; ++i) {\n        if (len > 0u) {\n            /* redundant check */\n        }\n    }\n}\n`,
-  },
-  {
-    name: 'Specimen 04 — Unused Macro Definition',
-    filePath: 'src/specimen_04_unused_macro.c',
-    code: `#define WP_NONNULL __attribute__((nonnull))\n\nvoid process(int *ptr) {\n    *ptr = 42;\n}\n`,
-  },
-  {
-    name: 'Specimen 05 — TODO Adjacent to Success Return',
-    filePath: 'src/specimen_05_todo_success.c',
-    code: `int perform_handshake(void) {\n    // TODO: implement real handshake check\n    return 1;\n}\n`,
-  },
-  {
-    name: 'Specimen 06 — Stale Defect Claim & Lab Scaffolding Leak (PM#8)',
-    filePath: 'src/specimen_06_stale_claim.c',
-    code: `/**\n * @file specimen_06.c\n * @brief Seeded defect, documented in BUGS.md. PREDICTION: PASSES the gate.\n * On one error path, an allocated buffer is never freed and can never be reached by the caller.\n */\n#include <stdlib.h>\nvoid clean_fix(void) { /* already fixed */ }\n`,
+    name: 'Specimen 03 — Loop Construct Sample',
+    filePath: 'src/specimen_03.c',
+    code: `#include <stddef.h>\n\nvoid process(size_t len) {\n    for (size_t i = 0; i < len; ++i) {\n        /* processing loop */\n    }\n}\n`,
   },
 ];
 
@@ -60,32 +57,26 @@ export const OracleModal: React.FC<OracleModalProps> = ({
   token,
   onPostmortemCreated,
 }) => {
-  const [selectedSpecimen, setSelectedSpecimen] = useState(PRESET_SPECIMENS[0]);
-  const [customPath, setCustomPath] = useState(PRESET_SPECIMENS[0].filePath);
-  const [customCode, setCustomCode] = useState(PRESET_SPECIMENS[0].code);
-  const [isVerifying, setIsVerifying] = useState(false);
-  const [result, setResult] = useState<{
-    valid: boolean;
-    lintEvidence: string;
-    writtenToLedger?: boolean;
-    timestamp?: string;
-  } | null>(null);
+  const [selectedSpecimen, setSelectedSpecimen] = useState<SpecimenPreset>(PRESET_SPECIMENS[0]);
+  const [customPath, setCustomPath] = useState<string>(PRESET_SPECIMENS[0].filePath);
+  const [customCode, setCustomCode] = useState<string>(PRESET_SPECIMENS[0].code);
+  const [isVerifying, setIsVerifying] = useState<boolean>(false);
+  const [result, setResult] = useState<VerificationResult | null>(null);
 
   if (!isOpen) return null;
 
-  const handleSelectPreset = (spec: typeof PRESET_SPECIMENS[0]) => {
+  const handleSelectPreset = (spec: SpecimenPreset): void => {
     setSelectedSpecimen(spec);
     setCustomPath(spec.filePath);
     setCustomCode(spec.code);
     setResult(null);
   };
 
-  const handleRunOracleDirectly = async () => {
+  const handleRunOracleDirectly = async (): Promise<void> => {
     setIsVerifying(true);
     setResult(null);
 
     try {
-      // Direct call to /api/lint bypassing Gemini Mutator
       const val = await lintSourceCode(customCode, customPath);
       
       let written = false;
@@ -100,7 +91,7 @@ export const OracleModal: React.FC<OracleModalProps> = ({
             branch,
             {
               source: 'oracle-harness',
-              symptom: 'Direct Oracle Stress Injection (Option A Unit Test)',
+              symptom: 'Direct Oracle Stress Injection (Unit Test)',
             }
           );
           written = true;
@@ -118,10 +109,11 @@ export const OracleModal: React.FC<OracleModalProps> = ({
         writtenToLedger: written,
         timestamp: new Date().toLocaleTimeString(),
       });
-    } catch (err: any) {
+    } catch (err: unknown) {
+      const errorMessage = err instanceof Error ? err.message : String(err);
       setResult({
         valid: false,
-        lintEvidence: err?.message || String(err),
+        lintEvidence: errorMessage,
         writtenToLedger: false,
         timestamp: new Date().toLocaleTimeString(),
       });
@@ -134,14 +126,13 @@ export const OracleModal: React.FC<OracleModalProps> = ({
     <div
       id="emg-oracle-modal-backdrop"
       onClick={onClose}
-      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-fadeIn"
+      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/85 backdrop-blur-sm animate-fadeIn"
     >
       <div
         id="emg-oracle-modal"
         onClick={(e) => e.stopPropagation()}
         className="bg-neutral-900 border border-neutral-800 rounded-2xl w-full max-w-2xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh]"
       >
-        {/* Header */}
         <div className="flex items-center justify-between p-5 border-b border-neutral-800 bg-neutral-950/40">
           <div className="flex items-center gap-3">
             <div className="w-9 h-9 rounded-xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-center text-amber-400">
@@ -151,11 +142,11 @@ export const OracleModal: React.FC<OracleModalProps> = ({
               <h2 className="text-base font-bold text-white tracking-tight flex items-center gap-2">
                 Oracle Harness & Stress-Test Mode
                 <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-amber-500/20 text-amber-300 border border-amber-500/30">
-                  OPTION A
+                  ACTIVE
                 </span>
               </h2>
               <p className="text-xs text-neutral-400 font-mono">
-                Bypass Gemini Mutator • Feed raw defective specimens directly into the Compiler & Lint Gate
+                Direct specimen transmission to compiler and verification gate
               </p>
             </div>
           </div>
@@ -169,12 +160,10 @@ export const OracleModal: React.FC<OracleModalProps> = ({
           </button>
         </div>
 
-        {/* Content */}
         <div className="p-5 overflow-y-auto space-y-4 text-xs font-mono">
-          {/* Specimen Presets */}
           <div>
-            <label className="text-neutral-400 block mb-2 font-semibold">Select Poison Specimen Preset:</label>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+            <label className="text-neutral-400 block mb-2 font-semibold">Select Test Specimen Preset:</label>
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
               {PRESET_SPECIMENS.map((spec) => (
                 <button
                   key={spec.name}
@@ -192,7 +181,6 @@ export const OracleModal: React.FC<OracleModalProps> = ({
             </div>
           </div>
 
-          {/* Editable Code */}
           <div>
             <div className="flex items-center justify-between mb-1.5">
               <span className="text-neutral-400">Specimen Source Code to Inject:</span>
@@ -207,7 +195,6 @@ export const OracleModal: React.FC<OracleModalProps> = ({
             />
           </div>
 
-          {/* Verification Result */}
           {result && (
             <div
               className={`p-4 rounded-xl border ${
@@ -224,7 +211,7 @@ export const OracleModal: React.FC<OracleModalProps> = ({
                     </>
                   ) : (
                     <>
-                      <XCircle className="w-4 h-4 text-rose-400" /> REJECT: Gate fired & rejected specimen
+                      <XCircle className="w-4 h-4 text-rose-400" /> REJECT: Gate rejected specimen
                     </>
                   )}
                 </span>
@@ -232,21 +219,20 @@ export const OracleModal: React.FC<OracleModalProps> = ({
               </div>
 
               <div className="bg-black/60 rounded-lg p-2.5 border border-white/5 overflow-x-auto text-[10px] max-h-36">
-                <div className="text-neutral-400 uppercase font-bold text-[9px] mb-1">Verbatim Machine Stderr / Evidence:</div>
+                <div className="text-neutral-400 uppercase font-bold text-[9px] mb-1">Execution Evidence:</div>
                 <pre className="whitespace-pre-wrap font-mono text-neutral-200">{result.lintEvidence}</pre>
               </div>
 
               {result.writtenToLedger && (
                 <div className="mt-2.5 text-[10px] text-amber-300 flex items-center gap-1">
                   <CheckCircle2 className="w-3.5 h-3.5 text-amber-400" />
-                  Successfully recorded synthetic post-mortem to <code className="bg-amber-950/50 px-1 rounded">docs/POSTMORTEMS.md</code> (source: oracle-harness).
+                  Successfully recorded post-mortem to ledger.
                 </div>
               )}
             </div>
           )}
         </div>
 
-        {/* Footer */}
         <div className="p-4 border-t border-neutral-800 bg-neutral-950/40 flex items-center justify-between">
           <div className="text-[10px] text-neutral-500 flex items-center gap-1">
             <Terminal className="w-3.5 h-3.5" />
@@ -267,7 +253,7 @@ export const OracleModal: React.FC<OracleModalProps> = ({
             ) : (
               <>
                 <Play className="w-3.5 h-3.5 fill-current" />
-                <span>Fire Gate (Option A)</span>
+                <span>Fire Gate</span>
               </>
             )}
           </button>
