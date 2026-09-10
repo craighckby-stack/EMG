@@ -5,7 +5,7 @@
  * Architecture: Type-safe modular unit with resilient state interfaces.
  */
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import {
   Trash2,
   X,
@@ -17,10 +17,9 @@ import {
   Ban,
   Database,
   Sliders,
-  CheckCircle2,
 } from 'lucide-react';
 
-interface WipeMemoryModalProps {
+export interface WipeMemoryModalProps {
   isOpen: boolean;
   onClose: () => void;
   onConfirmWipe: (options: { resetConfig: boolean }) => void;
@@ -31,19 +30,34 @@ export const WipeMemoryModal: React.FC<WipeMemoryModalProps> = ({
   onClose,
   onConfirmWipe,
 }) => {
-  const [resetConfig, setResetConfig] = useState(true);
+  const [resetConfig, setResetConfig] = useState<boolean>(true);
 
-  useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') {
+  const handleKeyDown = useCallback(
+    (e: KeyboardEvent) => {
+      if (e.key === 'Escape' && isOpen) {
         onClose();
       }
-    };
+    },
+    [isOpen, onClose]
+  );
+
+  useEffect(() => {
     if (isOpen) {
       window.addEventListener('keydown', handleKeyDown);
     }
-    return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [isOpen, onClose]);
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [isOpen, handleKeyDown]);
+
+  const handleConfirm = useCallback(() => {
+    try {
+      onConfirmWipe({ resetConfig });
+      onClose();
+    } catch (error) {
+      console.error('Failed to execute memory wipe sequence:', error);
+    }
+  }, [resetConfig, onConfirmWipe, onClose]);
 
   if (!isOpen) return null;
 
@@ -76,7 +90,9 @@ export const WipeMemoryModal: React.FC<WipeMemoryModalProps> = ({
 
           <button
             id="btn-close-wipe-modal"
+            type="button"
             onClick={onClose}
+            aria-label="Close modal"
             className="p-1.5 rounded-xl text-neutral-400 hover:text-white hover:bg-neutral-800 transition-colors cursor-pointer"
           >
             <X className="w-4 h-4" />
@@ -162,10 +178,7 @@ export const WipeMemoryModal: React.FC<WipeMemoryModalProps> = ({
           <button
             id="btn-confirm-wipe"
             type="button"
-            onClick={() => {
-              onConfirmWipe({ resetConfig });
-              onClose();
-            }}
+            onClick={handleConfirm}
             className="w-full sm:w-auto px-5 py-2.5 rounded-xl bg-rose-600 hover:bg-rose-500 text-white text-xs font-mono font-bold transition-all shadow-lg shadow-rose-600/25 flex items-center justify-center gap-2 cursor-pointer active:scale-98"
           >
             <Trash2 className="w-4 h-4" />
