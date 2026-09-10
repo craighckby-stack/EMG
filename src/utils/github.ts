@@ -92,11 +92,11 @@ async function parseJsonResponse<T = any>(res: Response, fallbackError: string):
   const raw = await res.text();
   if (!raw || !raw.trim()) {
     if (!res.ok) {
-      if (res.status === 404) throw new GitHubError(`Resource not found (HTTP 404)`, 404);
-      if (res.status === 429) throw new GitHubError(`GitHub API rate limit reached (HTTP 429)`, 429);
-      if (res.status === 401) throw new GitHubError(`GitHub unauthorized (HTTP 401). Check Personal Access Token.`, 401);
-      if (res.status === 403) throw new GitHubError(`GitHub forbidden (HTTP 403). Check token scopes or rate limit.`, 403);
-      if (res.status === 409) throw new GitHubError(`GitHub file conflict (HTTP 409). SHA out of sync.`, 409);
+      if (res.status === 404) throw new GitHubError('Resource not found (HTTP 404)', 404);
+      if (res.status === 429) throw new GitHubError('GitHub API rate limit reached (HTTP 429)', 429);
+      if (res.status === 401) throw new GitHubError('GitHub unauthorized (HTTP 401). Check Personal Access Token.', 401);
+      if (res.status === 403) throw new GitHubError('GitHub forbidden (HTTP 403). Check token scopes or rate limit.', 403);
+      if (res.status === 409) throw new GitHubError('GitHub file conflict (HTTP 409). SHA out of sync.', 409);
       throw new GitHubError(`${fallbackError} (HTTP ${res.status})`, res.status);
     }
     return {} as T;
