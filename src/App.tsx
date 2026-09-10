@@ -612,8 +612,6 @@ export default function App() {
                         if (l.includes('fatal error:') && l.includes('no such file or directory')) isPoisoned = true;
                         if (l.includes('error:') && (l.includes('undeclared') || l.includes('unknown type name') || l.includes('implicit declaration'))) isPoisoned = true;
                         if (l.includes('lint reject: no_unused_macros') || l.includes('never applied')) isPoisoned = true;
-                        if (l.includes('unterminated string literal') || l.includes('has no corresponding closing tag') || l.includes('expected')) isPoisoned = true;
-                        if (l.includes('never repeat code patterns that produce this compiler/linter error')) isPoisoned = true;
                         lookahead++;
                     }
                     if (isPoisoned) {
