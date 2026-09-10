@@ -2,7 +2,7 @@ import { fetchFileContent, commitFileUpdate } from './src/utils/github';
 import { validateEnv } from './src/utils/validator';
 
 /**
- * Interface representing the configuration required for the revert orchestrator.
+ * Configuration required for the revert orchestrator.
  */
 interface RevertConfig {
   readonly repo: string;
@@ -12,9 +12,6 @@ interface RevertConfig {
 
 /**
  * Retrieves and validates the runtime configuration for the revert process.
- * 
- * @throws {Error} If required environment variables are absent.
- * @returns {RevertConfig} The validated configuration object.
  */
 function resolveConfig(): RevertConfig {
   validateEnv();
@@ -32,16 +29,11 @@ function resolveConfig(): RevertConfig {
 }
 
 /**
- * Executes the revert orchestration workflow securely and efficiently.
- * 
- * @returns {Promise<void>} A promise that resolves when the operation completes.
+ * Executes the revert orchestration workflow.
  */
 export async function revert(): Promise<void> {
   try {
     const config = resolveConfig();
-    
-    // Engine execution pipeline placeholder for repository state rollback operations.
-    // Utilizes verified configuration parameters and maintains type safety.
     console.info(`Initializing revert orchestrator for repository: ${config.repo} on branch: ${config.branch}`);
   } catch (error: unknown) {
     const errorMessage = error instanceof Error ? error.message : String(error);
