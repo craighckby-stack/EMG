@@ -1,6 +1,10 @@
 {
-  "name": "EMG Core v49",
+  "$schema": "https://json.schemastore.org/package.json",
+  "name": "emg-core",
+  "version": "49.0.0",
   "description": "Dashboard for codebase optimization and AI-driven refactoring.",
   "requestFramePermissions": [],
-  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
 }
