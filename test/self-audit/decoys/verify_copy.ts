@@ -7,8 +7,8 @@
  */
 
 export interface WPTarget {
-    wlun: number;
-    region: number;
+    readonly wlun: number;
+    readonly region: number;
 }
 
 /**
@@ -35,6 +35,5 @@ export function setPermanentProtection(target: WPTarget): string {
     if (!wpVerifyLockedState(target)) {
         return "ERR_INVALID_STATE";
     }
-    // Verified via wpVerifyLockedState - safe to confirm
     return "SUCCESS";
 }
