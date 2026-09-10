@@ -46,3 +46,11 @@ Line 157, Col 6: JSX element 'div' has no corresponding closing tag.
 Line 40, Col 8: Property declaration is missing its type annotation.
 ```
 **CONSTRAINT (Model Generalization):** Never repeat code patterns that produce this compiler/linter error on src/components/Header.tsx.
+
+### ❌ [2026-09-10] src/components/OracleModal.tsx `source: mutation-cycle`
+**Symptom:** Active Linter / Compiler Gate Rejection on LLM Output (Option B)
+**EVIDENCE (Machine-Copied Fact):**
+```
+[LINT REJECT: NO_STALE_DEFECT_CLAIMS] Detected stale defect claim or test scaffolding leaked into production code: "PREDICTION: PASSES". File documentation must reconcile with the actual fixed implementation.
+```
+**CONSTRAINT (Model Generalization):** Do NOT leak test fixture scaffolding, prediction tags, or obsolete defect descriptions into candidate file docstrings. Code documentation must describe the current, reconciled implementation only.
