@@ -4,7 +4,7 @@
  * Architecture: Type-safe modular unit with resilient state interfaces.
  */
 
-import React, { useState, useEffect, useCallback, FC } from 'react';
+import React, { useState, useEffect, useCallback, FC, MouseEvent } from 'react';
 import { X, Copy, Check, FileCode, AlertTriangle, KeyRound } from 'lucide-react';
 import { MutationRecord } from '../types';
 
@@ -47,18 +47,28 @@ export const DiffModal: FC<DiffModalProps> = ({ record, onClose }) => {
     }
   };
 
+  const handleBackdropClick = (e: MouseEvent<HTMLDivElement>): void => {
+    if (e.target === e.currentTarget) {
+      onClose();
+    }
+  };
+
+  const handleModalClick = (e: MouseEvent<HTMLDivElement>): void => {
+    e.stopPropagation();
+  };
+
   const isFailed = record.status === 'failed';
   const isNoop = record.status === 'noop';
 
   return (
     <div
       id="emg-diff-modal-backdrop"
-      onClick={onClose}
+      onClick={handleBackdropClick}
       className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-3 md:p-6"
     >
       <div
         id="emg-diff-modal"
-        onClick={(e) => e.stopPropagation()}
+        onClick={handleModalClick}
         className="bg-neutral-900 border border-neutral-700/80 rounded-3xl w-full max-w-5xl max-h-[90vh] flex flex-col shadow-2xl overflow-hidden"
       >
         {/* Header */}
