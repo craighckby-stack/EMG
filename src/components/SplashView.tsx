@@ -14,7 +14,7 @@ export interface SplashViewProps {
 }
 
 export const SplashView: React.FC<SplashViewProps> = ({ onInitialize, onOpenLicense }) => {
-  const handleKeyDown = useCallback((e: KeyboardEvent) => {
+  const handleKeyDown = useCallback((e: KeyboardEvent): void => {
     if (e.key === 'Escape' || e.key === 'Enter') {
       onInitialize();
     }
@@ -22,7 +22,9 @@ export const SplashView: React.FC<SplashViewProps> = ({ onInitialize, onOpenLice
 
   useEffect(() => {
     window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown);
+    };
   }, [handleKeyDown]);
 
   return (
