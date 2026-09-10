@@ -454,3 +454,11 @@ Line 180, Col 8: JSX element 'div' has no corresponding closing tag.
 Line 145, Col 6: JSX element 'div' has no corresponding closing tag.
 ```
 **CONSTRAINT (Model Generalization):** Never repeat code patterns that produce this compiler/linter error on src/components/ConfigPanel.tsx.
+
+### ❌ [2026-09-10] src/components/Header.tsx `source: mutation-cycle`
+**Symptom:** AST / TypeScript Compiler Validation Rejected
+**EVIDENCE (Machine-Copied Fact):**
+```
+Line 52, Col 8: Property declaration is missing its type annotation.
+```
+**CONSTRAINT (Model Generalization):** Never repeat code patterns that produce this compiler/linter error on src/components/Header.tsx.
