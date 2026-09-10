@@ -1,7 +1,6 @@
 /**
- * DARLEK CANN ARCHITECTURAL HEADER
  * File: src/components/MutationViewer.tsx
- * Role: Core system component participating in autonomous cognitive evolution cycles.
+ * Role: System component displaying mutation records and optimization history.
  * Architecture: Type-safe modular unit with resilient state interfaces.
  */
 
@@ -18,7 +17,7 @@ export const MutationViewer: React.FC<MutationViewerProps> = memo(({
   mutations,
   onSelectRecord,
 }) => {
-  const handleSelect = useCallback((record: MutationRecord) => {
+  const handleSelect = useCallback((record: MutationRecord): void => {
     onSelectRecord(record);
   }, [onSelectRecord]);
 
@@ -42,7 +41,7 @@ export const MutationViewer: React.FC<MutationViewerProps> = memo(({
       {mutations.length === 0 ? (
         <div className="py-8 text-center text-xs text-neutral-500 font-mono flex flex-col items-center justify-center gap-2 border border-dashed border-neutral-800 rounded-2xl">
           <FileCode2 className="w-6 h-6 text-neutral-600" />
-          <span>Awaiting first neural mutation pass...</span>
+          <span>Awaiting first mutation pass...</span>
           <span className="text-[10px] text-neutral-600">Engage engine or run a manual pass to start</span>
         </div>
       ) : (
