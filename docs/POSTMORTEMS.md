@@ -184,3 +184,11 @@ Line 70, Col 38: '}' expected.
 Line 394, Col 54: Unterminated string literal.
 ```
 **CONSTRAINT (Model Generalization):** Never repeat code patterns that produce this compiler/linter error on server.ts.
+
+### ❌ [2026-09-10] src/App.tsx `source: mutation-cycle`
+**Symptom:** AST / TypeScript Compiler Validation Rejected
+**EVIDENCE (Machine-Copied Fact):**
+```
+Line 807, Col 30: ')' expected.
+```
+**CONSTRAINT (Model Generalization):** Never repeat code patterns that produce this compiler/linter error on src/App.tsx.
