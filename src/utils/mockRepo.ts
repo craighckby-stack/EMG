@@ -1,7 +1,6 @@
 /**
- * DARLEK CANN ARCHITECTURAL HEADER
  * File: src/utils/mockRepo.ts
- * Role: Core system component participating in autonomous cognitive evolution cycles.
+ * Role: Core system component participating in autonomous evolution cycles.
  * Architecture: Type-safe modular unit with resilient state interfaces.
  */
 
