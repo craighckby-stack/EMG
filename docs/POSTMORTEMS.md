@@ -688,3 +688,12 @@ Line 70, Col 8: Property declaration is missing its type annotation.
 [LINT REJECT: NO_UNUSED_MACROS] Macro 'WP_NONNULL' was defined but never applied in any function or type signature.
 ```
 **CONSTRAINT (Model Generalization):** [STRUCK] Original constraint invalidated. Artifact of isolated compilation missing project context.
+
+### ❌ [2026-09-10] src/utils/sanitizer.ts `source: mutation-cycle`
+**Symptom:** AST / TypeScript Compiler Validation Rejected
+**EVIDENCE (Machine-Copied Fact):**
+```
+Line 135, Col 26: Unterminated string literal.
+[OUTPUT_LIKELY_TRUNCATED] The output is < 80% of original length and syntactically invalid. The model likely hit its output token limit.
+```
+**CONSTRAINT (Model Generalization):** Never repeat code patterns that produce this compiler/linter error on src/utils/sanitizer.ts.
