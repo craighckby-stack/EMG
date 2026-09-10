@@ -578,7 +578,11 @@ export default function App() {
           'DISCLAIMER.md',
           'LICENSE.md',
           'LICENSE',
-          'LICENSE.txt'
+          'LICENSE.txt',
+          'PREDICTIONS.md',
+          'package.json',
+          'tsconfig.json',
+          'vite.config.ts'
         ];
         for (const fixture of protectedFixtures) {
           skippedSet.add(fixture);
@@ -608,6 +612,8 @@ export default function App() {
                         if (l.includes('fatal error:') && l.includes('no such file or directory')) isPoisoned = true;
                         if (l.includes('error:') && (l.includes('undeclared') || l.includes('unknown type name') || l.includes('implicit declaration'))) isPoisoned = true;
                         if (l.includes('lint reject: no_unused_macros') || l.includes('never applied')) isPoisoned = true;
+                        if (l.includes('unterminated string literal') || l.includes('has no corresponding closing tag') || l.includes('expected')) isPoisoned = true;
+                        if (l.includes('never repeat code patterns that produce this compiler/linter error')) isPoisoned = true;
                         lookahead++;
                     }
                     if (isPoisoned) {
@@ -759,9 +765,29 @@ export default function App() {
         fileIndexRef.current = (fileIndexRef.current + 1) % candidateTree.length;
         setActivePath(target.path);
 
+        // --- TREE-EXISTENCE PRE-CHECK (KILLS PHANTOMS) ---
+        const existsInTree = tree.some(i => i.path === target.path);
+        if (!existsInTree) {
+           pushLog(`[ENGINE FAULT] Target ${target.path} does not exist in the repository tree. Phantom file skipped.`, 'error');
+           setStatus('IDLE');
+           return;
+        }
+
         setStatus('FETCHING');
         pushLog(`Fetching source blob: ${target.path}...`, 'info');
         const fileData = await fetchFileContent(config.targetRepo, target.path, config.ghToken, branch);
+
+        // --- FILE SIZE CEILING (Prevent LLM output truncation on huge files) ---
+        const lineCount = fileData.content.split('\n').length;
+        if (lineCount > 400) {
+           pushLog(`[NOT VERIFIABLE] ${target.path} — ${lineCount} lines exceeds full-file mutation capacity (max 400). Chunked mode required.`, 'warning', undefined, target.path);
+           setConfig(prev => ({
+             ...prev,
+             skippedFiles: [...(prev.skippedFiles || []), target.path]
+           }));
+           isCyclingRef.current = false;
+           return;
+        }
 
         setStatus('OPTIMIZING');
         pushLog(`Neural AST optimization in progress for [${target.path}]...`, 'neural', undefined, target.path);
@@ -805,6 +831,13 @@ export default function App() {
 
           if (!val.valid) {
             validationDiagnostics = val.errors.map((e) => `Line ${e.line}, Col ${e.column}: ${e.message}`);
+            
+            // TRUNCATION DIAGNOSTIC HINT
+            if (cleanCode.length < fileData.content.length * 0.8) {
+                const hint = `[OUTPUT_LIKELY_TRUNCATED] The output is < 80% of original length and syntactically invalid. The model likely hit its output token limit.`;
+                validationDiagnostics.push(hint);
+            }
+
             pushLog(
               `[TYPE/SYNTAX REJECTED] Commit aborted for [${target.path}] due to ${val.errors.length} defect(s): ${validationDiagnostics.slice(0, 2).join(' | ')}`,
               'error',

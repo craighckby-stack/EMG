@@ -1,5 +1,4 @@
 /**
- * DARLEK CANN ARCHITECTURAL HEADER
  * File: src/utils/validator.ts
  * Role: AST and syntactic/type validation layer for verifying generated code before commit.
  * Architecture: Multi-tier validator with balanced token parsing, simple type checks, and TS compiler validation.

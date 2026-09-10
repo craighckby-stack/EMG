@@ -1,5 +1,4 @@
 /**
- * DARLEK CANN ARCHITECTURAL HEADER
  * File: src/components/WipeMemoryModal.tsx
  * Role: System memory purge and state reset confirmation dialog.
  * Architecture: Type-safe modular unit with resilient state interfaces.

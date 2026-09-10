@@ -1,5 +1,4 @@
 /**
- * DARLEK CANN ARCHITECTURAL HEADER
  * File: src/components/SaturationModal.tsx
  * Role: Saturation notification dialog with skip list and skip decision controls.
  * Architecture: Type-safe modular unit with resilient state interfaces.

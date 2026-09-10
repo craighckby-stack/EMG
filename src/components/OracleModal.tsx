@@ -1,5 +1,4 @@
 /**
- * DARLEK CANN ARCHITECTURAL HEADER
  * File: src/components/OracleModal.tsx
  * Role: Oracle Stress-Test & Direct Poison Injection Harness (Option A).
  * Architecture: Type-safe modular unit with resilient state interfaces.

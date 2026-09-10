@@ -1,5 +1,4 @@
 /**
- * DARLEK CANN ARCHITECTURAL HEADER
  * File: src/utils/sanitizer.ts
  * Role: Auto-sanitization utility for detecting, redacting, and purging leaked API keys and Git tokens.
  * Architecture: Type-safe modular unit with resilient regex matching and zero-leak guarantees.
