@@ -714,3 +714,11 @@ Line 71, Col 8: Property declaration is missing its type annotation.
 [LINT REJECT: NO_UNUSED_MACROS] Macro 'WP_ACTIVE' was defined but never applied in any function or type signature.
 ```
 **CONSTRAINT (Model Generalization):** [STRUCK] Original constraint invalidated. Artifact of isolated compilation missing project context.
+
+### ❌ [2026-09-10] src/components/Header.tsx `source: mutation-cycle`
+**Symptom:** AST / TypeScript Compiler Validation Rejected
+**EVIDENCE (Machine-Copied Fact):**
+```
+Line 53, Col 8: Property declaration is missing its type annotation.
+```
+**CONSTRAINT (Model Generalization):** Never repeat code patterns that produce this compiler/linter error on src/components/Header.tsx.
