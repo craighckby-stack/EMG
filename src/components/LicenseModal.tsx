@@ -39,11 +39,14 @@ License Summary:
 export const LicenseModal: FC<LicenseModalProps> = ({ isOpen, onClose }) => {
   const [copied, setCopied] = useState<boolean>(false);
 
-  const handleKeyDown = useCallback((e: KeyboardEvent): void => {
-    if (e.key === 'Escape') {
-      onClose();
-    }
-  }, [onClose]);
+  const handleKeyDown = useCallback(
+    (e: KeyboardEvent): void => {
+      if (e.key === 'Escape') {
+        onClose();
+      }
+    },
+    [onClose]
+  );
 
   useEffect(() => {
     if (isOpen) {
