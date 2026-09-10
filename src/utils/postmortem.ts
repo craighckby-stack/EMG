@@ -26,7 +26,7 @@ export function computeStringHash(str: string): string {
 
 export type PostmortemSource = 'oracle-harness' | 'mutation-cycle';
 
-let writeQueue: Promise<any> = Promise.resolve();
+let writeQueue: Promise<{ content: string; hash: string }> = Promise.resolve({ content: '', hash: '' });
 
 export function writePostmortem(
   repo: string,
@@ -41,7 +41,7 @@ export function writePostmortem(
     symptom?: string;
   }
 ): Promise<{ content: string; hash: string }> {
-  const executeWrite = async () => {
+  const executeWrite = async (): Promise<{ content: string; hash: string }> => {
     const pmPath = 'docs/POSTMORTEMS.md';
     const timestamp = new Date().toISOString().split('T')[0];
     const flag = type === 'Success' ? '✅' : '❌';
