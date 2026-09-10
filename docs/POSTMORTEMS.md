@@ -630,10 +630,10 @@ Line 151, Col 6: JSX element 'div' has no corresponding closing tag.
 ```
 **CONSTRAINT (Model Generalization):** [STRUCK] Original constraint invalidated. Artifact of isolated compilation missing project context.
 
-### ❌ [2026-09-10] src/components/Header.tsx `source: mutation-cycle`
+### ⚠️ [STRUCK: NOT_VERIFIABLE, 2026-09-10] [2026-09-10] src/components/Header.tsx `source: mutation-cycle`
 **Symptom:** AST / TypeScript Compiler Validation Rejected
 **EVIDENCE (Machine-Copied Fact):**
 ```
 Line 53, Col 8: Property declaration is missing its type annotation.
 ```
-**CONSTRAINT (Model Generalization):** Never repeat code patterns that produce this compiler/linter error on src/components/Header.tsx.
+**CONSTRAINT (Model Generalization):** [STRUCK] Original constraint invalidated. Artifact of isolated compilation missing project context.
