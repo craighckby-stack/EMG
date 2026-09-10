@@ -215,3 +215,11 @@ Line 60, Col 8: Property declaration is missing its type annotation.
 Line 77, Col 8: Property declaration is missing its type annotation.
 ```
 **CONSTRAINT (Model Generalization):** Never repeat code patterns that produce this compiler/linter error on src/components/LogStream.tsx.
+
+### ❌ [2026-09-10] src/components/OracleModal.tsx `source: mutation-cycle`
+**Symptom:** Active Linter / Compiler Gate Rejection on LLM Output (Option B)
+**EVIDENCE (Machine-Copied Fact):**
+```
+[LINT REJECT: NO_UNVERIFIABLE_SELF_PRAISE] Detected unsubstantiated self-description in commentary: "Leak-free". Output must adhere to neutral, factual documentation without marketing adjectives.
+```
+**CONSTRAINT (Model Generalization):** Never repeat code patterns that produce this compiler/linter error on src/components/OracleModal.tsx.
