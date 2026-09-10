@@ -1,17 +1,22 @@
 /**
- * DARLEK CANN ARCHITECTURAL HEADER
  * File: src/main.tsx
- * Role: Core system component participating in autonomous cognitive evolution cycles.
- * Architecture: Type-safe modular unit with resilient state interfaces.
+ * Role: Application entry point initializing the root React component tree.
+ * Architecture: Strict mode container rendering with root DOM node resolution.
  */
 
-import {StrictMode} from 'react';
-import {createRoot} from 'react-dom/client';
+import { StrictMode } from 'react';
+import { createRoot } from 'react-dom/client';
 import App from './App.tsx';
 import './index.css';
 
-createRoot(document.getElementById('root')!).render(
+const rootElement = document.getElementById('root');
+
+if (!rootElement) {
+  throw new Error('Failed to find the root element to mount the application.');
+}
+
+createRoot(rootElement).render(
   <StrictMode>
     <App />
-  </StrictMode>,
+  </StrictMode>
 );
