@@ -322,3 +322,11 @@ Line 58, Col 8: Property declaration is missing its type annotation.
 Line 75, Col 8: Property declaration is missing its type annotation.
 ```
 **CONSTRAINT (Model Generalization):** Never repeat code patterns that produce this compiler/linter error on src/components/LogStream.tsx.
+
+### ❌ [2026-09-10] src/components/OracleModal.tsx `source: mutation-cycle`
+**Symptom:** Active Linter / Compiler Gate Rejection on LLM Output (Option B)
+**EVIDENCE (Machine-Copied Fact):**
+```
+[LINT REJECT: NO_STALE_DEFECT_CLAIMS] Detected stale defect claim or test scaffolding leaked into production code: "The poison: noexcept on a function". File documentation must reconcile with the actual fixed implementation.
+```
+**CONSTRAINT (Model Generalization):** Do NOT emit C++ keywords (e.g. noexcept, constexpr) in pure C translation units.
