@@ -4,7 +4,7 @@
  * Copyright (c) 2026 Craighckby
  */
 
-import React, { useState, useEffect, useRef, useCallback } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import {
   EngineStatus,
   EngineConfig,
@@ -26,6 +26,7 @@ import { DiagnosticsModal } from './components/DiagnosticsModal';
 import { SaturationModal } from './components/SaturationModal';
 import { WipeMemoryModal } from './components/WipeMemoryModal';
 import { OracleModal } from './components/OracleModal';
+import { Ecosystem } from './components/Ecosystem';
 import { SANDBOX_REPOSITORIES, resetSandboxRepositories } from './utils/mockRepo';
 import {
   fetchRepoDetails,
@@ -33,7 +34,7 @@ import {
   fetchFileContent,
   commitFileUpdate,
 } from './utils/github';
-import { writePostmortem, computeSHA256, computeStringHash } from './utils/postmortem';
+import { writePostmortem, computeSHA256 } from './utils/postmortem';
 import { optimizeSourceCode } from './utils/gemini';
 import { sanitizeCode, sanitizeText } from './utils/sanitizer';
 import { validateSourceCode, isMarkdownFile, lintSourceCode } from './utils/validator';
@@ -54,6 +55,7 @@ const INITIAL_CONFIG: EngineConfig = {
   autoSanitize: true,
   strictTypeCheck: true,
   autoApproveSaturated: true,
+  allowMultiPass: false,
 };
 
 const INITIAL_METRICS: EngineMetrics = {
@@ -91,6 +93,7 @@ export default function App() {
   const loopTimerRef = useRef<NodeJS.Timeout | null>(null);
   const fileIndexRef = useRef(0);
   const consecutiveFailuresRef = useRef<Record<string, number>>({});
+  const engineFaultsRef = useRef<Record<string, number>>({});
   const globalFailuresRef = useRef<number[]>([]);
   const cooldownUntilRef = useRef<number>(0);
   const fileCacheRef = useRef<Record<string, string>>({});
@@ -106,8 +109,8 @@ export default function App() {
         timestamp,
         type,
         msg: cleanMsg,
-        latencyMs,
-        path,
+        ...(latencyMs !== undefined ? { latencyMs } : {}),
+        ...(path !== undefined ? { path } : {}),
       };
 
       setLogs((prev) => [newLog, ...prev].slice(0, 150));
@@ -142,6 +145,9 @@ export default function App() {
       setLatestLatency(0);
       setSelectedRecord(null);
       setSaturationAlert(null);
+      consecutiveFailuresRef.current = {};
+      engineFaultsRef.current = {};
+      fileIndexRef.current = 0;
 
       // 4. Clear browser storage cache
       try {
@@ -233,7 +239,8 @@ export default function App() {
         setStatus('SCANNING');
         pushLog(`Scanning sandbox repository "${config.targetRepo}"...`, 'info');
 
-        const repoData = SANDBOX_REPOSITORIES[config.targetRepo] || SANDBOX_REPOSITORIES['craighckby/sovereign-kernel'];
+        const defaultSandbox = SANDBOX_REPOSITORIES['craighckby/sovereign-kernel'] || { name: 'Sandbox', description: '', files: [] };
+        const repoData = SANDBOX_REPOSITORIES[config.targetRepo] || defaultSandbox;
         let candidateFiles = repoData.files;
 
         // Filter out skipped files
@@ -293,6 +300,11 @@ export default function App() {
 
         // Sequential round-robin selection
         const targetFile = candidateFiles[fileIndexRef.current % candidateFiles.length];
+        if (!targetFile) {
+          setActivePath(null);
+          setStatus('IDLE');
+          return;
+        }
         fileIndexRef.current = (fileIndexRef.current + 1) % candidateFiles.length;
         setActivePath(targetFile.path);
 
@@ -371,16 +383,21 @@ export default function App() {
               sanitizedSecretsCount: (prev.sanitizedSecretsCount || 0) + scrubbedCount,
             }));
 
-            consecutiveFailuresRef.current[targetFile.path] =
-              (consecutiveFailuresRef.current[targetFile.path] || 0) + 1;
+            const prevFail = consecutiveFailuresRef.current[targetFile.path] || 0;
+            const newFailCount = prevFail + 1;
+            consecutiveFailuresRef.current[targetFile.path] = newFailCount;
 
-            if (consecutiveFailuresRef.current[targetFile.path] >= 3) {
+            if (newFailCount >= 3) {
               pushLog(
-                `[AUTONOMOUS LOOP] File [${targetFile.path}] rejected by type/syntax validator ${consecutiveFailuresRef.current[targetFile.path]} consecutive times. Auto-rotating to next candidate file.`,
+                `[AUTONOMOUS LOOP] File [${targetFile.path}] rejected by type/syntax validator ${newFailCount} consecutive times. Added to skip list to allow loop to proceed to other files.`,
                 'warning',
                 undefined,
                 targetFile.path
               );
+              setConfig((prev) => ({
+                ...prev,
+                skippedFiles: [...(prev.skippedFiles || []), targetFile.path],
+              }));
             }
 
             setStatus('IDLE');
@@ -453,11 +470,31 @@ export default function App() {
         // --- HEURISTIC LINTING (SANDBOX) ---
         setStatus('LINTING');
         pushLog(`Running heuristic linting for [${targetFile.path}]...`, 'info', undefined, targetFile.path);
-        const extVal = await lintSourceCode(cleanCode, targetFile.path);
+        const sandboxProjectFiles: Record<string, string> = {};
+        for (const f of repoData.files) {
+          sandboxProjectFiles[f.path] = f.content;
+          const bname = f.path.split('/').pop();
+          if (bname) sandboxProjectFiles[bname] = f.content;
+        }
+        const extVal = await lintSourceCode(cleanCode, targetFile.path, sandboxProjectFiles);
         
         if (!extVal.valid) {
           pushLog(`[HEURISTIC LINT REJECTED] Linting failed. Writing post-mortem lesson...`, 'error', undefined, targetFile.path);
-          consecutiveFailuresRef.current[targetFile.path] = (consecutiveFailuresRef.current[targetFile.path] || 0) + 1;
+          const prevFail = consecutiveFailuresRef.current[targetFile.path] || 0;
+          const newFailCount = prevFail + 1;
+          consecutiveFailuresRef.current[targetFile.path] = newFailCount;
+          if (newFailCount >= 3) {
+            pushLog(
+              `[AUTONOMOUS LOOP] File [${targetFile.path}] failed heuristic linting ${newFailCount} consecutive times. Added to skip list.`,
+              'warning',
+              undefined,
+              targetFile.path
+            );
+            setConfig((prev) => ({
+              ...prev,
+              skippedFiles: [...(prev.skippedFiles || []), targetFile.path],
+            }));
+          }
           setStatus('IDLE');
           return;
         }
@@ -469,12 +506,14 @@ export default function App() {
         }
 
         // Auto-mark file as optimized in current session so it does not cycle infinitely
-        const currentSandboxSkip = config.skippedFiles || [];
-        if (!currentSandboxSkip.includes(targetFile.path)) {
-          setConfig((prev) => ({
-            ...prev,
-            skippedFiles: [...(prev.skippedFiles || []), targetFile.path],
-          }));
+        if (!config.allowMultiPass) {
+          const currentSandboxSkip = config.skippedFiles || [];
+          if (!currentSandboxSkip.includes(targetFile.path)) {
+            setConfig((prev) => ({
+              ...prev,
+              skippedFiles: [...(prev.skippedFiles || []), targetFile.path],
+            }));
+          }
         }
 
         const originalLines = originalContent.split('\n').length;
@@ -602,13 +641,13 @@ export default function App() {
             let healCount = 0;
 
             for (let i = 0; i < oldLines.length; i++) {
-                const line = oldLines[i];
+                const line = oldLines[i] ?? '';
                 if (line.startsWith('### ❌')) {
                     // Check ahead for poisoned evidence
                     let lookahead = i + 1;
                     let isPoisoned = false;
-                    while (lookahead < oldLines.length && !oldLines[lookahead].startsWith('### ')) {
-                        const l = oldLines[lookahead].toLowerCase();
+                    while (lookahead < oldLines.length && !oldLines[lookahead]?.startsWith('### ')) {
+                        const l = (oldLines[lookahead] ?? '').toLowerCase();
                         if (l.includes('fatal error:') && l.includes('no such file or directory')) isPoisoned = true;
                         if (l.includes('error:') && (l.includes('undeclared') || l.includes('unknown type name') || l.includes('implicit declaration'))) isPoisoned = true;
                         if (l.includes('lint reject: no_unused_macros') || l.includes('never applied')) isPoisoned = true;
@@ -683,8 +722,7 @@ export default function App() {
                 postmortemHash: sha256Hash,
                 postmortemConstraints: pmData.content
               }));
-              consecutiveFailuresRef.current = {};
-              pushLog(`[LEARNING] Ingested ledger hash mutation (${sha256Hash}). 0-diff saturation cache remains active, failed files re-armed.`, 'warning');
+              pushLog(`[LEARNING] Ingested ledger hash mutation (${sha256Hash}). Negative constraints updated.`, 'info');
             }
           } catch (e) {
             pushLog(`Failed to sync ledger: ${String(e)}`, 'error');
@@ -760,6 +798,11 @@ export default function App() {
 
         // Select candidate file sequentially (round-robin)
         const target = candidateTree[fileIndexRef.current % candidateTree.length];
+        if (!target) {
+          setActivePath(null);
+          setStatus('IDLE');
+          return;
+        }
         fileIndexRef.current = (fileIndexRef.current + 1) % candidateTree.length;
         setActivePath(target.path);
 
@@ -777,13 +820,13 @@ export default function App() {
 
         // --- FILE SIZE CEILING (Prevent LLM output truncation on huge files) ---
         const lineCount = fileData.content.split('\n').length;
-        if (lineCount > 400) {
-           pushLog(`[NOT VERIFIABLE] ${target.path} — ${lineCount} lines exceeds full-file mutation capacity (max 400). Chunked mode required.`, 'warning', undefined, target.path);
+        if (lineCount > 1000) {
+           pushLog(`[NOT VERIFIABLE] ${target.path} — ${lineCount} lines exceeds mutation capacity (max 1000). Added to skip list.`, 'warning', undefined, target.path);
            setConfig(prev => ({
              ...prev,
              skippedFiles: [...(prev.skippedFiles || []), target.path]
            }));
-           isCyclingRef.current = false;
+           setStatus('IDLE');
            return;
         }
 
@@ -898,16 +941,21 @@ export default function App() {
               }
             }
 
-            consecutiveFailuresRef.current[target.path] =
-              (consecutiveFailuresRef.current[target.path] || 0) + 1;
+            const prevFail = consecutiveFailuresRef.current[target.path] || 0;
+            const newFailCount = prevFail + 1;
+            consecutiveFailuresRef.current[target.path] = newFailCount;
 
-            if (consecutiveFailuresRef.current[target.path] >= 3) {
+            if (newFailCount >= 3) {
               pushLog(
-                `[AUTONOMOUS LOOP] File [${target.path}] rejected by type/syntax validator ${consecutiveFailuresRef.current[target.path]} consecutive times. Auto-rotating to next candidate file.`,
+                `[AUTONOMOUS LOOP] File [${target.path}] rejected by type/syntax validator ${newFailCount} consecutive times. Added to skip list to allow loop to proceed to other files.`,
                 'warning',
                 undefined,
                 target.path
               );
+              setConfig((prev) => ({
+                ...prev,
+                skippedFiles: [...(prev.skippedFiles || []), target.path],
+              }));
             }
 
             setStatus('IDLE');
@@ -981,28 +1029,25 @@ export default function App() {
         setStatus('LINTING');
         pushLog(`Running heuristic linting for [${target.path}]...`, 'info', undefined, target.path);
         
-        // Pre-fetch local includes for project-aware compiling (C/C++)
+        // Pre-fetch local files for project-aware compiling and macro cross-checking
         const projectFiles: Record<string, string> = {};
-        const isC = target.path.endsWith('.c') || target.path.endsWith('.cpp') || target.path.endsWith('.h') || target.path.endsWith('.hpp');
-        
-        if (isC) {
-           const cAndHFiles = tree.filter(i => i.path.endsWith('.c') || i.path.endsWith('.h') || i.path.endsWith('.cpp') || i.path.endsWith('.hpp'));
-           for (const f of cAndHFiles) {
-              const basename = f.path.split('/').pop();
-              if (basename) {
-                 if (fileCacheRef.current[f.path]) {
-                     projectFiles[basename] = fileCacheRef.current[f.path];
-                 } else {
-                     try {
-                        const fData = await fetchFileContent(config.targetRepo, f.path, config.ghToken, branch);
-                        fileCacheRef.current[f.path] = fData.content;
-                        projectFiles[basename] = fData.content;
-                     } catch (e) {
-                        pushLog(`Warning: Failed to fetch ${basename} for linting context`, 'warning');
-                     }
-                 }
-              }
-           }
+        const sourceFiles = tree.filter(i => /\.(c|cpp|cc|cxx|h|hpp|hxx|inl|hh|inc|rs|go|py|ts|js)$/i.test(i.path));
+        for (const f of sourceFiles) {
+          const basename = f.path.split('/').pop();
+          const cached = fileCacheRef.current[f.path];
+          if (cached) {
+            projectFiles[f.path] = cached;
+            if (basename) projectFiles[basename] = cached;
+          } else if (/\.(h|hpp|hxx|inl|hh|inc|c|cpp)$/i.test(f.path)) {
+            try {
+              const fData = await fetchFileContent(config.targetRepo, f.path, config.ghToken, branch);
+              fileCacheRef.current[f.path] = fData.content;
+              projectFiles[f.path] = fData.content;
+              if (basename) projectFiles[basename] = fData.content;
+            } catch (e) {
+              // Ignore individual fetch failure
+            }
+          }
         }
 
         const extVal = await lintSourceCode(cleanCode, target.path, projectFiles);
@@ -1079,7 +1124,21 @@ export default function App() {
                 pushLog(`Failed to write postmortem: ${String(pmErr)}`, 'error');
               }
             }
-            consecutiveFailuresRef.current[target.path] = (consecutiveFailuresRef.current[target.path] || 0) + 1;
+            const prevFail = consecutiveFailuresRef.current[target.path] || 0;
+            const newFailCount = prevFail + 1;
+            consecutiveFailuresRef.current[target.path] = newFailCount;
+            if (newFailCount >= 3) {
+              pushLog(
+                `[AUTONOMOUS LOOP] File [${target.path}] failed heuristic linting ${newFailCount} consecutive times. Added to skip list.`,
+                'warning',
+                undefined,
+                target.path
+              );
+              setConfig((prev) => ({
+                ...prev,
+                skippedFiles: [...(prev.skippedFiles || []), target.path],
+              }));
+            }
             
             // Quota circuit-breaker (5 failures in 5 minutes)
             if (globalFailuresRef.current.length >= 5) {
@@ -1128,12 +1187,14 @@ export default function App() {
         }
 
         // Auto-mark file as optimized in current session so it does not cycle infinitely
-        const currentLiveSkip = config.skippedFiles || [];
-        if (!currentLiveSkip.includes(target.path)) {
-          setConfig((prev) => ({
-            ...prev,
-            skippedFiles: [...(prev.skippedFiles || []), target.path],
-          }));
+        if (!config.allowMultiPass) {
+          const currentLiveSkip = config.skippedFiles || [];
+          if (!currentLiveSkip.includes(target.path)) {
+            setConfig((prev) => ({
+              ...prev,
+              skippedFiles: [...(prev.skippedFiles || []), target.path],
+            }));
+          }
         }
 
         // Record mutation
@@ -1231,6 +1292,24 @@ export default function App() {
       } else {
         pushLog(`[ENGINE FAULT] ${errMsg}`, 'error');
       }
+
+      // Advance file index to avoid getting stuck on the same problematic file
+      fileIndexRef.current += 1;
+      if (activePath) {
+        engineFaultsRef.current[activePath] = (engineFaultsRef.current[activePath] || 0) + 1;
+        if (engineFaultsRef.current[activePath] >= 3) {
+          pushLog(
+            `[AUTONOMOUS LOOP] File [${activePath}] encountered 3 consecutive engine faults. Added to skip list to allow loop to proceed to other files.`,
+            'warning',
+            undefined,
+            activePath
+          );
+          setConfig((prev) => ({
+            ...prev,
+            skippedFiles: [...(prev.skippedFiles || []), activePath],
+          }));
+        }
+      }
     } finally {
       isCyclingRef.current = false;
       setIsCycling(false);
@@ -1266,6 +1345,7 @@ export default function App() {
         clearInterval(loopTimerRef.current);
         loopTimerRef.current = null;
       }
+      return undefined;
     }
   }, [isLive, config.loopIntervalSec, executeCycle]);
 
@@ -1311,7 +1391,7 @@ export default function App() {
   return (
     <div
       id="emg-app-root"
-      className="min-h-screen bg-neutral-950 text-neutral-100 font-sans p-3 sm:p-4 md:p-6 flex flex-col gap-5 max-w-7xl mx-auto selection:bg-blue-600 selection:text-white"
+      className="min-h-screen bg-[#020503] text-zinc-200 font-sans p-4 sm:p-6 md:p-8 flex flex-col gap-6 max-w-7xl mx-auto selection:bg-emerald-500 selection:text-black relative"
     >
       {/* Header */}
       <Header
@@ -1325,6 +1405,13 @@ export default function App() {
         onOpenDiagnostics={() => setIsDiagnosticsOpen(true)}
         onOpenWipeMemory={() => setIsWipeMemoryOpen(true)}
         onOpenOracle={() => setIsOracleOpen(true)}
+        onOpenSplash={() => setIsAcknowledged(false)}
+        onOpenEcosystem={() => {
+          const el = document.getElementById('emg-ecosystem-workspace');
+          if (el) {
+            el.scrollIntoView({ behavior: 'smooth' });
+          }
+        }}
         isCycling={isCycling}
       />
 
@@ -1337,7 +1424,7 @@ export default function App() {
       />
 
       {/* Main Content Workspace Grid */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 flex-1 items-start">
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 flex-1 items-start">
         {/* Left Column: Configuration */}
         <div className="lg:col-span-4 w-full">
           <ConfigPanel
@@ -1349,7 +1436,7 @@ export default function App() {
         </div>
 
         {/* Right Column: Neural Pulse Chart, Mutation History & Log Stream */}
-        <div className="lg:col-span-8 flex flex-col gap-5 w-full">
+        <div className="lg:col-span-8 flex flex-col gap-6 w-full">
           {/* Real-Time Neural Latency Chart */}
           <NeuralChart
             activePath={activePath}
@@ -1367,6 +1454,9 @@ export default function App() {
           <LogStream logs={logs} onClearLogs={handleClearLogs} />
         </div>
       </div>
+
+      {/* Prominently Placed Developer Ecosystem & Repository Hub */}
+      <Ecosystem id="emg-ecosystem-workspace" onOpenLicense={() => setIsLicenseOpen(true)} />
 
       {/* Diff Inspector Modal */}
       {selectedRecord && (
@@ -1421,19 +1511,19 @@ export default function App() {
         onConfirmWipe={handleWipeMemory}
       />
 
-      {/* Sovereign Footer */}
-      <footer className="text-[10px] font-mono text-neutral-500 uppercase tracking-[0.2em] py-4 border-t border-neutral-900 mt-4 flex flex-col sm:flex-row items-center justify-between gap-2">
-        <div className="flex items-center gap-3">
-          <span>EMG Core // C-Dialect Verifier</span>
-          <span>•</span>
-          <span>CRAIGHCKBY @ 2026</span>
+      {/* Footer */}
+      <footer className="text-xs font-mono text-zinc-400 py-4 border-t border-emerald-950/80 mt-4 flex flex-col sm:flex-row items-center justify-between gap-3">
+        <div className="flex items-center gap-2">
+          <span>EMG-CORE // C-DIALECT VERIFIER</span>
+          <span className="text-emerald-800">•</span>
+          <span>CRAIGHCKBY © 2026</span>
         </div>
         <button
           id="btn-footer-license"
           onClick={() => setIsLicenseOpen(true)}
-          className="text-blue-400 hover:text-blue-300 transition-colors cursor-pointer underline underline-offset-4 decoration-blue-500/40 hover:decoration-blue-400"
+          className="text-emerald-400 hover:text-emerald-300 transition-colors cursor-pointer underline underline-offset-4 decoration-emerald-800 hover:decoration-emerald-400"
         >
-          CC BY-NC-SA 4.0 License
+          CC BY-NC-ND 4.0 License
         </button>
       </footer>
     </div>

@@ -1,6 +1,3 @@
-import { fetchFileContent, commitFileUpdate } from './src/utils/github';
-import { validateEnv } from './src/utils/validator';
-
 /**
  * Interface representing the configuration required for the revert orchestrator.
  */
@@ -17,8 +14,6 @@ interface RevertConfig {
  * @returns {RevertConfig} The validated configuration object.
  */
 function resolveConfig(): RevertConfig {
-  validateEnv();
-
   const token = process.env.GITHUB_PAT ?? process.env.GITHUB_TOKEN;
   if (!token) {
     throw new Error('Critical Error: GitHub authentication token (GITHUB_PAT or GITHUB_TOKEN) is not defined in the environment.');

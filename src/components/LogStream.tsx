@@ -1,11 +1,10 @@
 /**
  * File: src/components/LogStream.tsx
- * Role: Core system component participating in autonomous cognitive evolution cycles.
- * Architecture: Type-safe modular unit with resilient state interfaces.
+ * Role: Modern Black & Emerald Telemetry Event Stream
  */
 
 import React, { useState, useRef, useEffect } from 'react';
-import { Terminal, Trash2, ArrowDown, Copy, Check, Filter } from 'lucide-react';
+import { Terminal, Trash2, Copy, Check } from 'lucide-react';
 import { TelemetryLog, LogType } from '../types';
 
 interface LogStreamProps {
@@ -15,7 +14,7 @@ interface LogStreamProps {
 
 export const LogStream: React.FC<LogStreamProps> = ({ logs, onClearLogs }) => {
   const [filter, setFilter] = useState<'all' | LogType>('all');
-  const [autoScroll, setAutoScroll] = useState(true);
+  const [autoScroll] = useState(true);
   const [copied, setCopied] = useState(false);
   const streamRef = useRef<HTMLDivElement | null>(null);
 
@@ -26,7 +25,7 @@ export const LogStream: React.FC<LogStreamProps> = ({ logs, onClearLogs }) => {
 
   useEffect(() => {
     if (autoScroll && streamRef.current) {
-      streamRef.current.scrollTop = 0; // Since logs are unshifted or we can scroll
+      streamRef.current.scrollTop = 0;
     }
   }, [logs, autoScroll]);
 
@@ -42,69 +41,71 @@ export const LogStream: React.FC<LogStreamProps> = ({ logs, onClearLogs }) => {
   const getTypeStyle = (type: LogType) => {
     switch (type) {
       case 'success':
-        return 'text-emerald-400 font-medium';
+        return 'text-emerald-300 font-medium';
       case 'error':
-        return 'text-rose-400 font-medium';
+        return 'text-red-300 font-bold';
       case 'warning':
-        return 'text-amber-400 font-medium';
+        return 'text-amber-300 font-medium';
       case 'neural':
-        return 'text-sky-300 font-medium';
+        return 'text-emerald-300 font-medium';
       case 'noop':
         return 'text-amber-300 font-medium';
       default:
-        return 'text-neutral-300';
+        return 'text-zinc-200';
     }
   };
 
   const getTypeBadge = (type: LogType) => {
     switch (type) {
       case 'success':
-        return 'bg-emerald-500/10 text-emerald-400 border-emerald-500/30';
+        return 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40';
       case 'error':
-        return 'bg-rose-500/10 text-rose-400 border-rose-500/30';
+        return 'bg-red-500/20 text-red-300 border-red-500/40';
       case 'warning':
-        return 'bg-amber-500/10 text-amber-400 border-amber-500/30';
+        return 'bg-amber-500/20 text-amber-300 border-amber-500/40';
       case 'neural':
-        return 'bg-sky-500/10 text-sky-400 border-sky-500/30';
+        return 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40';
       case 'noop':
-        return 'bg-amber-500/15 text-amber-300 border-amber-500/40 font-bold';
+        return 'bg-amber-500/20 text-amber-300 border-amber-500/40 font-bold';
       default:
-        return 'bg-neutral-800 text-neutral-400 border-neutral-700';
+        return 'bg-zinc-800/80 text-zinc-300 border-zinc-700';
     }
   };
 
   return (
     <div
       id="emg-log-stream"
-      className="bg-neutral-900/80 border border-neutral-800/80 rounded-3xl p-5 md:p-6 shadow-xl backdrop-blur-md flex flex-col gap-4"
+      className="cyber-card p-5 md:p-6 rounded-2xl flex flex-col gap-4 bg-[#070e0a]/80 shadow-[0_8px_32px_rgba(0,0,0,0.5)]"
     >
       {/* Header & Controls */}
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <div className="flex items-center gap-2">
-          <Terminal className="w-4 h-4 text-blue-400" />
-          <h3 className="text-xs font-bold text-white uppercase tracking-widest font-mono">
-            Telemetry Event Bus
+      <div className="flex flex-wrap items-center justify-between gap-3 border-b border-emerald-950 pb-3">
+        <div className="flex items-center gap-2.5">
+          <div className="p-1.5 rounded-lg bg-emerald-950/80 border border-emerald-500/30 text-emerald-400">
+            <Terminal className="w-4 h-4" />
+          </div>
+          <h3 className="text-sm font-bold text-white tracking-tight">
+            Telemetry Stream
           </h3>
-          <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-neutral-800 text-neutral-400 border border-neutral-700">
-            {filteredLogs.length} events
+          <span className="text-xs font-mono px-2 py-0.5 rounded-full bg-emerald-950 border border-emerald-500/30 text-emerald-300">
+            {filteredLogs.length} Events
           </span>
         </div>
 
         <div className="flex items-center gap-2">
           {/* Filters */}
-          <div className="flex rounded-lg bg-neutral-950 p-0.5 border border-neutral-800 text-[11px] font-mono">
+          <div className="flex bg-[#050b07] p-1 rounded-xl border border-emerald-900/60 text-xs font-sans">
             {(['all', 'success', 'neural', 'noop', 'error'] as const).map((f) => (
               <button
                 key={f}
                 type="button"
                 onClick={() => setFilter(f)}
-                className={`px-2 py-0.5 rounded uppercase cursor-pointer transition-colors ${
+                className={`px-2.5 py-1 rounded-lg uppercase cursor-pointer transition-all text-[11px] font-semibold ${
                   filter === f
-                    ? 'bg-neutral-800 text-white font-bold'
-                    : 'text-neutral-500 hover:text-neutral-300'
+                    ? 'bg-emerald-500 text-black shadow-sm font-bold'
+                    : 'text-zinc-400 hover:text-white'
                 }`}
               >
-                {f === 'noop' ? 'NO-OP' : f}
+                {f === 'noop' ? 'No-Op' : f}
               </button>
             ))}
           </div>
@@ -112,19 +113,19 @@ export const LogStream: React.FC<LogStreamProps> = ({ logs, onClearLogs }) => {
           <button
             type="button"
             onClick={handleCopyLogs}
-            className="p-1.5 rounded-lg bg-neutral-800 hover:bg-neutral-700 text-neutral-400 hover:text-white border border-neutral-700 transition-colors cursor-pointer"
+            className="p-2 rounded-xl bg-[#09140c] hover:bg-emerald-950 text-zinc-300 hover:text-white border border-emerald-800/60 transition-colors cursor-pointer"
             title="Copy logs"
           >
-            {copied ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />}
+            {copied ? <Check className="w-4 h-4 text-emerald-300" /> : <Copy className="w-4 h-4" />}
           </button>
 
           <button
             type="button"
             onClick={onClearLogs}
-            className="p-1.5 rounded-lg bg-neutral-800 hover:bg-rose-950 hover:text-rose-400 text-neutral-400 border border-neutral-700 transition-colors cursor-pointer"
+            className="p-2 rounded-xl bg-[#09140c] hover:bg-red-950/60 text-zinc-400 hover:text-red-400 border border-emerald-800/60 transition-colors cursor-pointer"
             title="Clear event stream"
           >
-            <Trash2 className="w-3.5 h-3.5" />
+            <Trash2 className="w-4 h-4" />
           </button>
         </div>
       </div>
@@ -132,24 +133,24 @@ export const LogStream: React.FC<LogStreamProps> = ({ logs, onClearLogs }) => {
       {/* Log Feed */}
       <div
         ref={streamRef}
-        className="h-64 overflow-y-auto bg-neutral-950/80 border border-neutral-900 rounded-2xl p-4 font-mono text-xs space-y-2.5"
+        className="h-64 overflow-y-auto bg-[#040805] rounded-xl border border-emerald-950/80 p-3.5 font-mono text-xs space-y-2.5"
       >
         {filteredLogs.length === 0 ? (
-          <div className="h-full flex flex-col items-center justify-center text-neutral-600 text-xs">
+          <div className="h-full flex flex-col items-center justify-center text-zinc-500 text-xs">
             <span>Awaiting telemetry broadcast signals...</span>
           </div>
         ) : (
           filteredLogs.map((log) => (
             <div
               key={log.id}
-              className="flex items-start gap-2.5 text-[11px] leading-relaxed pb-2 border-b border-neutral-900/90 last:border-0"
+              className="flex items-start gap-2.5 text-[11px] leading-relaxed pb-2 border-b border-emerald-950/40 last:border-0"
             >
-              <span className="text-neutral-500 shrink-0 select-none">
+              <span className="text-zinc-500 shrink-0 select-none">
                 [{log.timestamp}]
               </span>
 
               <span
-                className={`px-1.5 py-0.2 rounded text-[9px] font-bold uppercase tracking-wider shrink-0 border ${getTypeBadge(
+                className={`px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wider rounded-md shrink-0 border ${getTypeBadge(
                   log.type
                 )}`}
               >
@@ -161,7 +162,7 @@ export const LogStream: React.FC<LogStreamProps> = ({ logs, onClearLogs }) => {
               </span>
 
               {log.latencyMs !== undefined && (
-                <span className="text-neutral-500 text-[10px] shrink-0">
+                <span className="text-zinc-400 text-[10px] shrink-0 font-mono">
                   {log.latencyMs}ms
                 </span>
               )}

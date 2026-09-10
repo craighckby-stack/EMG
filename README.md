@@ -1,128 +1,182 @@
-# EMG Core: Closed-Loop, Verification-Gated Code Refactoring
+# EMG Core // Autonomous C-Dialect Verifier & Neural Code Evolution Engine
 
-EMG Core is an autonomous, verification-gated code refactoring engine. Powered by Google Gemini models, it performs closed-loop refactoring across multi-file repositories with **real compiler gates**, **autonomous memory write-back**, **SHA-256 hash tracking**, and **automatic self-halting**.
+**EMG Core** is an automated, verification-gated code refactoring engine and full-stack operational control deck. It drives iterative, autonomous cognitive evolution cycles across local sandbox fixtures and remote GitHub repositories, validating model-generated code changes through multi-tier syntax verifiers, real GCC/Clang compiler gates, heuristic linters, unified diff patchers, and automated PII/secret redaction before applying changes.
 
 ---
 
-## 🏗️ Core Architecture & The Verification Loop
+## Architecture Overview
 
 ```
- ┌─────────────────────────────────────────────────────────────┐
- │                      EMG Core Loop                          │
- └──────────────────────────────┬──────────────────────────────┘
-                                │
-                 1. Read Repository Tree
-                 2. Ingest POSTMORTEMS.md (SHA-256)
-                                │
-                 3. Neural Mutation (Gemini)
-                                │
-     ┌──────────────────────────┴──────────────────────────┐
-     ▼                                                     ▼
-Tier 1: AST & Type Diagnostics           Tier 2: External Compiler / Linter
-(TS Diagnostic / Balanced Scanner)       (GCC 13.2 via Godbolt / Output Rules)
-     │                                                     │
-     ├──────────────────────────┬──────────────────────────┤
-     │ Fails Validation         │ Passes Validation        │
-     ▼                          ▼                          │
-[MEMORY WRITE-BACK]             [IDEMPOTENCY CHECK]        │
-Auto-commit failure evidence    0 diffs?                   │
-& negative rule to              ├── YES: [SATURATION HALT] │
-docs/POSTMORTEMS.md             └── NO:  Commit to Repo    │
-(Triggers SHA-256 Invalidation)                            │
-     │                                                     │
-     └──────────────────────────┬──────────────────────────┘
-                                │
-                    Re-arm candidate files
+                        ┌─────────────────────────────────────────┐
+                        │             EMG Core Engine             │
+                        │       (Autonomous Evolution Loop)       │
+                        └────────────────────┬────────────────────┘
+                                             │
+                      1. File Discovery & Repository Tree Scan
+                      2. Ingest Constraints (docs/POSTMORTEMS.md SHA-256)
+                      3. Secret / PII Pre-flight Sanitization
+                                             │
+                      4. Neural Transformation (Gemini 3.7 / 3.6 Flash)
+                                             │
+            ┌────────────────────────────────┴────────────────────────────────┐
+            ▼                                                                 ▼
+    Tier 1: AST & Syntax Verifier                             Tier 2: Real Compiler Gate
+    • Balanced Token & Delimiter Parsing                      • GCC 13.2 via Godbolt API (cg132/g132)
+    • Native TypeScript AST Diagnostics                       • Cross-file `#include` header splicing (depth 5)
+    • Auto-unwraps Markdown Code Fences                       • Isolation Error Detection (Bypasses missing deps)
+            │                                                                 │
+            ├────────────────────────────────┬────────────────────────────────┤
+            │ Fails Validation               │ Passes Validation              │
+            ▼                                ▼                                │
+    [Post-Mortem Logger]                     [Patch, Convergence & Commit]    │
+    • Appends failure evidence &             • Resilient multi-strategy diff  │
+      actionable rule to POSTMORTEMS.md        splicer (Unified / Hunk / Full)│
+    • Computes rolling SHA-256 state         ├── 0 diffs: Saturation Handled  │
+    • Ingests negative constraints           └── >0 diffs: Commit to Branch   │
+            │                                                                 │
+            └────────────────────────────────┬────────────────────────────────┘
+                                             │
+                                   Rotate to Next Candidate
 ```
 
 ---
 
-## ⚡ The 5 Core Capabilities
+## Core Capabilities & Subsystems
 
-### 1. External Verification Gates (`REJECT`)
-Mutations are never trusted blindly:
-* **C/C++ Translation Units & The Splicing Engine:** Tested against a real GCC 13.2 compiler via the Godbolt API. For multi-file repositories, the engine automatically resolves and splices local `#include` headers (up to depth 5) into the source payload before compilation.
-  * **Syntactic Multi-File Coherence:** The engine verifies that the file and its direct headers form a syntactically valid unit. It does *not* verify full project linkage or semantic header drift.
-  * Rejects invalid keywords (e.g. `noexcept` in C), missing system headers (`<stddef.h>`), or syntax bugs with verbatim machine `stderr`. Hallucinated undeclared symbols are rejected; true cross-file macro dependencies outside the splice are safely bypassed.
-  > *Privacy Disclosure:* Code passed to the GCC compiler gate is transmitted over HTTPS to the public [Godbolt Compiler Explorer API](https://godbolt.org). Sensitive internal headers or proprietary tokens should be sanitized or tested with Sandbox/Mock mode.
-* **TypeScript/JavaScript:** Checked via compiler diagnostics and AST balanced-bracket verification.
-* **Active Output Linter Rules:** Rejects invalid patterns before commit:
-  * `NO_UNVERIFIABLE_SELF_PRAISE`: Blocks unsubstantiated adjectives (`"Fully optimized"`, `"Hardened"`).
-  * `NO_STALE_DEFECT_CLAIMS`: Rejects leaked lab predictions or docstrings claiming bugs that the code already fixed.
-  * `NO_DEAD_CONDITIONS`: Catches redundant inner bounds guards inside bounded loops.
-  * `TODO_ADJACENT_SUCCESS`: Prohibits placeholder TODOs adjacent to success return statements.
+### 1. Multi-Tier Verification Pipeline
+Proposed code mutations pass through rigorous independent verification gates before commit:
+* **AST & Syntax Scanner (Tier 1):** Scans bracket/delimiter balancing, unclosed quotes, template strings, and native TypeScript compiler diagnostics.
+* **External Compiler Gate (Tier 2):** Transmits C/C++ translation units to the Godbolt Compiler Explorer API (`cg132` for C, `g132` for C++). Slices and resolves local `#include` dependencies (up to depth 5) across the project tree.
+* **Heuristic Linter Rules:**
+  * **Rule 1 (`NO_UNVERIFIABLE_SELF_PRAISE`):** Strips marketing hype and self-praise in code comments (*"Hardened"*, *"Bulletproof"*, *"Fully optimized"*, *"Production-grade"*).
+  * **Rule 1B (`NO_STALE_DEFECT_CLAIMS`):** Prevents obsolete defect claims (*"Seeded defect"*, *"PREDICTION: PASSES"*) or test scaffolding from leaking into production docstrings.
+  * **Rule 2 (`NO_DEAD_CONDITIONS`):** Rejects redundant inner conditionals bounded by loop variables (e.g., `len > 0` inside `for (i < len)`).
+  * **Rule 3 (`NO_UNUSED_MACROS`):** Scans the whole repository tree for macro usage, exempting public header exports.
+  * **Rule 4 (`TODO_ADJACENT_SUCCESS`):** Blocks placeholder TODO comments adjacent to success/return statements.
 
-### 2. Autonomous Memory Write-Back (`LEARN`)
-When a mutation fails any gate, EMG Core autonomously writes back its own scar tissue:
-* **Separation of Concerns:** Separates machine-copied facts (`EVIDENCE`) from derived negative rules (`CONSTRAINT`).
-* **Provenance Tagging:** Automatically tags the failure origin (`source: mutation-cycle` vs `source: oracle-harness`).
-* **Direct Repository Commit:** Commits the post-mortem directly to `docs/POSTMORTEMS.md` on the target branch.
+### 2. Built-in Credential & PII Sanitizer
+* Integrated pre-flight regex and entropy scanning filters out sensitive keys and secrets at both client and server boundaries.
+* Automatically redacts:
+  * GitHub Personal Access Tokens (`ghp_`, `github_pat_`, `gho_`, `ghs_`)
+  * Google Gemini API Keys (`AIza...`)
+  * OpenAI, Anthropic, Stripe, and AWS API keys
+  * RSA/EC Private Key blocks and JWT tokens
+* Scrubbed secrets are substituted with standardized `[REDACTED_*]` tokens and tallied in real-time metrics.
 
-### 3. Dynamic Hash Tracking & Re-Arming (`REMEMBER`)
-* Computes the cryptographic **`SHA-256`** digest of `docs/POSTMORTEMS.md` on every cycle.
-* When a hash mutation is detected (whether auto-written by the engine or hand-edited by an engineer on GitHub), the engine automatically invalidates the skip list and re-arms candidate files with the updated negative constraints.
+### 3. Resilient Unified Diff Patcher
+* **Unified Diff Parsing:** Reconstructs hunk headers (`@@ -old,len +new,len @@`) and applies modifications via `diff.applyPatch` with fuzz matching.
+* **Hunk Search-and-Replace:** Employs fuzzy block matching when offset numbers shift.
+* **Full-File Fallback:** Automatically replaces compact source files when models output full implementations.
 
-### 4. Automatic Global Saturation & Re-Run Lockout (`STOP` / PM#11)
-* **Deterministic Convergence Detection:** Calculates file-by-file diffs against repository baselines. When all candidate files achieve zero diffs under current constraints, the engine triggers:
-  ```text
-  [GLOBAL SATURATION REACHED] No remaining diffs under current constraints. The repository is converged — not proven optimal. Re-runs require new input. 🏁
-  ```
-* **Re-Run Lockout (Anti-Over-Optimization):** Records the baseline tree hash at saturation. Subsequent runs without new repository commits, post-mortem ledger updates, or prompt goal modifications are refused (`[REFUSAL] Repository at saturation...`), permanently preventing post-halt hallucination cascades and fiction-load-bearing commentary.
+### 4. Post-Mortem Constraints Ledger (`docs/POSTMORTEMS.md`)
+* Automated write-back appends structured evidence and generalized negative constraints upon gate rejections.
+* SHA-256 fingerprinting automatically detects ledger mutations and re-arms prompt memory in real time.
+* **Self-Healing Ledger:** Automatically identifies and neutralizes poisoned isolation errors from missing external headers.
 
-### 5. Permanent Apparatus Protection (PM#9)
-* **Hard-Locked Skip Set:** Evaluation fixtures and scorecards (`BUGS.md`, `README.md`, `docs/POSTMORTEMS.md`) are permanently excluded from mutation candidates:
-  ```text
-  [SKIP] Protected apparatus fixture: BUGS.md (PM#9: Write-protection active)
-  ```
-* Verified by artifact in [EMG-Tests](https://github.com/craighckby-stack/EMG-Tests), isolating test apparatus from examinee wordsmithing.
+### 5. Code Saturation & Convergence Engine
+* Detects zero-diff mutations when code has converged.
+* Offers interactive saturation decisions or auto-skipping to keep autonomous runs moving.
+* Prevents post-halt drift, redundant API burn, and hallucinated refactorings.
 
----
-
-## 🔬 Verification & Evidence
-
-Every capability claim above is backed by machine artifacts — verbatim compiler stderr, hash-chain telemetry, and captured halt events — in the validation lab:
-
-**[EMG-Tests](https://github.com/craighckby-stack/EMG-Tests)** — seeded-defect corpus + the engine's own post-mortem ledger, published raw. Claims are reproducible; the ledger is the receipt.
-
-> **Known Frontier (PM#7):** The gate verifies compilation and lint compliance, not semantic intent. Syntactic verification pressure without a semantic contract oracle can select for disguised parameter checks (e.g. `wp_verify_locked_state`). See the test ledger for the documented boundary.
+### 6. Protected Apparatus
+* Evaluation fixtures, license declarations, and test manifests (`README.md`, `BUGS.md`, `docs/POSTMORTEMS.md`, `RULES.md`, `LICENSE`, `package.json`, `tsconfig.json`) are strictly write-protected from automated modifications.
 
 ---
 
-## 🧪 Oracle Stress-Test Mode (Option A)
+## Developer Ecosystem Hub
 
-The UI includes a dedicated **Oracle Harness** in the top navigation bar. This enables engineers to bypass LLM generation entirely and inject raw defective specimens directly into the GCC compiler and output linting gate to verify gate behavior and memory write-back under unit-test conditions.
+EMG Core is connected directly to a network of agentic, security, and worldbuilding platforms:
 
----
-
-## 🚀 Live Preview & Usage
-
-You can run the engine directly in your browser:
-
-**[Launch EMG Core Preview](https://ai.studio/apps/c7006db0-163f-48a6-bc9e-dfdac7b37ff0)**
-
-1. **Sandbox Mode:** Toggle "Sandbox Mode" to run cycles against simulated test suites without credentials.
-2. **Live GitHub Repositories:** Enter your GitHub PAT and target repository (`owner/repo`) with a dedicated branch.
-   * *Safety Note:* EMG Core commits only to the branch you designate. Always run against an isolated test branch (`test/emg-run`), never directly against `main`.
-3. Click **Run Single Cycle** or **Toggle Live Optimization** to observe closed-loop refactoring, verification, and autonomous learning.
+| Project | Category | Description | Launch URL |
+| :--- | :--- | :--- | :--- |
+| **Git-Secret-PII-Sanitizer-2** | Security Gateway | Scrub API keys, tokens, and PII from git trees before LLM submission. | [GitHub Repository](https://github.com/craighckby-stack/Git-Secret-PII-Sanitizer-2) |
+| **DARLEK CAAN** | AI Command Center | Autonomous Code Evolution matrix and distributed AI command platform. | [Live Deployment](https://ais-pre-amubz4v3czr3772fnvrcru-483535245139.asia-southeast1.run.app/) |
+| **Darlek Caan vs Jesus Chess** | AI Studio Arena | Grandmaster tactical chess tournament duel on Google AI Studio. | [AI Studio App](https://ai.studio/apps/4f692b1f-527f-4c1d-b423-e2bbe06b2009) |
+| **Huxley Singularity Loop** | Neural Loop | Recursive self-improving neural loop and autonomous feedback synthesis engine. | [Live Deployment](https://ais-pre-km7pxypy7meeld2j6lnyqm-483535245139.asia-southeast1.run.app) |
+| **Wonder Craig: The Brave Adventure** | Interactive Story | Interactive generative story and agentic universe in Google AI Studio. | [AI Studio App](https://ai.studio/apps/2120b556-3b9e-4d23-b65b-bf3ef98aa510) |
+| **AetherForge Ω: Global Genesis** | World Simulation | Cosmological genesis simulation and multi-agent worldbuilding engine. | [AI Studio App](https://ai.studio/apps/2c919791-444e-40a2-ba71-e2ec13057cba) |
+| **EMG-Tests Suite** | Test Harness | Seeded defect suites and C-dialect AST verification regression harness. | [GitHub Repository](https://github.com/craighckby-stack/EMG-Tests) |
+| **PKM System** | Knowledge Base | Personal knowledge management, research lineages, and architecture notes. | [GitHub Repository](https://github.com/craighckby-stack/PKM) |
 
 ---
 
-## 👤 Author & Lineage
+## Getting Started
 
-**EMG Core was created by [Craig Huckerby](https://github.com/craighckby-stack)** after an AI coding agent corrupted his repository while logging self-verified success. The engine is the countermeasure: every mutation gated by a real compiler, every failure recorded as evidence, and every claim backed by an artifact.
+### Prerequisites
+* Node.js (v20.x or newer recommended)
+* npm (v10.x or newer)
+* Google Gemini API Key
 
-**The lineage:**
-* **[PKM](https://github.com/craighckby-stack/PKM)** — The origin project; its post-mortem ledger is where this evidence system was born.
-* **[EMG-Tests](https://github.com/craighckby-stack/EMG-Tests)** — The validation lab; contains the receipts and raw post-mortem ledgers for every claim in this system.
+### Installation
 
-*Trust diffs, never claims.*
+1. **Clone the repository:**
+   ```bash
+   git clone https://github.com/craighckby-stack/EMG-Tests.git
+   cd EMG-Tests
+   ```
+
+2. **Install dependencies:**
+   ```bash
+   npm install
+   ```
+
+3. **Configure environment variables:**
+   ```bash
+   cp .env.example .env
+   ```
+   Set your API credentials in `.env`:
+   ```env
+   GEMINI_API_KEY="your-gemini-api-key"
+   PORT=3000
+   NODE_ENV="development"
+   ```
+
+4. **Start the development server:**
+   ```bash
+   npm run dev
+   ```
+   Open `http://localhost:3000` in your browser.
+
+5. **Build and start for production:**
+   ```bash
+   npm run build
+   npm start
+   ```
 
 ---
 
-## 📄 License & Disclaimer
+## Operating Modes
 
-### License
-This project is licensed under the **Creative Commons Attribution-NonCommercial-ShareAlike 4.0 International (CC BY-NC-SA 4.0)** License.
+1. **Sandbox Mode:**
+   * Operates on pre-seeded memory fixtures without remote GitHub token requirements.
+   * Safe environment for inspecting diff generation, AST checking, and saturation alerts.
+2. **Live GitHub Mode:**
+   * Authenticates with GitHub via a Personal Access Token (`repo` scope).
+   * Reads remote trees, pulls source blobs, executes verification passes, and writes verified mutations to target branches.
+3. **Oracle Stress-Test Mode (Option A):**
+   * Accessible via the top **Oracle** button.
+   * Allows direct manual injection of poisoned C code specimens into the GCC compiler and heuristic linter to verify rejection logic and post-mortem write-backs.
 
-### Disclaimer
-This software is provided "as is", without warranty of any kind, express or implied. The authors and maintainers are not responsible for any modifications, data loss, or regressions resulting from automated commits made by this engine. Always configure repository branch protection rules and review pull requests before deploying changes to production environments.
+---
+
+## Server API Endpoints
+
+| Endpoint | Method | Description |
+| :--- | :--- | :--- |
+| `/api/optimize` | `POST` | Dispatches source code and optimization goals to the Gemini API with candidate fallback chains. |
+| `/api/lint` | `POST` | Executes project-aware heuristic linter rules and compiles C/C++ units via the Godbolt GCC 13.2 API. |
+| `/api/validate` | `POST` | Native TypeScript compiler AST diagnostics and syntactic verification. |
+| `/api/sanitize` | `POST` | Server-side regex and entropy redaction for credentials and tokens. |
+| `/api/diagnostic` | `GET` | Health status probe, memory path validation, and environment verification. |
+| `/api/status` | `GET` | Reports Gemini API key injection state and supported model profiles. |
+| `/api/github/user-repos` | `POST` | Proxies authenticated user repository listings from GitHub. |
+| `/api/github/repo-tree` | `POST` | Fetches recursive git tree structures for a specified branch. |
+| `/api/github/file-content` | `POST` | Fetches raw file blob and SHA metadata from GitHub. |
+| `/api/github/commit-file` | `POST` | Commits sanitized, verified code mutations to GitHub with 409 conflict retries. |
+
+---
+
+## License
+
+This project is licensed under the **Creative Commons Attribution-NonCommercial-ShareAlike 4.0 International (CC BY-NC-SA 4.0)** License. See the `LICENSE` file for details.
+

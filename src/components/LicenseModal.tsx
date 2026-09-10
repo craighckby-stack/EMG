@@ -1,7 +1,6 @@
 /**
  * File: src/components/LicenseModal.tsx
- * Role: Core system component participating in autonomous cognitive evolution cycles.
- * Architecture: Type-safe modular unit with resilient state interfaces.
+ * Role: Modern Black & Emerald License & Attribution Modal
  */
 
 import React, { useState } from 'react';
@@ -11,11 +10,9 @@ import {
   Copy,
   Check,
   ExternalLink,
-  ShieldCheck,
   Share2,
   GitFork,
   Ban,
-  RefreshCw,
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 
@@ -78,19 +75,19 @@ export const LicenseModal: React.FC<LicenseModalProps> = ({ isOpen, onClose }) =
           exit={{ opacity: 0, scale: 0.95, y: 15 }}
           transition={{ duration: 0.2, ease: 'easeOut' }}
           onClick={(e) => e.stopPropagation()}
-          className="w-full max-w-2xl max-h-[90vh] bg-neutral-900 border border-neutral-800 rounded-3xl shadow-2xl overflow-hidden flex flex-col my-auto"
+          className="cyber-card w-full max-w-2xl max-h-[90vh] bg-[#070e0a]/95 border border-emerald-500/30 rounded-2xl shadow-[0_16px_48px_rgba(0,0,0,0.9)] overflow-hidden flex flex-col my-auto"
         >
-          {/* Header - Fixed / Sticky */}
-          <div className="flex items-center justify-between gap-4 p-5 md:p-6 border-b border-neutral-800 bg-neutral-950/70 shrink-0">
+          {/* Header */}
+          <div className="flex items-center justify-between gap-4 p-5 md:p-6 border-b border-emerald-950 bg-[#040805] shrink-0">
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-2xl bg-blue-500/10 border border-blue-500/20 flex items-center justify-center text-blue-400 shrink-0">
+              <div className="w-10 h-10 rounded-xl bg-emerald-950/80 border border-emerald-500/30 flex items-center justify-center text-emerald-400 shrink-0">
                 <Scale className="w-5 h-5" />
               </div>
               <div>
                 <h3 className="text-base font-bold text-white tracking-tight">
                   License & Attribution
                 </h3>
-                <p className="text-xs font-mono text-neutral-400">
+                <p className="text-xs font-mono text-zinc-400">
                   CC BY-NC-ND 4.0 International
                 </p>
               </div>
@@ -100,7 +97,7 @@ export const LicenseModal: React.FC<LicenseModalProps> = ({ isOpen, onClose }) =
               <button
                 id="btn-exit-license-header"
                 onClick={onClose}
-                className="px-3 py-2 rounded-xl bg-neutral-800 hover:bg-neutral-700 text-neutral-300 hover:text-white border border-neutral-700 text-xs font-semibold flex items-center gap-1.5 transition-colors cursor-pointer"
+                className="px-3 py-2 rounded-xl bg-[#09140c] hover:bg-emerald-950 text-zinc-300 hover:text-white border border-emerald-800/60 text-xs font-semibold flex items-center gap-1.5 transition-colors cursor-pointer"
                 title="Exit License Modal (Esc)"
                 aria-label="Exit License Modal"
               >
@@ -111,54 +108,54 @@ export const LicenseModal: React.FC<LicenseModalProps> = ({ isOpen, onClose }) =
           </div>
 
           {/* Scrollable Body */}
-          <div className="p-5 md:p-6 overflow-y-auto space-y-5 custom-scrollbar">
+          <div className="p-5 md:p-6 overflow-y-auto space-y-5 custom-scrollbar font-sans">
             {/* Core Badges & Terms Summary */}
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-              <div className="p-3 bg-neutral-950/70 border border-neutral-800 rounded-2xl flex flex-col gap-1">
-                <div className="flex items-center gap-1.5 text-blue-400 text-xs font-semibold">
+              <div className="p-3.5 bg-[#040805] border border-emerald-950 rounded-xl flex flex-col gap-1">
+                <div className="flex items-center gap-1.5 text-emerald-300 text-xs font-semibold">
                   <Share2 className="w-3.5 h-3.5" />
                   <span>Share</span>
                 </div>
-                <p className="text-[11px] text-neutral-400 leading-relaxed">
+                <p className="text-xs text-zinc-400 leading-relaxed">
                   Copy and redistribute the material in any medium or format.
                 </p>
               </div>
 
-              <div className="p-3 bg-neutral-950/70 border border-neutral-800 rounded-2xl flex flex-col gap-1">
-                <div className="flex items-center gap-1.5 text-sky-400 text-xs font-semibold">
+              <div className="p-3.5 bg-[#040805] border border-emerald-950 rounded-xl flex flex-col gap-1">
+                <div className="flex items-center gap-1.5 text-emerald-300 text-xs font-semibold">
                   <GitFork className="w-3.5 h-3.5" />
                   <span>Adapt</span>
                 </div>
-                <p className="text-[11px] text-neutral-400 leading-relaxed">
+                <p className="text-xs text-zinc-400 leading-relaxed">
                   Remix, transform, and build upon the material.
                 </p>
               </div>
 
-              <div className="p-3 bg-neutral-950/70 border border-neutral-800 rounded-2xl flex flex-col gap-1">
-                <div className="flex items-center gap-1.5 text-amber-400 text-xs font-semibold">
+              <div className="p-3.5 bg-[#040805] border border-emerald-950 rounded-xl flex flex-col gap-1">
+                <div className="flex items-center gap-1.5 text-amber-300 text-xs font-semibold">
                   <Ban className="w-3.5 h-3.5" />
                   <span>NonCommercial</span>
                 </div>
-                <p className="text-[11px] text-neutral-400 leading-relaxed">
+                <p className="text-xs text-zinc-400 leading-relaxed">
                   Attribution, NonCommercial, & ShareAlike terms apply.
                 </p>
               </div>
             </div>
 
             {/* Full License Block */}
-            <div className="bg-neutral-950 border border-neutral-800 rounded-2xl p-4 font-mono text-xs text-neutral-300 leading-relaxed whitespace-pre-wrap select-text max-h-56 overflow-y-auto custom-scrollbar">
+            <div className="bg-[#040805] border border-emerald-950 rounded-xl p-4 font-mono text-xs text-zinc-200 leading-relaxed whitespace-pre-wrap select-text max-h-56 overflow-y-auto custom-scrollbar">
               {LICENSE_TEXT}
             </div>
           </div>
 
-          {/* Footer Controls - Fixed / Sticky */}
-          <div className="flex flex-wrap items-center justify-between gap-3 p-4 md:p-5 border-t border-neutral-800 bg-neutral-950/70 shrink-0">
+          {/* Footer Controls */}
+          <div className="flex flex-wrap items-center justify-between gap-3 p-4 md:p-5 border-t border-emerald-950 bg-[#040805] shrink-0">
             <a
               id="link-creative-commons"
               href="https://creativecommons.org/licenses/by-nc-nd/4.0/"
               target="_blank"
               rel="noopener noreferrer"
-              className="inline-flex items-center gap-1.5 text-xs text-blue-400 hover:text-blue-300 transition-colors font-medium cursor-pointer"
+              className="inline-flex items-center gap-1.5 text-xs text-emerald-300 hover:text-white transition-colors font-medium cursor-pointer"
             >
               <span>View Deed on Creative Commons</span>
               <ExternalLink className="w-3.5 h-3.5" />
@@ -168,16 +165,16 @@ export const LicenseModal: React.FC<LicenseModalProps> = ({ isOpen, onClose }) =
               <button
                 id="btn-copy-license"
                 onClick={handleCopy}
-                className="px-4 py-2 rounded-xl bg-neutral-800 hover:bg-neutral-700 text-neutral-200 hover:text-white border border-neutral-700/80 text-xs font-semibold transition-all flex items-center gap-1.5 cursor-pointer"
+                className="px-4 py-2 rounded-xl bg-[#09140c] hover:bg-emerald-950 text-zinc-300 hover:text-white border border-emerald-800/60 text-xs font-semibold transition-all flex items-center gap-1.5 cursor-pointer"
               >
                 {copied ? (
                   <>
-                    <Check className="w-3.5 h-3.5 text-emerald-400" />
-                    <span className="text-emerald-400">Copied to Clipboard</span>
+                    <Check className="w-3.5 h-3.5 text-emerald-300" />
+                    <span className="text-emerald-300">Copied</span>
                   </>
                 ) : (
                   <>
-                    <Copy className="w-3.5 h-3.5 text-neutral-400" />
+                    <Copy className="w-3.5 h-3.5 text-emerald-400" />
                     <span>Copy License</span>
                   </>
                 )}
@@ -186,7 +183,7 @@ export const LicenseModal: React.FC<LicenseModalProps> = ({ isOpen, onClose }) =
               <button
                 id="btn-dismiss-license"
                 onClick={onClose}
-                className="px-5 py-2 rounded-xl bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold uppercase tracking-wider transition-all cursor-pointer shadow-md shadow-blue-600/20 flex items-center gap-1.5"
+                className="px-5 py-2 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-black text-xs font-bold transition-all cursor-pointer shadow-md shadow-emerald-500/20 flex items-center gap-1.5"
                 title="Exit and close modal"
                 aria-label="Exit modal"
               >

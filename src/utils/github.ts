@@ -5,7 +5,6 @@
  */
 
 import { sanitizeCode, sanitizeText } from './sanitizer';
-import { isMarkdownFile } from './validator';
 
 export const b64ToUtf8 = (str: string): string => {
   try {
@@ -243,17 +242,21 @@ export async function fetchRepoTree(repo: string, branch: string, token: string)
     rawData = await parseJsonResponse<{ tree?: GitHubFileItem[] }>(proxyRes, `Failed to fetch file tree for ${branch}`);
   }
 
+  // Include all source and text files, excluding only binary/compiled assets and lockfiles
+  const binaryExtensions = /\.(png|jpe?g|gif|ico|webp|svg|bmp|tiff|pdf|zip|tar|gz|bz2|7z|rar|exe|dll|so|dylib|wasm|bin|dat|iso|woff2?|ttf|eot|otf|mp3|mp4|wav|avi|mov|mkv|flac|ogg)$/i;
+
   return (rawData.tree || []).filter(
     (item: GitHubFileItem) =>
       item.type === 'blob' &&
-      (/\.(js|jsx|ts|tsx|py|html|css|json|rs|go|c|cpp|h|md|markdown|mdx|txt)$/i.test(item.path) ||
-        isMarkdownFile(item.path)) &&
+      !binaryExtensions.test(item.path) &&
       !item.path.includes('node_modules/') &&
       !item.path.includes('dist/') &&
+      !item.path.includes('build/') &&
       !item.path.includes('.git/') &&
       !item.path.includes('package-lock.json') &&
       !item.path.includes('bun.lock') &&
-      !item.path.includes('yarn.lock')
+      !item.path.includes('yarn.lock') &&
+      !item.path.includes('pnpm-lock.yaml')
   );
 }
 

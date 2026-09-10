@@ -1,11 +1,10 @@
 /**
  * File: src/components/MutationViewer.tsx
- * Role: Core system component participating in autonomous cognitive evolution cycles.
- * Architecture: Type-safe modular unit with resilient state interfaces.
+ * Role: Modern Black & Emerald Mutation Event Journal
  */
 
 import React from 'react';
-import { GitCommit, Eye, FileCode2, Clock, CheckCircle2, Shield, AlertTriangle, KeyRound, Ban } from 'lucide-react';
+import { GitCommit, Eye, FileCode2, CheckCircle2, AlertTriangle, KeyRound, Ban } from 'lucide-react';
 import { MutationRecord } from '../types';
 
 interface MutationViewerProps {
@@ -20,25 +19,27 @@ export const MutationViewer: React.FC<MutationViewerProps> = ({
   return (
     <div
       id="emg-mutations-panel"
-      className="bg-neutral-900/80 border border-neutral-800/80 rounded-3xl p-5 md:p-6 shadow-xl backdrop-blur-md flex flex-col gap-4"
+      className="cyber-card p-5 md:p-6 rounded-2xl flex flex-col gap-4 bg-[#070e0a]/80 shadow-[0_8px_32px_rgba(0,0,0,0.5)]"
     >
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-2">
-          <GitCommit className="w-4 h-4 text-emerald-400" />
-          <h3 className="text-xs font-bold text-white uppercase tracking-widest font-mono">
-            Applied Code Mutations
+      <div className="flex items-center justify-between border-b border-emerald-950 pb-3">
+        <div className="flex items-center gap-2.5">
+          <div className="p-1.5 rounded-lg bg-emerald-950/80 border border-emerald-500/30 text-emerald-400">
+            <GitCommit className="w-4 h-4" />
+          </div>
+          <h3 className="text-sm font-bold text-white tracking-tight">
+            Mutation Journal
           </h3>
         </div>
-        <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-neutral-800 text-neutral-400 border border-neutral-700">
-          {mutations.length} records
+        <span className="text-xs font-mono px-2.5 py-0.5 rounded-full bg-emerald-950 border border-emerald-500/30 text-emerald-400">
+          {mutations.length} {mutations.length === 1 ? 'Record' : 'Records'}
         </span>
       </div>
 
       {mutations.length === 0 ? (
-        <div className="py-8 text-center text-xs text-neutral-500 font-mono flex flex-col items-center justify-center gap-2 border border-dashed border-neutral-800 rounded-2xl">
-          <FileCode2 className="w-6 h-6 text-neutral-600" />
-          <span>Awaiting first neural mutation pass...</span>
-          <span className="text-[10px] text-neutral-600">Engage engine or run a manual pass to start</span>
+        <div className="py-12 text-center text-xs text-zinc-400 font-sans flex flex-col items-center justify-center gap-2.5 rounded-xl border border-dashed border-emerald-900/60 bg-[#050b07]">
+          <FileCode2 className="w-7 h-7 text-emerald-700/80" />
+          <span className="text-zinc-200 font-semibold">No active mutation records in ledger</span>
+          <span className="text-[11px] text-zinc-400">Engage engine with Run Auto or execute a manual Step pass</span>
         </div>
       ) : (
         <div className="space-y-2.5 max-h-72 overflow-y-auto pr-1">
@@ -51,22 +52,22 @@ export const MutationViewer: React.FC<MutationViewerProps> = ({
               <div
                 key={mut.id}
                 onClick={() => onSelectRecord(mut)}
-                className={`p-3 bg-neutral-950/60 hover:bg-neutral-900 border rounded-2xl transition-all cursor-pointer flex items-center justify-between gap-3 group ${
+                className={`p-3.5 rounded-xl bg-[#09120b] hover:bg-[#0d1a10] border transition-all cursor-pointer flex items-center justify-between gap-3 group cyber-card-hover ${
                   isFailed
-                    ? 'border-rose-900/50 hover:border-rose-700'
+                    ? 'border-red-500/40 hover:border-red-400/80'
                     : isNoop
-                    ? 'border-amber-900/40 hover:border-amber-700'
-                    : 'border-neutral-800/80 hover:border-neutral-700'
+                    ? 'border-amber-500/40 hover:border-amber-400/80'
+                    : 'border-emerald-500/20 hover:border-emerald-500/50'
                 }`}
               >
                 <div className="flex items-start gap-3 min-w-0">
                   <div
                     className={`w-7 h-7 rounded-lg border flex items-center justify-center shrink-0 mt-0.5 ${
                       isFailed
-                        ? 'bg-rose-500/10 border-rose-500/30 text-rose-400'
+                        ? 'bg-red-950/60 border-red-500/50 text-red-400'
                         : isNoop
-                        ? 'bg-amber-500/10 border-amber-500/30 text-amber-400'
-                        : 'bg-emerald-500/10 border-emerald-500/20 text-emerald-400'
+                        ? 'bg-amber-950/60 border-amber-500/50 text-amber-400'
+                        : 'bg-emerald-950/60 border-emerald-500/50 text-emerald-400'
                     }`}
                   >
                     {isFailed ? (
@@ -78,31 +79,31 @@ export const MutationViewer: React.FC<MutationViewerProps> = ({
                     )}
                   </div>
                   <div className="min-w-0">
-                    <div className="text-xs font-mono font-bold text-neutral-200 group-hover:text-blue-400 transition-colors truncate">
+                    <div className="text-xs font-mono font-bold text-white group-hover:text-emerald-300 transition-colors truncate">
                       {mut.path}
                     </div>
-                    <div className="text-[10px] font-mono text-neutral-400 flex items-center gap-2 mt-0.5 flex-wrap">
+                    <div className="text-[11px] font-mono text-zinc-400 flex items-center gap-2 mt-1 flex-wrap">
                       <span>{mut.timestamp}</span>
-                      <span>•</span>
-                      <span className="text-amber-400">{mut.latencyMs}ms</span>
-                      <span>•</span>
-                      <span className="text-neutral-500">
-                        {mut.originalLines}L → {mut.optimizedLines}L
+                      <span>&bull;</span>
+                      <span className="text-amber-300">{mut.latencyMs}ms</span>
+                      <span>&bull;</span>
+                      <span className="text-zinc-200">
+                        {mut.originalLines}L &rarr; {mut.optimizedLines}L
                       </span>
                       {(mut.redactedCount || 0) > 0 && (
                         <>
-                          <span>•</span>
-                          <span className="text-emerald-400 font-bold flex items-center gap-0.5">
-                            <KeyRound className="w-2.5 h-2.5" />
+                          <span>&bull;</span>
+                          <span className="text-emerald-300 font-semibold flex items-center gap-1">
+                            <KeyRound className="w-3 h-3" />
                             {mut.redactedCount} scrubbed
                           </span>
                         </>
                       )}
                       {mut.validationErrors && mut.validationErrors.length > 0 && (
                         <>
-                          <span>•</span>
-                          <span className="text-rose-400 font-bold">
-                            {mut.validationErrors.length} type err(s)
+                          <span>&bull;</span>
+                          <span className="text-red-300 font-semibold">
+                            {mut.validationErrors.length} type err
                           </span>
                         </>
                       )}
@@ -110,26 +111,23 @@ export const MutationViewer: React.FC<MutationViewerProps> = ({
                   </div>
                 </div>
 
-                <div className="flex items-center gap-2 shrink-0">
+                <div className="flex items-center gap-2.5 shrink-0">
                   <span
-                    className={`text-[9px] font-mono px-2 py-0.5 rounded font-semibold uppercase ${
+                    className={`text-[10px] font-mono px-2 py-0.5 rounded-full font-bold uppercase border ${
                       isApplied
-                        ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20'
+                        ? 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40'
                         : isFailed
-                        ? 'bg-rose-500/10 text-rose-400 border border-rose-500/30'
+                        ? 'bg-red-500/20 text-red-300 border-red-500/40'
                         : isNoop
-                        ? 'bg-amber-500/10 text-amber-400 border border-amber-500/30'
-                        : 'bg-sky-500/10 text-sky-400 border border-sky-500/20'
+                        ? 'bg-amber-500/20 text-amber-300 border-amber-500/40'
+                        : 'bg-emerald-500/10 text-emerald-300 border-emerald-500/30'
                     }`}
                   >
                     {mut.status}
                   </span>
-                  <button
-                    type="button"
-                    className="p-1.5 rounded-lg bg-neutral-800 group-hover:bg-blue-600 group-hover:text-white text-neutral-400 transition-colors"
-                  >
+                  <div className="p-1.5 rounded-lg bg-[#0a170f] group-hover:bg-emerald-500 group-hover:text-black text-emerald-400 border border-emerald-800/60 transition-colors">
                     <Eye className="w-3.5 h-3.5" />
-                  </button>
+                  </div>
                 </div>
               </div>
             );

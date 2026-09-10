@@ -8,9 +8,9 @@ export interface ValidationError {
   line: number;
   column: number;
   message: string;
-  code?: string;
+  code?: string | undefined;
   severity: 'error' | 'warning';
-  snippet?: string;
+  snippet?: string | undefined;
 }
 
 export interface ValidationResult {
@@ -19,7 +19,7 @@ export interface ValidationResult {
   errors: ValidationError[];
   warnings: string[];
   autoHealed: boolean;
-  healedCode?: string;
+  healedCode?: string | undefined;
 }
 
 /**
@@ -68,8 +68,11 @@ export function unwrapMarkdownCodeFences(code: string, language: string): { unwr
 
   // 1. If wrapped between delimiters @@@START and @@@END, extract that
   if (trimmed.includes('@@@START') && trimmed.includes('@@@END')) {
-    const extracted = trimmed.split('@@@START')[1].split('@@@END')[0].trim();
-    return { unwrapped: extracted, wasWrapped: true };
+    const afterStart = trimmed.split('@@@START')[1];
+    if (afterStart) {
+      const extracted = (afterStart.split('@@@END')[0] || '').trim();
+      return { unwrapped: extracted, wasWrapped: true };
+    }
   }
 
   // 2. If code contains a markdown code fence block anywhere inside commentary
@@ -114,14 +117,14 @@ function checkDelimitersAndStrings(
   let templateBraceDepth = 0;
 
   for (let l = 0; l < lines.length; l++) {
-    const line = lines[l];
+    const line = lines[l] ?? '';
     const lineNum = l + 1;
 
     for (let c = 0; c < line.length; c++) {
       const colNum = c + 1;
-      const char = line[c];
+      const char = line[c] ?? '';
       const nextChar = line[c + 1] || '';
-      const prevChar = c > 0 ? line[c - 1] : '';
+      const prevChar = c > 0 ? (line[c - 1] ?? '') : '';
 
       // Skip escaped characters
       if (prevChar === '\\' && (inSingleQuote || inDoubleQuote || inTemplateString || inRegex)) {
@@ -187,7 +190,7 @@ function checkDelimitersAndStrings(
           }
         } else if (char === '/' && inRegex) {
           inRegex = false;
-          while (c + 1 < line.length && /[gimsuyvd]/.test(line[c + 1])) {
+          while (c + 1 < line.length && line[c + 1] && /[gimsuyvd]/.test(line[c + 1]!)) {
             c++;
           }
           continue;
@@ -359,7 +362,7 @@ function checkTypeScriptPatterns(code: string): ValidationError[] {
   let exportDefaultCount = 0;
 
   for (let i = 0; i < lines.length; i++) {
-    const line = lines[i];
+    const line = lines[i] ?? '';
     const lineNum = i + 1;
     const trimmed = line.trim();
 
@@ -484,7 +487,7 @@ function validateJson(code: string): ValidationError[] {
       const prefix = code.slice(0, pos);
       const lines = prefix.split('\n');
       line = lines.length;
-      column = lines[lines.length - 1].length + 1;
+      column = (lines[lines.length - 1]?.length ?? 0) + 1;
     }
 
     return [
@@ -509,7 +512,7 @@ function validateMarkdown(code: string): { errors: ValidationError[]; unclosedFe
   let blockStartLine = 1;
 
   for (let i = 0; i < lines.length; i++) {
-    const line = lines[i].trim();
+    const line = (lines[i] ?? '').trim();
     if (line.startsWith('```')) {
       if (!inCodeBlock) {
         inCodeBlock = true;
@@ -698,12 +701,13 @@ export async function validateSourceCode(
   errors.push(...delimiterCheck.errors);
 
   // 5. Auto-fix single missing trailing delimiter
-  if (errors.length === 1 && errors[0].code === 'SYNTAX_UNCLOSED_DELIMITER') {
-    const unclosedChar = errors[0].message.includes('{')
+  const firstError = errors[0];
+  if (errors.length === 1 && firstError && firstError.code === 'SYNTAX_UNCLOSED_DELIMITER') {
+    const unclosedChar = firstError.message.includes('{')
       ? '}'
-      : errors[0].message.includes('(')
+      : firstError.message.includes('(')
       ? ')'
-      : errors[0].message.includes('[')
+      : firstError.message.includes('[')
       ? ']'
       : '';
     if (unclosedChar) {

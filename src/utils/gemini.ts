@@ -9,6 +9,7 @@ import { sanitizeCode, sanitizeText } from './sanitizer';
 
 export interface OptimizationResult {
   optimizedCode: string;
+  patch?: string;
   summary: string;
   latencyMs: number;
   tokensEstimate: number;
@@ -33,13 +34,15 @@ export class GeminiApiError extends Error {
   isCapacity: boolean;
   isNotFound: boolean;
   isAuth: boolean;
-  raw?: string;
+  raw?: string | undefined;
 
   constructor(message: string, status: number = 500, raw?: string) {
     super(message);
     this.name = 'GeminiApiError';
     this.status = status;
-    this.raw = raw;
+    if (raw !== undefined) {
+      this.raw = raw;
+    }
     const lower = message.toLowerCase();
     this.isRateLimit = status === 429 || lower.includes('quota') || lower.includes('rate limit') || lower.includes('resource_exhausted');
     this.isCapacity = status === 503 || lower.includes('unavailable') || lower.includes('high demand') || lower.includes('capacity');
@@ -135,6 +138,7 @@ export async function optimizeSourceCode(
         latencyMs: data.latencyMs,
         tokensEstimate: data.tokensEstimate,
         modelUsed: data.modelUsed || model,
+        patch: data.patch,
         redactedSecretsCount: (data.redactedSecretsCount || 0) + sanitized.redactedCount,
       };
     }
@@ -185,7 +189,7 @@ export async function optimizeSourceCode(
 function simulateNeuralOptimization(
   code: string,
   filePath: string,
-  goal: OptimizationGoal
+  _goal: OptimizationGoal
 ): { code: string; summary: string } {
   let modified = code;
   let summary = 'Checked syntax, verified memory bounds, and confirmed structural contracts.';

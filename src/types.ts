@@ -74,6 +74,7 @@ export interface EngineConfig {
   autoSanitize?: boolean;
   strictTypeCheck?: boolean;
   autoApproveSaturated?: boolean;
+  allowMultiPass?: boolean;
   postmortemHash?: string;
   postmortemConstraints?: string;
   saturatedTreeHash?: string;

@@ -1,11 +1,10 @@
 /**
  * File: src/components/DiffModal.tsx
- * Role: Core system component participating in autonomous cognitive evolution cycles.
- * Architecture: Type-safe modular unit with resilient state interfaces.
+ * Role: Modern Black & Emerald AST Diff Inspection Modal
  */
 
 import React, { useState, useEffect } from 'react';
-import { X, Copy, Check, FileCode, ArrowRight, Shield, AlertTriangle, KeyRound } from 'lucide-react';
+import { X, Copy, Check, FileCode, AlertTriangle, KeyRound } from 'lucide-react';
 import { MutationRecord } from '../types';
 
 interface DiffModalProps {
@@ -44,57 +43,57 @@ export const DiffModal: React.FC<DiffModalProps> = ({ record, onClose }) => {
     <div
       id="emg-diff-modal-backdrop"
       onClick={onClose}
-      className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-3 md:p-6"
+      className="fixed inset-0 z-50 bg-black/85 backdrop-blur-md flex items-center justify-center p-3 sm:p-6"
     >
       <div
         id="emg-diff-modal"
         onClick={(e) => e.stopPropagation()}
-        className="bg-neutral-900 border border-neutral-700/80 rounded-3xl w-full max-w-5xl max-h-[90vh] flex flex-col shadow-2xl overflow-hidden"
+        className="cyber-card bg-[#070e0a]/95 border border-emerald-500/30 rounded-2xl w-full max-w-5xl max-h-[90vh] flex flex-col shadow-[0_16px_48px_rgba(0,0,0,0.9),0_0_30px_rgba(16,185,129,0.1)] overflow-hidden"
       >
         {/* Header */}
-        <div className="p-4 md:px-6 border-b border-neutral-800 flex items-center justify-between bg-neutral-950/60">
+        <div className="p-4 sm:px-6 border-b border-emerald-950 flex items-center justify-between bg-[#040805]">
           <div className="flex items-center gap-3">
-            <div className={`w-8 h-8 rounded-lg border flex items-center justify-center ${
-              isFailed ? 'bg-rose-500/10 border-rose-500/30 text-rose-400' : 'bg-blue-500/10 border-blue-500/20 text-blue-400'
+            <div className={`w-9 h-9 rounded-xl border flex items-center justify-center ${
+              isFailed ? 'bg-red-950/60 border-red-500/40 text-red-400' : 'bg-emerald-950/60 border-emerald-500/40 text-emerald-400'
             }`}>
-              <FileCode className="w-4 h-4" />
+              <FileCode className="w-5 h-5" />
             </div>
             <div>
               <div className="flex items-center gap-2 flex-wrap">
                 <h3 className="font-bold text-white text-sm font-mono">{record.path}</h3>
                 <span
-                  className={`text-[10px] font-mono px-2 py-0.5 rounded uppercase font-semibold ${
+                  className={`text-[10px] font-mono px-2.5 py-0.5 rounded-full uppercase font-bold border ${
                     record.status === 'applied'
-                      ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/30'
+                      ? 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40'
                       : isFailed
-                      ? 'bg-rose-500/10 text-rose-400 border border-rose-500/30'
+                      ? 'bg-red-500/20 text-red-300 border-red-500/40'
                       : isNoop
-                      ? 'bg-amber-500/10 text-amber-400 border border-amber-500/30'
-                      : 'bg-sky-500/10 text-sky-400 border border-sky-500/30'
+                      ? 'bg-amber-500/20 text-amber-300 border-amber-500/40'
+                      : 'bg-emerald-500/10 text-emerald-400 border-emerald-500/30'
                   }`}
                 >
                   {record.status}
                 </span>
                 {(record.redactedCount || 0) > 0 && (
-                  <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-emerald-500/10 text-emerald-400 border border-emerald-500/30 flex items-center gap-1 font-semibold">
+                  <span className="text-[10px] font-mono px-2.5 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 flex items-center gap-1 font-semibold">
                     <KeyRound className="w-3 h-3" />
-                    {record.redactedCount} token(s) scrubbed
+                    {record.redactedCount} scrubbed
                   </span>
                 )}
               </div>
-              <p className="text-[11px] text-neutral-400 font-mono mt-0.5">
-                Latency: {record.latencyMs}ms • Original: {record.originalLines} lines → Optimized: {record.optimizedLines} lines
+              <p className="text-xs text-zinc-400 font-mono mt-0.5">
+                Latency: {record.latencyMs}ms &bull; Original: {record.originalLines}L &rarr; Optimized: {record.optimizedLines}L
               </p>
             </div>
           </div>
 
           <div className="flex items-center gap-2">
-            <div className="flex rounded-lg bg-neutral-800 p-0.5 border border-neutral-700">
+            <div className="flex rounded-xl bg-[#050b07] p-1 border border-emerald-900/80">
               <button
                 type="button"
                 onClick={() => setViewMode('split')}
-                className={`px-2.5 py-1 rounded text-xs font-mono transition-colors cursor-pointer ${
-                  viewMode === 'split' ? 'bg-neutral-700 text-white font-bold' : 'text-neutral-400 hover:text-white'
+                className={`px-3 py-1 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
+                  viewMode === 'split' ? 'bg-emerald-500 text-black font-bold shadow-sm' : 'text-zinc-400 hover:text-white'
                 }`}
               >
                 Split
@@ -102,8 +101,8 @@ export const DiffModal: React.FC<DiffModalProps> = ({ record, onClose }) => {
               <button
                 type="button"
                 onClick={() => setViewMode('unified')}
-                className={`px-2.5 py-1 rounded text-xs font-mono transition-colors cursor-pointer ${
-                  viewMode === 'unified' ? 'bg-neutral-700 text-white font-bold' : 'text-neutral-400 hover:text-white'
+                className={`px-3 py-1 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
+                  viewMode === 'unified' ? 'bg-emerald-500 text-black font-bold shadow-sm' : 'text-zinc-400 hover:text-white'
                 }`}
               >
                 Optimized
@@ -112,17 +111,17 @@ export const DiffModal: React.FC<DiffModalProps> = ({ record, onClose }) => {
 
             <button
               onClick={handleCopy}
-              className="p-2 rounded-lg bg-neutral-800 hover:bg-neutral-700 text-neutral-300 hover:text-white border border-neutral-700 transition-colors cursor-pointer"
+              className="p-2 rounded-xl bg-[#09140c] hover:bg-emerald-950 text-zinc-300 hover:text-white border border-emerald-800/60 transition-colors cursor-pointer"
               title="Copy optimized code"
               aria-label="Copy optimized code"
             >
-              {copied ? <Check className="w-4 h-4 text-emerald-400" /> : <Copy className="w-4 h-4" />}
+              {copied ? <Check className="w-4 h-4 text-emerald-300" /> : <Copy className="w-4 h-4" />}
             </button>
 
             <button
               id="btn-close-diff-header"
               onClick={onClose}
-              className="p-2 rounded-lg bg-neutral-800 hover:bg-neutral-700 text-neutral-400 hover:text-white border border-neutral-700 transition-colors cursor-pointer"
+              className="p-2 rounded-xl bg-[#09140c] hover:bg-emerald-950 text-zinc-400 hover:text-white border border-emerald-800/60 transition-colors cursor-pointer"
               title="Close modal (Esc)"
               aria-label="Close modal"
             >
@@ -133,12 +132,12 @@ export const DiffModal: React.FC<DiffModalProps> = ({ record, onClose }) => {
 
         {/* Validation Errors Notice */}
         {record.validationErrors && record.validationErrors.length > 0 && (
-          <div className="px-6 py-3 bg-rose-950/40 border-b border-rose-900/50 text-xs text-rose-300 font-mono space-y-1">
-            <div className="flex items-center gap-1.5 font-bold text-rose-400 uppercase text-[10px]">
+          <div className="px-6 py-3 bg-red-950/40 border-b border-red-900/50 text-xs text-red-300 font-mono space-y-1">
+            <div className="flex items-center gap-1.5 font-bold text-red-400 uppercase text-[10px]">
               <AlertTriangle className="w-3.5 h-3.5" />
               <span>Type / Syntax Diagnostics Rejected Commit ({record.validationErrors.length} issues):</span>
             </div>
-            <ul className="list-disc list-inside space-y-0.5 text-[11px] text-rose-200">
+            <ul className="list-disc list-inside space-y-0.5 text-[11px] text-red-200">
               {record.validationErrors.map((err, i) => (
                 <li key={i}>{err}</li>
               ))}
@@ -148,47 +147,47 @@ export const DiffModal: React.FC<DiffModalProps> = ({ record, onClose }) => {
 
         {/* Summary Bar */}
         {record.optimizationSummary && (
-          <div className="px-6 py-2.5 bg-blue-950/20 border-b border-blue-900/30 text-xs text-blue-300 font-sans flex items-center gap-2">
-            <span className="font-semibold text-blue-400 font-mono text-[10px] uppercase tracking-wider">
-              Optimization Directive:
+          <div className="px-6 py-2.5 bg-emerald-950/30 border-b border-emerald-900/40 text-xs text-zinc-200 flex items-center gap-2">
+            <span className="font-semibold text-emerald-300 font-mono text-[10px] uppercase tracking-wider">
+              Directive:
             </span>
             <span>{record.optimizationSummary}</span>
           </div>
         )}
 
         {/* Content Area */}
-        <div className="flex-1 overflow-auto p-4 md:p-6 bg-neutral-950 font-mono text-xs text-neutral-300">
+        <div className="flex-1 overflow-auto p-4 sm:p-6 bg-[#040805] font-mono text-xs text-zinc-200">
           {viewMode === 'split' ? (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 h-full">
               {/* Original */}
-              <div className="flex flex-col border border-neutral-800 rounded-2xl overflow-hidden bg-neutral-900/50">
-                <div className="px-4 py-2 bg-neutral-900 border-b border-neutral-800 text-[11px] font-bold text-neutral-400 flex items-center justify-between">
+              <div className="flex flex-col border border-emerald-950 rounded-xl overflow-hidden bg-[#070e09]">
+                <div className="px-4 py-2 bg-[#050a06] border-b border-emerald-950 text-[11px] font-bold text-zinc-300 flex items-center justify-between">
                   <span>BEFORE (ORIGINAL)</span>
-                  <span className="text-neutral-500">{record.originalLines} lines</span>
+                  <span className="text-zinc-400">{record.originalLines} lines</span>
                 </div>
-                <pre className="p-4 overflow-auto text-rose-300/80 leading-relaxed text-[11px] select-text">
+                <pre className="p-4 overflow-auto text-rose-300 leading-relaxed text-[11px] select-text">
                   <code>{record.originalCode}</code>
                 </pre>
               </div>
 
               {/* Optimized */}
-              <div className="flex flex-col border border-emerald-950/50 rounded-2xl overflow-hidden bg-emerald-950/10">
-                <div className="px-4 py-2 bg-neutral-900 border-b border-neutral-800 text-[11px] font-bold text-emerald-400 flex items-center justify-between">
-                  <span>AFTER (SYNTHESIZED OPTIMA)</span>
-                  <span className="text-emerald-500">{record.optimizedLines} lines</span>
+              <div className="flex flex-col border border-emerald-500/30 rounded-xl overflow-hidden bg-[#070e09]">
+                <div className="px-4 py-2 bg-[#050a06] border-b border-emerald-950 text-[11px] font-bold text-emerald-300 flex items-center justify-between">
+                  <span>AFTER (SYNTHESIZED)</span>
+                  <span className="text-emerald-400">{record.optimizedLines} lines</span>
                 </div>
-                <pre className="p-4 overflow-auto text-emerald-300 leading-relaxed text-[11px] select-text">
+                <pre className="p-4 overflow-auto text-emerald-200 leading-relaxed text-[11px] select-text">
                   <code>{record.optimizedCode}</code>
                 </pre>
               </div>
             </div>
           ) : (
-            <div className="border border-neutral-800 rounded-2xl overflow-hidden bg-neutral-900/50">
-              <div className="px-4 py-2 bg-neutral-900 border-b border-neutral-800 text-[11px] font-bold text-emerald-400 flex items-center justify-between">
+            <div className="border border-emerald-500/20 rounded-xl overflow-hidden bg-[#070e09]">
+              <div className="px-4 py-2 bg-[#050a06] border-b border-emerald-950 text-[11px] font-bold text-emerald-300 flex items-center justify-between">
                 <span>OPTIMIZED CODE</span>
-                <span className="text-neutral-500">{record.optimizedLines} lines</span>
+                <span className="text-emerald-400">{record.optimizedLines} lines</span>
               </div>
-              <pre className="p-4 overflow-auto text-emerald-300 leading-relaxed text-xs select-text">
+              <pre className="p-4 overflow-auto text-emerald-200 leading-relaxed text-xs select-text">
                 <code>{record.optimizedCode}</code>
               </pre>
             </div>
@@ -196,11 +195,11 @@ export const DiffModal: React.FC<DiffModalProps> = ({ record, onClose }) => {
         </div>
 
         {/* Footer */}
-        <div className="p-4 border-t border-neutral-800 bg-neutral-950/60 flex items-center justify-between text-[11px] text-neutral-500 font-mono">
-          <span>EMG Core v49 Neural Diff Engine</span>
+        <div className="p-4 border-t border-emerald-950 bg-[#040805] flex items-center justify-between text-xs text-zinc-400 font-mono">
+          <span>EMG Core Neural AST Diff Engine</span>
           <button
             onClick={onClose}
-            className="px-4 py-1.5 rounded-lg bg-neutral-800 hover:bg-neutral-700 text-white font-semibold cursor-pointer"
+            className="px-5 py-2 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-black font-bold cursor-pointer transition-all shadow-md shadow-emerald-500/20"
           >
             Close
           </button>

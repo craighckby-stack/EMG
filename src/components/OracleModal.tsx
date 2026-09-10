@@ -1,11 +1,10 @@
 /**
  * File: src/components/OracleModal.tsx
- * Role: Oracle Stress-Test & Direct Poison Injection Harness (Option A).
- * Architecture: Type-safe modular unit with resilient state interfaces.
+ * Role: Modern Black & Emerald Oracle Stress-Test & Direct Poison Injection Harness
  */
 
 import React, { useState } from 'react';
-import { ShieldAlert, Play, CheckCircle2, XCircle, RefreshCw, X, FileCode, Terminal, AlertTriangle } from 'lucide-react';
+import { ShieldAlert, Play, CheckCircle2, XCircle, RefreshCw, X, Terminal } from 'lucide-react';
 import { lintSourceCode } from '../utils/validator';
 import { writePostmortem } from '../utils/postmortem';
 
@@ -59,9 +58,9 @@ export const OracleModal: React.FC<OracleModalProps> = ({
   token,
   onPostmortemCreated,
 }) => {
-  const [selectedSpecimen, setSelectedSpecimen] = useState(PRESET_SPECIMENS[0]);
-  const [customPath, setCustomPath] = useState(PRESET_SPECIMENS[0].filePath);
-  const [customCode, setCustomCode] = useState(PRESET_SPECIMENS[0].code);
+  const [selectedSpecimen, setSelectedSpecimen] = useState(PRESET_SPECIMENS[0]!);
+  const [customPath, setCustomPath] = useState(PRESET_SPECIMENS[0]!.filePath);
+  const [customCode, setCustomCode] = useState(PRESET_SPECIMENS[0]!.code);
   const [isVerifying, setIsVerifying] = useState(false);
   const [result, setResult] = useState<{
     valid: boolean;
@@ -84,7 +83,6 @@ export const OracleModal: React.FC<OracleModalProps> = ({
     setResult(null);
 
     try {
-      // Direct call to /api/lint bypassing Gemini Mutator
       const val = await lintSourceCode(customCode, customPath);
       
       let written = false;
@@ -133,28 +131,28 @@ export const OracleModal: React.FC<OracleModalProps> = ({
     <div
       id="emg-oracle-modal-backdrop"
       onClick={onClose}
-      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-fadeIn"
+      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/85 backdrop-blur-md"
     >
       <div
         id="emg-oracle-modal"
         onClick={(e) => e.stopPropagation()}
-        className="bg-neutral-900 border border-neutral-800 rounded-2xl w-full max-w-2xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh]"
+        className="cyber-card bg-[#070e0a]/95 border border-emerald-500/30 rounded-2xl w-full max-w-2xl shadow-[0_16px_48px_rgba(0,0,0,0.9)] overflow-hidden flex flex-col max-h-[90vh]"
       >
         {/* Header */}
-        <div className="flex items-center justify-between p-5 border-b border-neutral-800 bg-neutral-950/40">
+        <div className="flex items-center justify-between p-5 border-b border-emerald-950 bg-[#040805]">
           <div className="flex items-center gap-3">
-            <div className="w-9 h-9 rounded-xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-center text-amber-400">
+            <div className="w-9 h-9 rounded-xl bg-amber-500/10 border border-amber-500/30 flex items-center justify-center text-amber-400">
               <ShieldAlert className="w-5 h-5" />
             </div>
             <div>
               <h2 className="text-base font-bold text-white tracking-tight flex items-center gap-2">
-                Oracle Harness & Stress-Test Mode
-                <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-amber-500/20 text-amber-300 border border-amber-500/30">
+                Oracle Harness & Stress-Test
+                <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-300 border border-amber-500/40 font-bold">
                   OPTION A
                 </span>
               </h2>
-              <p className="text-xs text-neutral-400 font-mono">
-                Bypass Gemini Mutator • Feed raw defective specimens directly into the Compiler & Lint Gate
+              <p className="text-xs text-zinc-400 font-mono">
+                Direct specimen injection into Compiler & Lint Gate
               </p>
             </div>
           </div>
@@ -162,7 +160,7 @@ export const OracleModal: React.FC<OracleModalProps> = ({
           <button
             id="btn-close-oracle"
             onClick={onClose}
-            className="p-2 rounded-xl text-neutral-400 hover:text-white hover:bg-neutral-800 transition-colors"
+            className="p-2 rounded-xl bg-[#09140c] text-zinc-400 hover:text-white hover:bg-emerald-950 border border-emerald-800/60 transition-colors cursor-pointer"
           >
             <X className="w-4 h-4" />
           </button>
@@ -172,20 +170,20 @@ export const OracleModal: React.FC<OracleModalProps> = ({
         <div className="p-5 overflow-y-auto space-y-4 text-xs font-mono">
           {/* Specimen Presets */}
           <div>
-            <label className="text-neutral-400 block mb-2 font-semibold">Select Poison Specimen Preset:</label>
+            <label className="text-zinc-200 block mb-2 font-semibold">Select Poison Specimen Preset:</label>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
               {PRESET_SPECIMENS.map((spec) => (
                 <button
                   key={spec.name}
                   onClick={() => handleSelectPreset(spec)}
-                  className={`p-2.5 rounded-xl text-left border transition-all ${
+                  className={`p-2.5 rounded-xl text-left border transition-all cursor-pointer ${
                     selectedSpecimen.name === spec.name
-                      ? 'bg-amber-500/10 border-amber-500/40 text-amber-200'
-                      : 'bg-neutral-950/50 border-neutral-800 text-neutral-400 hover:border-neutral-700 hover:text-neutral-300'
+                      ? 'bg-amber-500/20 border-amber-500/50 text-amber-200'
+                      : 'bg-[#050b07] border-emerald-950 text-zinc-300 hover:border-emerald-700 hover:text-white'
                   }`}
                 >
-                  <div className="font-semibold text-[11px] truncate">{spec.name}</div>
-                  <div className="text-[10px] text-neutral-500 truncate">{spec.filePath}</div>
+                  <div className="font-semibold text-xs truncate">{spec.name}</div>
+                  <div className="text-[10px] text-zinc-400 truncate">{spec.filePath}</div>
                 </button>
               ))}
             </div>
@@ -194,15 +192,15 @@ export const OracleModal: React.FC<OracleModalProps> = ({
           {/* Editable Code */}
           <div>
             <div className="flex items-center justify-between mb-1.5">
-              <span className="text-neutral-400">Specimen Source Code to Inject:</span>
-              <span className="text-[10px] text-neutral-500">{customPath}</span>
+              <span className="text-zinc-200 font-semibold">Specimen Source Code to Inject:</span>
+              <span className="text-[10px] text-zinc-400">{customPath}</span>
             </div>
             <textarea
               id="oracle-code-input"
               value={customCode}
               onChange={(e) => setCustomCode(e.target.value)}
               rows={7}
-              className="w-full bg-neutral-950 border border-neutral-800 rounded-xl p-3 text-[11px] text-neutral-200 focus:outline-none focus:border-amber-500/50 font-mono resize-none"
+              className="w-full bg-[#040805] border border-emerald-900/80 rounded-xl p-3 text-xs text-zinc-200 focus:outline-none focus:border-emerald-500 font-mono resize-none"
             />
           </div>
 
@@ -211,8 +209,8 @@ export const OracleModal: React.FC<OracleModalProps> = ({
             <div
               className={`p-4 rounded-xl border ${
                 result.valid
-                  ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-300'
-                  : 'bg-rose-500/10 border-rose-500/30 text-rose-300'
+                  ? 'bg-emerald-950/40 border-emerald-500/40 text-emerald-300'
+                  : 'bg-red-950/40 border-red-500/40 text-red-300'
               }`}
             >
               <div className="flex items-center justify-between font-bold text-xs mb-2">
@@ -223,22 +221,22 @@ export const OracleModal: React.FC<OracleModalProps> = ({
                     </>
                   ) : (
                     <>
-                      <XCircle className="w-4 h-4 text-rose-400" /> REJECT: Gate fired & rejected specimen
+                      <XCircle className="w-4 h-4 text-red-400" /> REJECT: Gate fired & rejected specimen
                     </>
                   )}
                 </span>
-                <span className="text-[10px] opacity-70">{result.timestamp}</span>
+                <span className="text-[10px] opacity-70 font-mono">{result.timestamp}</span>
               </div>
 
-              <div className="bg-black/60 rounded-lg p-2.5 border border-white/5 overflow-x-auto text-[10px] max-h-36">
-                <div className="text-neutral-400 uppercase font-bold text-[9px] mb-1">Verbatim Machine Stderr / Evidence:</div>
-                <pre className="whitespace-pre-wrap font-mono text-neutral-200">{result.lintEvidence}</pre>
+              <div className="bg-[#040805] rounded-lg p-2.5 border border-emerald-900/60 overflow-x-auto text-xs max-h-36">
+                <div className="text-zinc-400 uppercase font-bold text-[10px] mb-1 font-mono">Verbatim Machine Stderr / Evidence:</div>
+                <pre className="whitespace-pre-wrap font-mono text-zinc-200">{result.lintEvidence}</pre>
               </div>
 
               {result.writtenToLedger && (
-                <div className="mt-2.5 text-[10px] text-amber-300 flex items-center gap-1">
+                <div className="mt-2.5 text-xs text-amber-300 flex items-center gap-1 font-mono">
                   <CheckCircle2 className="w-3.5 h-3.5 text-amber-400" />
-                  Successfully recorded synthetic post-mortem to <code className="bg-amber-950/50 px-1 rounded">docs/POSTMORTEMS.md</code> (source: oracle-harness).
+                  Recorded post-mortem to <code className="bg-amber-950/80 px-1 py-0.5 rounded text-amber-200 border border-amber-800/40">docs/POSTMORTEMS.md</code>
                 </div>
               )}
             </div>
@@ -246,17 +244,17 @@ export const OracleModal: React.FC<OracleModalProps> = ({
         </div>
 
         {/* Footer */}
-        <div className="p-4 border-t border-neutral-800 bg-neutral-950/40 flex items-center justify-between">
-          <div className="text-[10px] text-neutral-500 flex items-center gap-1">
-            <Terminal className="w-3.5 h-3.5" />
-            Target: {targetRepo || 'Local Sandbox'} ({branch || 'main'})
+        <div className="p-4 border-t border-emerald-950 bg-[#040805] flex items-center justify-between">
+          <div className="text-xs text-zinc-400 font-mono flex items-center gap-1">
+            <Terminal className="w-3.5 h-3.5 text-emerald-400" />
+            Target: {targetRepo || 'Sandbox'} ({branch || 'main'})
           </div>
 
           <button
             id="btn-execute-oracle-injection"
             onClick={handleRunOracleDirectly}
             disabled={isVerifying}
-            className="px-4 py-2 rounded-xl bg-amber-600 hover:bg-amber-500 disabled:opacity-50 text-white font-bold text-xs flex items-center gap-2 cursor-pointer shadow-md shadow-amber-600/20 transition-all"
+            className="px-5 py-2 rounded-xl bg-amber-600 hover:bg-amber-500 disabled:opacity-50 text-white font-bold text-xs flex items-center gap-2 cursor-pointer shadow-md shadow-amber-950 transition-all"
           >
             {isVerifying ? (
               <>

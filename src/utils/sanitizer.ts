@@ -170,10 +170,12 @@ export function sanitizeCode(
   // Strip ```c ... ``` or similar markdown blocks if present
   if (code.startsWith('```')) {
      const lines = code.split('\n');
-     if (lines.length > 0 && lines[0].startsWith('```')) {
+     const firstLine = lines[0];
+     if (firstLine && firstLine.startsWith('```')) {
          lines.shift();
      }
-     if (lines.length > 0 && lines[lines.length - 1].startsWith('```')) {
+     const lastLine = lines[lines.length - 1];
+     if (lastLine && lastLine.startsWith('```')) {
          lines.pop();
      }
      code = lines.join('\n').trim();

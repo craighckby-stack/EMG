@@ -1,12 +1,11 @@
 /**
  * File: src/components/NeuralChart.tsx
- * Role: Core system component participating in autonomous cognitive evolution cycles.
- * Architecture: Type-safe modular unit with resilient state interfaces.
+ * Role: Modern Black & Emerald Latency Telemetry Chart
  */
 
 import React, { useEffect, useRef } from 'react';
 import { Chart, registerables } from 'chart.js';
-import { Activity, FileCode, Zap } from 'lucide-react';
+import { Activity, FileCode } from 'lucide-react';
 
 Chart.register(...registerables);
 
@@ -30,10 +29,10 @@ export const NeuralChart: React.FC<NeuralChartProps> = ({
     const ctx = canvasRef.current.getContext('2d');
     if (!ctx) return;
 
-    // Create gradient fill
+    // Create modern emerald gradient
     const gradient = ctx.createLinearGradient(0, 0, 0, 220);
-    gradient.addColorStop(0, 'rgba(59, 130, 246, 0.35)');
-    gradient.addColorStop(1, 'rgba(59, 130, 246, 0.0)');
+    gradient.addColorStop(0, 'rgba(16, 185, 129, 0.3)');
+    gradient.addColorStop(1, 'rgba(16, 185, 129, 0.0)');
 
     if (chartInstanceRef.current) {
       chartInstanceRef.current.destroy();
@@ -47,21 +46,21 @@ export const NeuralChart: React.FC<NeuralChartProps> = ({
         labels,
         datasets: [
           {
-            label: 'Neural Latency (ms)',
+            label: 'Latency (ms)',
             data: [...latencyHistory],
-            borderColor: '#3b82f6',
-            borderWidth: 2.2,
+            borderColor: '#10b981',
+            borderWidth: 2,
             backgroundColor: gradient,
             fill: true,
-            tension: 0.38,
+            tension: 0.35,
             pointRadius: (context) => {
               const index = context.dataIndex;
               const count = context.dataset.data.length;
-              return index === count - 1 ? 4 : 0;
+              return index === count - 1 ? 5 : 2;
             },
-            pointBackgroundColor: '#60a5fa',
-            pointBorderColor: '#1d4ed8',
-            pointBorderWidth: 2,
+            pointBackgroundColor: '#34d399',
+            pointBorderColor: '#064e3b',
+            pointBorderWidth: 1.5,
           },
         ],
       },
@@ -69,17 +68,18 @@ export const NeuralChart: React.FC<NeuralChartProps> = ({
         responsive: true,
         maintainAspectRatio: false,
         animation: {
-          duration: 300,
+          duration: 250,
         },
         plugins: {
           legend: { display: false },
           tooltip: {
-            backgroundColor: '#171717',
-            titleColor: '#a3a3a3',
-            bodyColor: '#60a5fa',
-            borderColor: '#262626',
+            backgroundColor: '#070e0a',
+            titleColor: '#10b981',
+            bodyColor: '#e2f7ea',
+            borderColor: 'rgba(16, 185, 129, 0.3)',
             borderWidth: 1,
-            padding: 8,
+            padding: 10,
+            cornerRadius: 8,
             displayColors: false,
             callbacks: {
               label: (context) => `${context.parsed.y} ms`,
@@ -97,10 +97,10 @@ export const NeuralChart: React.FC<NeuralChartProps> = ({
             suggestedMin: 0,
             suggestedMax: 1500,
             grid: {
-              color: 'rgba(255, 255, 255, 0.04)',
+              color: 'rgba(16, 185, 129, 0.08)',
             },
             ticks: {
-              color: '#737373',
+              color: 'rgba(52, 211, 153, 0.7)',
               font: { size: 10, family: 'monospace' },
               callback: (value) => `${value}ms`,
             },
@@ -119,7 +119,7 @@ export const NeuralChart: React.FC<NeuralChartProps> = ({
 
   // Update chart data whenever latencyHistory changes
   useEffect(() => {
-    if (chartInstanceRef.current) {
+    if (chartInstanceRef.current && chartInstanceRef.current.data.datasets[0]) {
       chartInstanceRef.current.data.labels = Array(latencyHistory.length).fill('');
       chartInstanceRef.current.data.datasets[0].data = [...latencyHistory];
       chartInstanceRef.current.update('none');
@@ -134,38 +134,40 @@ export const NeuralChart: React.FC<NeuralChartProps> = ({
   return (
     <div
       id="emg-neural-chart"
-      className="bg-neutral-900/80 border border-neutral-800/80 rounded-3xl p-5 md:p-6 shadow-xl backdrop-blur-md flex flex-col gap-4"
+      className="cyber-card p-5 md:p-6 rounded-2xl flex flex-col gap-4 bg-[#070e0a]/80 shadow-[0_8px_32px_rgba(0,0,0,0.5)]"
     >
-      <div className="flex flex-wrap items-center justify-between gap-2">
-        <div className="flex items-center gap-2">
-          <Activity className="w-4 h-4 text-blue-400" />
-          <h3 className="text-xs font-bold text-white uppercase tracking-widest font-mono">
-            Neural Pulse Telemetry
+      <div className="flex flex-wrap items-center justify-between gap-3 border-b border-emerald-950 pb-3">
+        <div className="flex items-center gap-2.5">
+          <div className="p-1.5 rounded-lg bg-emerald-950/80 border border-emerald-500/30 text-emerald-400">
+            <Activity className="w-4 h-4" />
+          </div>
+          <h3 className="text-sm font-bold text-white tracking-tight">
+            Neural Latency Stream
           </h3>
         </div>
 
-        <div className="flex items-center gap-3 text-[10px] font-mono">
-          <span className="text-neutral-400">
-            Min: <strong className="text-emerald-400">{minVal}ms</strong>
+        <div className="flex items-center gap-3 text-xs font-mono">
+          <span className="text-zinc-400">
+            Min: <strong className="text-emerald-300 font-semibold">{minVal}ms</strong>
           </span>
-          <span className="text-neutral-400">
-            Peak: <strong className="text-amber-400">{maxVal}ms</strong>
+          <span className="text-zinc-400">
+            Peak: <strong className="text-amber-300 font-semibold">{maxVal}ms</strong>
           </span>
-          <span className="px-2 py-0.5 rounded bg-blue-500/10 border border-blue-500/20 text-blue-400 font-bold">
+          <span className="px-2.5 py-1 rounded-full bg-emerald-950/80 border border-emerald-500/50 text-emerald-300 font-bold text-[11px]">
             Live: {latestLatency}ms
           </span>
         </div>
       </div>
 
       {activePath && (
-        <div className="flex items-center gap-2 text-xs font-mono bg-neutral-950/60 border border-neutral-800/80 rounded-xl px-3 py-1.5 text-neutral-300">
-          <FileCode className="w-3.5 h-3.5 text-sky-400 shrink-0" />
-          <span className="text-neutral-500 text-[11px]">ACTIVE TARGET:</span>
-          <span className="text-sky-300 font-semibold truncate">{activePath}</span>
+        <div className="flex items-center gap-2 text-xs font-mono bg-[#050b07] border border-emerald-900/60 px-3.5 py-2 rounded-xl text-zinc-200">
+          <FileCode className="w-4 h-4 text-emerald-400 shrink-0" />
+          <span className="text-zinc-400 font-semibold">TARGET:</span>
+          <span className="text-zinc-200 font-medium truncate">{activePath}</span>
         </div>
       )}
 
-      <div className="w-full h-48 md:h-56 relative">
+      <div className="w-full h-44 md:h-52 relative">
         <canvas ref={canvasRef} />
       </div>
     </div>
