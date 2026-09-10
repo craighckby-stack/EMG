@@ -277,3 +277,11 @@ Line 70, Col 38: '}' expected.
 [LINT REJECT: NO_UNUSED_MACROS] Macro 'SEED_ERR_GENERIC' was defined but never applied in any function or type signature.
 ```
 **CONSTRAINT (Model Generalization):** [STRUCK] Original constraint invalidated. Artifact of isolated compilation missing project context.
+
+### ❌ [2026-09-10] server.ts `source: mutation-cycle`
+**Symptom:** AST / TypeScript Compiler Validation Rejected
+**EVIDENCE (Machine-Copied Fact):**
+```
+Line 386, Col 54: Unterminated string literal.
+```
+**CONSTRAINT (Model Generalization):** Never repeat code patterns that produce this compiler/linter error on server.ts.
