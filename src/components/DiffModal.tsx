@@ -18,7 +18,7 @@ export const DiffModal: FC<DiffModalProps> = ({ record, onClose }) => {
   const [viewMode, setViewMode] = useState<'split' | 'unified'>('split');
 
   const handleKeyDown = useCallback(
-    (e: KeyboardEvent) => {
+    (e: KeyboardEvent): void => {
       if (e.key === 'Escape') {
         onClose();
       }
