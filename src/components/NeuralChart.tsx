@@ -1,5 +1,4 @@
 /**
- * DARLEK CANN ARCHITECTURAL HEADER
  * File: src/components/NeuralChart.tsx
  * Role: Core system component participating in cognitive evolution cycles.
  * Architecture: Type-safe modular unit with resilient state interfaces.
