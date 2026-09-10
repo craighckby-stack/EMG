@@ -1,13 +1,13 @@
 /**
  * DARLEK CANN ARCHITECTURAL HEADER
  * File: src/components/NeuralChart.tsx
- * Role: Core system component participating in autonomous cognitive evolution cycles.
+ * Role: Core system component participating in cognitive evolution cycles.
  * Architecture: Type-safe modular unit with resilient state interfaces.
  */
 
 import React, { useEffect, useRef } from 'react';
-import { Chart, registerables } from 'chart.js';
-import { Activity, FileCode, Zap } from 'lucide-react';
+import { Chart, registerables, ScriptableContext } from 'chart.js';
+import { Activity, FileCode } from 'lucide-react';
 
 Chart.register(...registerables);
 
@@ -31,7 +31,6 @@ export const NeuralChart: React.FC<NeuralChartProps> = ({
     const ctx = canvasRef.current.getContext('2d');
     if (!ctx) return;
 
-    // Create gradient fill
     const gradient = ctx.createLinearGradient(0, 0, 0, 220);
     gradient.addColorStop(0, 'rgba(59, 130, 246, 0.35)');
     gradient.addColorStop(1, 'rgba(59, 130, 246, 0.0)');
@@ -55,7 +54,7 @@ export const NeuralChart: React.FC<NeuralChartProps> = ({
             backgroundColor: gradient,
             fill: true,
             tension: 0.38,
-            pointRadius: (context) => {
+            pointRadius: (context: ScriptableContext<'line'>) => {
               const index = context.dataIndex;
               const count = context.dataset.data.length;
               return index === count - 1 ? 4 : 0;
@@ -118,7 +117,6 @@ export const NeuralChart: React.FC<NeuralChartProps> = ({
     };
   }, []);
 
-  // Update chart data whenever latencyHistory changes
   useEffect(() => {
     if (chartInstanceRef.current) {
       chartInstanceRef.current.data.labels = Array(latencyHistory.length).fill('');
@@ -127,10 +125,9 @@ export const NeuralChart: React.FC<NeuralChartProps> = ({
     }
   }, [latencyHistory]);
 
-  const maxVal = Math.max(...latencyHistory, 0);
-  const minVal = latencyHistory.filter((v) => v > 0).length
-    ? Math.min(...latencyHistory.filter((v) => v > 0))
-    : 0;
+  const maxVal = latencyHistory.length ? Math.max(...latencyHistory, 0) : 0;
+  const filteredLatencies = latencyHistory.filter((v) => v > 0);
+  const minVal = filteredLatencies.length ? Math.min(...filteredLatencies) : 0;
 
   return (
     <div
