@@ -72,9 +72,14 @@ export const Header: React.FC<HeaderProps> = ({
 
         <div>
           <div className="flex items-center gap-2">
-            <h1 className="font-bold text-white text-base tracking-tight flex items-center gap-2">
-              EMG Core <span className="text-emerald-300 text-xs font-mono px-2 py-0.5 rounded-full bg-emerald-950/80 border border-emerald-500/40">v49</span>
-            </h1>
+            <div>
+              <h1 className="font-bold text-white text-base tracking-tight leading-tight flex items-center gap-2">
+                EMG
+              </h1>
+              <p className="text-[10px] text-emerald-400 font-mono tracking-wide leading-none mt-0.5">
+                Ephemeral Mind Gem
+              </p>
+            </div>
             <span className="hidden sm:inline-flex items-center text-[11px] font-mono text-zinc-300 bg-[#09150d] px-2 py-0.5 rounded-md border border-emerald-800/40">
               C-Dialect Engine
             </span>

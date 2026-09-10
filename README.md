@@ -1,6 +1,19 @@
-# EMG Core // Autonomous C-Dialect Verifier & Neural Code Evolution Engine
+# EMG Core // Ephemeral Mind Gem (EMG)
 
-**EMG Core** is an automated, verification-gated code refactoring engine and full-stack operational control deck. It drives iterative, autonomous cognitive evolution cycles across local sandbox fixtures and remote GitHub repositories, validating model-generated code changes through multi-tier syntax verifiers, real GCC/Clang compiler gates, heuristic linters, unified diff patchers, and automated PII/secret redaction before applying changes.
+**EMG** (Ephemeral Mind Gem) is an automated, verification-gated code refactoring engine and full-stack operational control deck. It drives iterative, autonomous cognitive evolution cycles across local sandbox fixtures and remote GitHub repositories, validating model-generated code changes through multi-tier syntax verifiers, real GCC/Clang compiler gates, heuristic linters, unified diff patchers, and automated PII/secret redaction before applying changes.
+
+---
+
+## Live Preview & How to Use Preview
+
+* **Live App URL:** [https://ais-dev-ipgdsocr7adysm4iwxj2rb-483535245139.asia-southeast1.run.app](https://ais-dev-ipgdsocr7adysm4iwxj2rb-483535245139.asia-southeast1.run.app)
+* **Shared App URL:** [https://ais-pre-ipgdsocr7adysm4iwxj2rb-483535245139.asia-southeast1.run.app](https://ais-pre-ipgdsocr7adysm4iwxj2rb-483535245139.asia-southeast1.run.app)
+
+### How to Use the Preview
+1. **Initial Matrix Intro**: Upon loading the application, you will be greeted by the multi-color matrix rain intro screen featuring the AI Ponderer for Hire (`craighckby@gmail.com`) for 20 seconds. You can watch the neural matrix initialize or click **"Enter System Now"** to jump straight in.
+2. **Splash & Advisory View**: Explore the Architecture, Security pre-flight advisory, and Ecosystem tabs.
+3. **Workspace Control Deck**: Click **Launch Workspace** to access the live control deck, execute optimization cycles, monitor telemetry, and interact with the refactoring engine.
+4. **New Tab Access**: If you are viewing inside an embedded iframe, you can open the preview in a new browser tab for full screen interactive performance.
 
 ---
 
@@ -89,7 +102,7 @@ EMG Core is connected directly to a network of agentic, security, and worldbuild
 
 | Project | Category | Description | Launch URL |
 | :--- | :--- | :--- | :--- |
-| **Git-Secret-PII-Sanitizer-2** | Security Gateway | Scrub API keys, tokens, and PII from git trees before LLM submission. | [GitHub Repository](https://github.com/craighckby-stack/Git-Secret-PII-Sanitizer-2) |
+| **Git-Secret-PII-Sanitizer-2** | Security Gateway | Scrub API keys, tokens, and PII from git trees before LLM submission. | [AI Studio App](https://ai.studio/apps/57c14614-897c-40cb-a90d-aeff7df60e68) |
 | **DARLEK CAAN** | AI Command Center | Autonomous Code Evolution matrix and distributed AI command platform. | [Live Deployment](https://ais-pre-amubz4v3czr3772fnvrcru-483535245139.asia-southeast1.run.app/) |
 | **Darlek Caan vs Jesus Chess** | AI Studio Arena | Grandmaster tactical chess tournament duel on Google AI Studio. | [AI Studio App](https://ai.studio/apps/4f692b1f-527f-4c1d-b423-e2bbe06b2009) |
 | **Huxley Singularity Loop** | Neural Loop | Recursive self-improving neural loop and autonomous feedback synthesis engine. | [Live Deployment](https://ais-pre-km7pxypy7meeld2j6lnyqm-483535245139.asia-southeast1.run.app) |

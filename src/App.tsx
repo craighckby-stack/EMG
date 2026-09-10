@@ -26,7 +26,6 @@ import { DiagnosticsModal } from './components/DiagnosticsModal';
 import { SaturationModal } from './components/SaturationModal';
 import { WipeMemoryModal } from './components/WipeMemoryModal';
 import { OracleModal } from './components/OracleModal';
-import { Ecosystem } from './components/Ecosystem';
 import { SANDBOX_REPOSITORIES, resetSandboxRepositories } from './utils/mockRepo';
 import {
   fetchRepoDetails,
@@ -1406,12 +1405,7 @@ export default function App() {
         onOpenWipeMemory={() => setIsWipeMemoryOpen(true)}
         onOpenOracle={() => setIsOracleOpen(true)}
         onOpenSplash={() => setIsAcknowledged(false)}
-        onOpenEcosystem={() => {
-          const el = document.getElementById('emg-ecosystem-workspace');
-          if (el) {
-            el.scrollIntoView({ behavior: 'smooth' });
-          }
-        }}
+        onOpenEcosystem={() => setIsAcknowledged(false)}
         isCycling={isCycling}
       />
 
@@ -1454,9 +1448,6 @@ export default function App() {
           <LogStream logs={logs} onClearLogs={handleClearLogs} />
         </div>
       </div>
-
-      {/* Prominently Placed Developer Ecosystem & Repository Hub */}
-      <Ecosystem id="emg-ecosystem-workspace" onOpenLicense={() => setIsLicenseOpen(true)} />
 
       {/* Diff Inspector Modal */}
       {selectedRecord && (

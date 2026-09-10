@@ -137,7 +137,7 @@ export const DiffModal: React.FC<DiffModalProps> = ({ record, onClose }) => {
               <AlertTriangle className="w-3.5 h-3.5" />
               <span>Type / Syntax Diagnostics Rejected Commit ({record.validationErrors.length} issues):</span>
             </div>
-            <ul className="list-disc list-inside space-y-0.5 text-[11px] text-red-200">
+            <ul className="list-disc list-inside space-y-0.5 text-[11px] text-red-200 break-all">
               {record.validationErrors.map((err, i) => (
                 <li key={i}>{err}</li>
               ))}
@@ -148,10 +148,10 @@ export const DiffModal: React.FC<DiffModalProps> = ({ record, onClose }) => {
         {/* Summary Bar */}
         {record.optimizationSummary && (
           <div className="px-6 py-2.5 bg-emerald-950/30 border-b border-emerald-900/40 text-xs text-zinc-200 flex items-center gap-2">
-            <span className="font-semibold text-emerald-300 font-mono text-[10px] uppercase tracking-wider">
+            <span className="font-semibold text-emerald-300 font-mono text-[10px] uppercase tracking-wider shrink-0">
               Directive:
             </span>
-            <span>{record.optimizationSummary}</span>
+            <span className="break-all">{record.optimizationSummary}</span>
           </div>
         )}
 
@@ -165,7 +165,7 @@ export const DiffModal: React.FC<DiffModalProps> = ({ record, onClose }) => {
                   <span>BEFORE (ORIGINAL)</span>
                   <span className="text-zinc-400">{record.originalLines} lines</span>
                 </div>
-                <pre className="p-4 overflow-auto text-rose-300 leading-relaxed text-[11px] select-text">
+                <pre className="p-4 overflow-auto whitespace-pre-wrap break-all text-rose-300 leading-relaxed text-[11px] select-text">
                   <code>{record.originalCode}</code>
                 </pre>
               </div>
@@ -176,7 +176,7 @@ export const DiffModal: React.FC<DiffModalProps> = ({ record, onClose }) => {
                   <span>AFTER (SYNTHESIZED)</span>
                   <span className="text-emerald-400">{record.optimizedLines} lines</span>
                 </div>
-                <pre className="p-4 overflow-auto text-emerald-200 leading-relaxed text-[11px] select-text">
+                <pre className="p-4 overflow-auto whitespace-pre-wrap break-all text-emerald-200 leading-relaxed text-[11px] select-text">
                   <code>{record.optimizedCode}</code>
                 </pre>
               </div>
@@ -187,7 +187,7 @@ export const DiffModal: React.FC<DiffModalProps> = ({ record, onClose }) => {
                 <span>OPTIMIZED CODE</span>
                 <span className="text-emerald-400">{record.optimizedLines} lines</span>
               </div>
-              <pre className="p-4 overflow-auto text-emerald-200 leading-relaxed text-xs select-text">
+              <pre className="p-4 overflow-auto whitespace-pre-wrap break-all text-emerald-200 leading-relaxed text-xs select-text">
                 <code>{record.optimizedCode}</code>
               </pre>
             </div>

@@ -26,6 +26,17 @@ interface SplashViewProps {
 
 export const SplashView: React.FC<SplashViewProps> = ({ onInitialize, onOpenLicense }) => {
   const [activeTab, setActiveTab] = useState<'overview' | 'sanitizer' | 'ecosystem'>('overview');
+  const [showMatrixIntro, setShowMatrixIntro] = useState<boolean>(true);
+
+  if (showMatrixIntro) {
+    return (
+      <MatrixIntroRain
+        onComplete={() => {
+          setShowMatrixIntro(false);
+        }}
+      />
+    );
+  }
 
   return (
     <div
@@ -50,15 +61,20 @@ export const SplashView: React.FC<SplashViewProps> = ({ onInitialize, onOpenLice
             </div>
             <div>
               <div className="flex items-center gap-2">
-                <h1 className="text-xl font-bold tracking-tight text-white flex items-center gap-2">
-                  EMG Core <span className="text-emerald-300 text-sm font-mono px-2 py-0.5 rounded-full bg-emerald-950/80 border border-emerald-500/40">v49</span>
-                </h1>
-                <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-emerald-300 bg-emerald-950/80 px-2 py-0.5 rounded-full border border-emerald-700/60">
+                <div>
+                  <h1 className="text-xl font-bold tracking-tight text-white leading-tight">
+                    EMG
+                  </h1>
+                  <p className="text-[11px] text-emerald-400 font-mono font-medium tracking-wide leading-none mt-1">
+                    Ephemeral Mind Gem
+                  </p>
+                </div>
+                <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-emerald-300 bg-emerald-950/80 px-2 py-0.5 rounded-full border border-emerald-700/60 ml-2">
                   <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
                   Online
                 </span>
               </div>
-              <p className="text-xs text-zinc-300 font-mono mt-0.5">
+              <p className="text-xs text-zinc-300 font-mono mt-1">
                 Autonomous C-Dialect Neural Verification & Refactoring Engine
               </p>
             </div>
@@ -203,16 +219,16 @@ export const SplashView: React.FC<SplashViewProps> = ({ onInitialize, onOpenLice
               <div className="pt-2 flex flex-wrap items-center gap-3">
                 <a
                   id="btn-link-sanitizer-tab"
-                  href="https://github.com/craighckby-stack/Git-Secret-PII-Sanitizer-2"
+                  href="https://ai.studio/apps/57c14614-897c-40cb-a90d-aeff7df60e68"
                   target="_blank"
                   rel="noopener noreferrer"
                   className="px-4 py-2 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-black font-bold text-xs transition-all flex items-center gap-2 cursor-pointer shadow-lg shadow-emerald-500/20"
                 >
-                  <span>Launch Git-Secret-PII-Sanitizer-2</span>
+                  <span>Open Sanitizer in AI Studio</span>
                   <ExternalLink className="w-3.5 h-3.5" />
                 </a>
                 <span className="text-xs text-zinc-400 font-mono truncate">
-                  github.com/craighckby-stack/Git-Secret-PII-Sanitizer-2
+                  ai.studio/apps/57c14614-897c-40cb-a90d-aeff7df60e68
                 </span>
               </div>
             </div>
@@ -238,12 +254,12 @@ export const SplashView: React.FC<SplashViewProps> = ({ onInitialize, onOpenLice
               </div>
               <a
                 id="btn-splash-sanitizer"
-                href="https://github.com/craighckby-stack/Git-Secret-PII-Sanitizer-2"
+                href="https://ai.studio/apps/57c14614-897c-40cb-a90d-aeff7df60e68"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="py-1.5 px-3 rounded-lg bg-emerald-500 hover:bg-emerald-400 text-black font-bold text-xs flex items-center justify-center gap-1.5 cursor-pointer transition-colors"
               >
-                <span>Launch Sanitizer</span>
+                <span>Open Sanitizer in Studio</span>
                 <ExternalLink className="w-3 h-3" />
               </a>
             </div>
@@ -427,3 +443,118 @@ export const SplashView: React.FC<SplashViewProps> = ({ onInitialize, onOpenLice
     </div>
   );
 };
+
+const MatrixIntroRain: React.FC<{ onComplete: () => void }> = ({ onComplete }) => {
+  const canvasRef = React.useRef<HTMLCanvasElement | null>(null);
+  const [timeLeft, setTimeLeft] = React.useState(20);
+
+  React.useEffect(() => {
+    const timer = setInterval(() => {
+      setTimeLeft((prev) => {
+        if (prev <= 1) {
+          clearInterval(timer);
+          setTimeout(() => {
+            onComplete();
+          }, 0);
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
+
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+
+    const chars = '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyzλψωΣΩµ∆ΨΞ';
+    const fontSize = 14;
+    const columns = Math.floor(canvas.width / fontSize);
+    const drops: number[] = Array(columns).fill(1);
+    const colors = ['#10b981', '#06b6d4', '#a855f7', '#3b82f6', '#84cc16', '#ec4899', '#f59e0b'];
+
+    const interval = setInterval(() => {
+      ctx.fillStyle = 'rgba(3, 7, 4, 0.12)';
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+      ctx.font = `bold ${fontSize}px monospace`;
+      for (let i = 0; i < drops.length; i++) {
+        const text = chars.charAt(Math.floor(Math.random() * chars.length));
+        const color = colors[Math.floor(Math.random() * colors.length)] || '#10b981';
+        ctx.fillStyle = color;
+        ctx.fillText(text, i * fontSize, (drops[i] ?? 1) * fontSize);
+
+        if ((drops[i] ?? 1) * fontSize > canvas.height && Math.random() > 0.975) {
+          drops[i] = 0;
+        }
+        drops[i] = (drops[i] ?? 0) + 1;
+      }
+    }, 45);
+
+    const handleResize = () => {
+      if (canvas) {
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+      }
+    };
+    window.addEventListener('resize', handleResize);
+
+    return () => {
+      clearInterval(timer);
+      clearInterval(interval);
+      window.removeEventListener('resize', handleResize);
+    };
+  }, [onComplete]);
+
+  return (
+    <div className="fixed inset-0 z-50 bg-[#030704] flex flex-col items-center justify-center overflow-hidden">
+      <canvas ref={canvasRef} className="absolute inset-0 w-full h-full pointer-events-none opacity-85" />
+      <div className="absolute inset-0 bg-gradient-to-t from-[#030704] via-transparent to-[#030704]/80 pointer-events-none" />
+
+      <motion.div
+        initial={{ opacity: 0, scale: 0.9 }}
+        animate={{ opacity: 1, scale: 1 }}
+        transition={{ duration: 0.6 }}
+        className="relative z-10 text-center p-8 max-w-2xl mx-4 cyber-card bg-[#070e09]/90 border border-emerald-500/40 rounded-2xl shadow-[0_0_50px_rgba(16,185,129,0.25)] backdrop-blur-md"
+      >
+        <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-950/80 border border-emerald-500/50 text-emerald-300 font-mono text-xs mb-4 animate-pulse">
+          <span className="w-2 h-2 rounded-full bg-emerald-400" />
+          Neural Matrix Initializing ({timeLeft}s)
+        </div>
+
+        <h1 className="text-2xl sm:text-3xl font-extrabold text-white tracking-tight mb-1">
+          EMG
+        </h1>
+        <p className="text-xs text-emerald-400 font-mono tracking-widest uppercase mb-6">
+          Ephemeral Mind Gem
+        </p>
+
+        <div className="p-4 rounded-xl bg-[#040906] border border-emerald-500/30 mb-6 shadow-inner">
+          <p className="text-sm sm:text-base font-mono text-emerald-300 font-semibold tracking-wide">
+            AI Ponderer for Hire
+          </p>
+          <a
+            href="mailto:craighckby@gmail.com"
+            className="text-xs font-mono text-cyan-400 hover:text-cyan-300 underline mt-1 inline-block transition-colors"
+          >
+            craighckby@gmail.com
+          </a>
+        </div>
+
+        <div className="flex items-center justify-center gap-3">
+          <button
+            onClick={() => setTimeout(onComplete, 0)}
+            className="px-6 py-2.5 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-black font-bold text-xs font-mono uppercase tracking-wider flex items-center gap-2 transition-all shadow-[0_0_20px_rgba(16,185,129,0.4)] cursor-pointer"
+          >
+            <span>Enter System Now ({timeLeft}s)</span>
+            <ArrowRight className="w-4 h-4" />
+          </button>
+        </div>
+      </motion.div>
+    </div>
+  );
+};
+
