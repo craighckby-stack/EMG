@@ -45,19 +45,19 @@ export function writePostmortem(
     const pmPath = 'docs/POSTMORTEMS.md';
     const timestamp = new Date().toISOString().split('T')[0];
     const flag = type === 'Success' ? '✅' : '❌';
-    const source = options?.source || 'mutation-cycle';
+    const source = options?.source ?? 'mutation-cycle';
     const tag = `\`source: ${source}\``;
     
     let newEntry = `\n### ${flag} [${timestamp}] ${filePath} ${tag}\n`;
     if (type === 'Failure') {
-      newEntry += `**Symptom:** ${options?.symptom || 'Verification Gate / Linting Rejected'}\n`;
+      newEntry += `**Symptom:** ${options?.symptom ?? 'Verification Gate / Linting Rejected'}\n`;
       newEntry += `**EVIDENCE (Machine-Copied Fact):**\n\`\`\`\n${lintEvidence.trim()}\n\`\`\`\n`;
-      const rule = options?.constraintRule || deriveConstraintFromEvidence(lintEvidence, filePath);
+      const rule = options?.constraintRule ?? deriveConstraintFromEvidence(lintEvidence, filePath);
       newEntry += `**CONSTRAINT (Model Generalization):** ${rule}\n`;
     } else {
       newEntry += `**Symptom:** Successful Verification Pass\n`;
       newEntry += `**EVIDENCE:** Pattern survived compiler and heuristic gates.\n`;
-      newEntry += `**CONSTRAINT:** ${options?.constraintRule || lintEvidence}\n`;
+      newEntry += `**CONSTRAINT:** ${options?.constraintRule ?? lintEvidence}\n`;
     }
 
     let retries = 5;
@@ -89,7 +89,7 @@ export function writePostmortem(
             return { content: updatedContent, hash };
         } catch (commitErr: unknown) {
             const err = commitErr as { message?: string };
-            if (err.message && err.message.includes('409') && retries > 1) {
+            if (err.message?.includes('409') && retries > 1) {
                 retries--;
                 await new Promise((r) => setTimeout(r, 1000 + Math.random() * 1000));
                 continue;
@@ -101,7 +101,7 @@ export function writePostmortem(
     throw new Error('Failed to write postmortem: Max retries exceeded on 409 Conflict.');
   };
 
-  const op = writeQueue.then(() => executeWrite()).catch(() => executeWrite());
+  const op = writeQueue.then(executeWrite, executeWrite);
   writeQueue = op;
   return op;
 }
