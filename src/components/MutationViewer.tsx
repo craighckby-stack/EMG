@@ -5,19 +5,23 @@
  * Architecture: Type-safe modular unit with resilient state interfaces.
  */
 
-import React from 'react';
-import { GitCommit, Eye, FileCode2, Clock, CheckCircle2, Shield, AlertTriangle, KeyRound, Ban } from 'lucide-react';
+import React, { memo, useCallback } from 'react';
+import { GitCommit, Eye, FileCode2, CheckCircle2, AlertTriangle, KeyRound, Ban } from 'lucide-react';
 import { MutationRecord } from '../types';
 
-interface MutationViewerProps {
-  mutations: MutationRecord[];
-  onSelectRecord: (record: MutationRecord) => void;
+export interface MutationViewerProps {
+  readonly mutations: readonly MutationRecord[];
+  readonly onSelectRecord: (record: MutationRecord) => void;
 }
 
-export const MutationViewer: React.FC<MutationViewerProps> = ({
+export const MutationViewer: React.FC<MutationViewerProps> = memo(({
   mutations,
   onSelectRecord,
 }) => {
+  const handleSelect = useCallback((record: MutationRecord) => {
+    onSelectRecord(record);
+  }, [onSelectRecord]);
+
   return (
     <div
       id="emg-mutations-panel"
@@ -44,14 +48,14 @@ export const MutationViewer: React.FC<MutationViewerProps> = ({
       ) : (
         <div className="space-y-2.5 max-h-72 overflow-y-auto pr-1">
           {mutations.map((mut) => {
-            const isFailed = mut.status === 'failed';
-            const isNoop = mut.status === 'noop';
-            const isApplied = mut.status === 'applied';
+            const isFailed: boolean = mut.status === 'failed';
+            const isNoop: boolean = mut.status === 'noop';
+            const isApplied: boolean = mut.status === 'applied';
 
             return (
               <div
                 key={mut.id}
-                onClick={() => onSelectRecord(mut)}
+                onClick={() => handleSelect(mut)}
                 className={`p-3 bg-neutral-950/60 hover:bg-neutral-900 border rounded-2xl transition-all cursor-pointer flex items-center justify-between gap-3 group ${
                   isFailed
                     ? 'border-rose-900/50 hover:border-rose-700'
@@ -90,7 +94,7 @@ export const MutationViewer: React.FC<MutationViewerProps> = ({
                       <span className="text-neutral-500">
                         {mut.originalLines}L → {mut.optimizedLines}L
                       </span>
-                      {(mut.redactedCount || 0) > 0 && (
+                      {(mut.redactedCount ?? 0) > 0 && (
                         <>
                           <span>•</span>
                           <span className="text-emerald-400 font-bold flex items-center gap-0.5">
@@ -139,4 +143,6 @@ export const MutationViewer: React.FC<MutationViewerProps> = ({
       )}
     </div>
   );
-};
+});
+
+MutationViewer.displayName = 'MutationViewer';
