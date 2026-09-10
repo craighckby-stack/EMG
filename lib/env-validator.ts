@@ -5,16 +5,31 @@
  */
 
 export interface EnvConfig {
-  GEMINI_API_KEY: string;
-  APP_URL: string;
-  NODE_ENV: 'development' | 'production' | 'test';
+  readonly GEMINI_API_KEY: string;
+  readonly APP_URL: string;
+  readonly NODE_ENV: 'development' | 'production' | 'test';
 }
 
-export function validateEnv(): { valid: boolean; missing: string[] } {
-  const required = ['GEMINI_API_KEY', 'APP_URL'];
-  const missing = required.filter(key => !process.env[key]);
+export interface EnvValidationResult {
+  readonly valid: boolean;
+  readonly missing: readonly string[];
+}
+
+const REQUIRED_ENV_VARS = ['GEMINI_API_KEY', 'APP_URL'] as const;
+
+export function validateEnv(): EnvValidationResult {
+  const missing: string[] = [];
+  
+  for (let i = 0; i < REQUIRED_ENV_VARS.length; i++) {
+    const key = REQUIRED_ENV_VARS[i];
+    const value = process.env[key];
+    if (!value || value.trim() === '') {
+      missing.push(key);
+    }
+  }
+
   return {
     valid: missing.length === 0,
-    missing
+    missing,
   };
 }
