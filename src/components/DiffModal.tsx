@@ -1,41 +1,50 @@
 /**
- * DARLEK CANN ARCHITECTURAL HEADER
  * File: src/components/DiffModal.tsx
- * Role: Core system component participating in autonomous cognitive evolution cycles.
+ * Role: Core component displaying mutation record differences and diagnostics.
  * Architecture: Type-safe modular unit with resilient state interfaces.
  */
 
-import React, { useState, useEffect } from 'react';
-import { X, Copy, Check, FileCode, ArrowRight, Shield, AlertTriangle, KeyRound } from 'lucide-react';
+import React, { useState, useEffect, useCallback, FC } from 'react';
+import { X, Copy, Check, FileCode, AlertTriangle, KeyRound } from 'lucide-react';
 import { MutationRecord } from '../types';
 
-interface DiffModalProps {
-  record: MutationRecord | null;
-  onClose: () => void;
+export interface DiffModalProps {
+  readonly record: MutationRecord | null;
+  readonly onClose: () => void;
 }
 
-export const DiffModal: React.FC<DiffModalProps> = ({ record, onClose }) => {
-  const [copied, setCopied] = useState(false);
+export const DiffModal: FC<DiffModalProps> = ({ record, onClose }) => {
+  const [copied, setCopied] = useState<boolean>(false);
   const [viewMode, setViewMode] = useState<'split' | 'unified'>('split');
 
-  useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
+  const handleKeyDown = useCallback(
+    (e: KeyboardEvent) => {
       if (e.key === 'Escape') {
         onClose();
       }
+    },
+    [onClose]
+  );
+
+  useEffect(() => {
+    if (!record) return;
+    window.addEventListener('keydown', handleKeyDown);
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown);
     };
-    if (record) {
-      window.addEventListener('keydown', handleKeyDown);
-    }
-    return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [record, onClose]);
+  }, [record, handleKeyDown]);
 
   if (!record) return null;
 
-  const handleCopy = () => {
-    navigator.clipboard.writeText(record.optimizedCode);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
+  const handleCopy = async (): Promise<void> => {
+    try {
+      await navigator.clipboard.writeText(record.optimizedCode);
+      setCopied(true);
+      const timer = setTimeout(() => setCopied(false), 2000);
+      return () => clearTimeout(timer);
+    } catch {
+      // Fallback or silent catch for clipboard permission failures
+    }
   };
 
   const isFailed = record.status === 'failed';
@@ -76,7 +85,7 @@ export const DiffModal: React.FC<DiffModalProps> = ({ record, onClose }) => {
                 >
                   {record.status}
                 </span>
-                {(record.redactedCount || 0) > 0 && (
+                {(record.redactedCount ?? 0) > 0 && (
                   <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-emerald-500/10 text-emerald-400 border border-emerald-500/30 flex items-center gap-1 font-semibold">
                     <KeyRound className="w-3 h-3" />
                     {record.redactedCount} token(s) scrubbed
@@ -112,6 +121,7 @@ export const DiffModal: React.FC<DiffModalProps> = ({ record, onClose }) => {
             </div>
 
             <button
+              type="button"
               onClick={handleCopy}
               className="p-2 rounded-lg bg-neutral-800 hover:bg-neutral-700 text-neutral-300 hover:text-white border border-neutral-700 transition-colors cursor-pointer"
               title="Copy optimized code"
@@ -121,6 +131,7 @@ export const DiffModal: React.FC<DiffModalProps> = ({ record, onClose }) => {
             </button>
 
             <button
+              type="button"
               id="btn-close-diff-header"
               onClick={onClose}
               className="p-2 rounded-lg bg-neutral-800 hover:bg-neutral-700 text-neutral-400 hover:text-white border border-neutral-700 transition-colors cursor-pointer"
@@ -141,7 +152,7 @@ export const DiffModal: React.FC<DiffModalProps> = ({ record, onClose }) => {
             </div>
             <ul className="list-disc list-inside space-y-0.5 text-[11px] text-rose-200">
               {record.validationErrors.map((err, i) => (
-                <li key={i}>{err}</li>
+                <li key={`error-${i}`}>{err}</li>
               ))}
             </ul>
           </div>
@@ -200,6 +211,7 @@ export const DiffModal: React.FC<DiffModalProps> = ({ record, onClose }) => {
         <div className="p-4 border-t border-neutral-800 bg-neutral-950/60 flex items-center justify-between text-[11px] text-neutral-500 font-mono">
           <span>EMG Core v49 Neural Diff Engine</span>
           <button
+            type="button"
             onClick={onClose}
             className="px-4 py-1.5 rounded-lg bg-neutral-800 hover:bg-neutral-700 text-white font-semibold cursor-pointer"
           >
