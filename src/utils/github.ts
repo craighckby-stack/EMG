@@ -8,31 +8,60 @@ import { sanitizeCode, sanitizeText } from './sanitizer';
 import { isMarkdownFile } from './validator';
 
 export const b64ToUtf8 = (str: string): string => {
+  if (!str) return '';
+  const cleaned = str.replace(/\s/g, '');
   try {
-    return decodeURIComponent(
-      atob(str.replace(/\s/g, ''))
-        .split('')
-        .map((c) => '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2))
-        .join('')
-    );
+    const binaryString = atob(cleaned);
+    const bytes = new Uint8Array(binaryString.length);
+    for (let i = 0; i < binaryString.length; i++) {
+      bytes[i] = binaryString.charCodeAt(i);
+    }
+    return new TextDecoder('utf-8').decode(bytes);
   } catch {
     try {
-      return atob(str);
+      return decodeURIComponent(
+        binaryStringToArray(atob(cleaned))
+          .map((c) => '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2))
+          .join('')
+      );
     } catch {
-      return str;
+      try {
+        return atob(cleaned);
+      } catch {
+        return str;
+      }
     }
   }
 };
 
+function binaryStringToArray(binaryStr: string): string[] {
+  const arr = new Array(binaryStr.length);
+  for (let i = 0; i < binaryStr.length; i++) {
+    arr[i] = binaryStr.charAt(i);
+  }
+  return arr;
+}
+
 export const utf8ToB64 = (str: string): string => {
+  if (!str) return '';
   try {
-    return btoa(
-      encodeURIComponent(str).replace(/%([0-9A-F]{2})/g, (_, p1) =>
-        String.fromCharCode(Number('0x' + p1))
-      )
-    );
+    const bytes = new TextEncoder().encode(str);
+    let binary = '';
+    const len = bytes.byteLength;
+    for (let i = 0; i < len; i++) {
+      binary += String.fromCharCode(bytes[i]);
+    }
+    return btoa(binary);
   } catch {
-    return btoa(str);
+    try {
+      return btoa(
+        encodeURIComponent(str).replace(/%([0-9A-F]{2})/g, (_, p1) =>
+          String.fromCharCode(Number('0x' + p1))
+        )
+      );
+    } catch {
+      return btoa(str);
+    }
   }
 };
 
@@ -88,7 +117,7 @@ export class GitHubError extends Error {
   }
 }
 
-async function parseJsonResponse<T = any>(res: Response, fallbackError: string): Promise<T> {
+async function parseJsonResponse<T = unknown>(res: Response, fallbackError: string): Promise<T> {
   const raw = await res.text();
   if (!raw || !raw.trim()) {
     if (!res.ok) {
@@ -111,9 +140,9 @@ async function parseJsonResponse<T = any>(res: Response, fallbackError: string):
   }
 
   try {
-    const parsed = JSON.parse(trimmed);
+    const parsed = JSON.parse(trimmed) as Record<string, unknown>;
     if (!res.ok) {
-      const errMsg = parsed?.error || parsed?.message || fallbackError;
+      const errMsg = (parsed?.error as string) || (parsed?.message as string) || fallbackError;
       if (res.status === 404) throw new GitHubError(`[404 Not Found] ${errMsg}`, 404);
       if (res.status === 429) throw new GitHubError(`[429 Rate Limit] ${errMsg}`, 429);
       if (res.status === 401) throw new GitHubError(`[401 Unauthorized] ${errMsg}`, 401);
@@ -272,7 +301,7 @@ export async function fetchFileContent(
     headers.Authorization = `Bearer ${token.trim()}`;
   }
 
-  let data: any = null;
+  let data: { content?: string; sha?: string } | null = null;
 
   try {
     let url = `https://api.github.com/repos/${cleanRepo}/contents/${filePath}?t=${Date.now()}`;
@@ -281,7 +310,7 @@ export async function fetchFileContent(
     }
     const res = await fetch(url, { headers });
     if (res.ok) {
-      data = await parseJsonResponse(res, `Failed to retrieve file contents for ${filePath}`);
+      data = await parseJsonResponse<{ content?: string; sha?: string }>(res, `Failed to retrieve file contents for ${filePath}`);
     }
   } catch {
     // Fallback handled below
@@ -298,12 +327,12 @@ export async function fetchFileContent(
         branch: branch?.trim(),
       }),
     });
-    data = await parseJsonResponse(proxyRes, `Failed to retrieve file ${filePath}`);
+    data = await parseJsonResponse<{ content?: string; sha?: string }>(proxyRes, `Failed to retrieve file ${filePath}`);
   }
 
   return {
-    content: b64ToUtf8(data.content || ''),
-    sha: data.sha,
+    content: b64ToUtf8(data?.content || ''),
+    sha: data?.sha || '',
   };
 }
 
@@ -320,7 +349,7 @@ export async function commitFileUpdate(
   const sanitizedContent = sanitizeCode(content, filePath).sanitized;
   const sanitizedMessage = sanitizeText(commitMessage);
 
-  const body: Record<string, any> = {
+  const body: Record<string, unknown> = {
     message: sanitizedMessage,
     content: utf8ToB64(sanitizedContent),
     sha: sha,
@@ -346,7 +375,7 @@ export async function commitFileUpdate(
     );
 
     if (res.ok) {
-      const data = await parseJsonResponse(res, 'Failed to commit mutation');
+      const data = await parseJsonResponse<{ commit?: { sha?: string } }>(res, 'Failed to commit mutation');
       return { commitSha: data.commit?.sha || 'unknown' };
     }
   } catch {
@@ -367,6 +396,6 @@ export async function commitFileUpdate(
     }),
   });
 
-  const data = await parseJsonResponse(proxyRes, 'Failed to commit mutation via backend proxy');
+  const data = await parseJsonResponse<{ commit?: { sha?: string } }>(proxyRes, 'Failed to commit mutation via backend proxy');
   return { commitSha: data.commit?.sha || 'unknown' };
 }
