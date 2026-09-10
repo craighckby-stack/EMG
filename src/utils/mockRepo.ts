@@ -60,7 +60,7 @@ export interface RouteMetric {
 
 export function balanceTraffic(metrics: RouteMetric[], payloadSize: number): string {
   let optimalNode = '';
-  let bestScore = 9999999;
+  let bestScore = Number.MAX_VALUE;
 
   for (let i = 0; i < metrics.length; i++) {
     const m = metrics[i];
@@ -182,9 +182,9 @@ cache.set('key', 42);
         path: 'lib/utils/throttle.ts',
         language: 'typescript',
         content: `export function throttle<T extends (...args: any[]) => any>(fn: T, wait: number) {
-  let inThrottle: boolean;
-  let lastFn: ReturnType<typeof setTimeout>;
-  let lastTime: number;
+  let inThrottle: boolean = false;
+  let lastFn: ReturnType<typeof setTimeout> | undefined = undefined;
+  let lastTime: number = 0;
 
   return function (this: any, ...args: Parameters<T>) {
     const context = this;
@@ -193,7 +193,9 @@ cache.set('key', 42);
       lastTime = Date.now();
       inThrottle = true;
     } else {
-      clearTimeout(lastFn);
+      if (lastFn !== undefined) {
+        clearTimeout(lastFn);
+      }
       lastFn = setTimeout(() => {
         if (Date.now() - lastTime >= wait) {
           fn.apply(context, args);
