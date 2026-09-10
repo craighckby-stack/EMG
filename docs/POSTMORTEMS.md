@@ -269,3 +269,11 @@ Line 77, Col 8: Property declaration is missing its type annotation.
 Line 70, Col 38: '}' expected.
 ```
 **CONSTRAINT (Model Generalization):** Never repeat code patterns that produce this compiler/linter error on src/utils/validator.ts.
+
+### ❌ [2026-09-10] seed_orchestrator.c `source: mutation-cycle`
+**Symptom:** Active Linter / Compiler Gate Rejection on LLM Output (Option B)
+**EVIDENCE (Machine-Copied Fact):**
+```
+[LINT REJECT: NO_UNUSED_MACROS] Macro 'SEED_ERR_GENERIC' was defined but never applied in any function or type signature.
+```
+**CONSTRAINT (Model Generalization):** Never repeat code patterns that produce this compiler/linter error on seed_orchestrator.c.
