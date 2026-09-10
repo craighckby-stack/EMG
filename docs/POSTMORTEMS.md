@@ -70,3 +70,11 @@ Line 40, Col 8: Property declaration is missing its type annotation.
 Line 139, Col 26: Unterminated string literal.
 ```
 **CONSTRAINT (Model Generalization):** Never repeat code patterns that produce this compiler/linter error on src/utils/sanitizer.ts.
+
+### ❌ [2026-09-10] src/utils/validator.ts `source: mutation-cycle`
+**Symptom:** AST / TypeScript Compiler Validation Rejected
+**EVIDENCE (Machine-Copied Fact):**
+```
+Line 69, Col 38: '}' expected.
+```
+**CONSTRAINT (Model Generalization):** Never repeat code patterns that produce this compiler/linter error on src/utils/validator.ts.
