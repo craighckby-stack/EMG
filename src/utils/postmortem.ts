@@ -87,10 +87,11 @@ export function writePostmortem(
               branch
             );
             return { content: updatedContent, hash };
-        } catch (commitErr: any) {
-            if (commitErr.message && commitErr.message.includes('409') && retries > 1) {
+        } catch (commitErr: unknown) {
+            const err = commitErr as { message?: string };
+            if (err.message && err.message.includes('409') && retries > 1) {
                 retries--;
-                await new Promise(r => setTimeout(r, 1000 + Math.random() * 1000));
+                await new Promise((r) => setTimeout(r, 1000 + Math.random() * 1000));
                 continue;
             }
             throw commitErr;
