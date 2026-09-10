@@ -10,7 +10,7 @@ import path from 'path';
 import { defineConfig } from 'vite';
 
 export default defineConfig(() => {
-  const isHmrDisabled = process.env.DISABLE_HMR === 'true';
+  const isHmrDisabled: boolean = process.env.DISABLE_HMR === 'true';
 
   return {
     plugins: [react(), tailwindcss()],
