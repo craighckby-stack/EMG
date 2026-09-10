@@ -32,7 +32,7 @@ function spliceIncludes(sourceCode, files) {
 }
 
 function run() {
-    let code = '#include "types.h"\nint main() { return 0; }';
+    const code = '#include "types.h"\nint main() { return 0; }';
     const projectFiles = { 'types.h': 'typedef int i32;' };
 
     try {
