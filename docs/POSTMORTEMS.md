@@ -400,3 +400,11 @@ Line 76, Col 8: Property declaration is missing its type annotation.
 [LINT REJECT: NO_STALE_DEFECT_CLAIMS] Detected stale defect claim or test scaffolding leaked into production code: "Seeded defect, documented in BUGS.md". File documentation must reconcile with the actual fixed implementation.
 ```
 **CONSTRAINT (Model Generalization):** Do NOT leak test fixture scaffolding, prediction tags, or obsolete defect descriptions into candidate file docstrings. Code documentation must describe the current, reconciled implementation only.
+
+### ❌ [2026-09-10] src/utils/sanitizer.ts `source: mutation-cycle`
+**Symptom:** AST / TypeScript Compiler Validation Rejected
+**EVIDENCE (Machine-Copied Fact):**
+```
+Line 156, Col 26: Unterminated string literal.
+```
+**CONSTRAINT (Model Generalization):** Never repeat code patterns that produce this compiler/linter error on src/utils/sanitizer.ts.
