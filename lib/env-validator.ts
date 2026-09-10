@@ -18,15 +18,10 @@ export interface EnvValidationResult {
 const REQUIRED_ENV_VARS = ['GEMINI_API_KEY', 'APP_URL'] as const;
 
 export function validateEnv(): EnvValidationResult {
-  const missing: string[] = [];
-  
-  for (let i = 0; i < REQUIRED_ENV_VARS.length; i++) {
-    const key = REQUIRED_ENV_VARS[i];
+  const missing = REQUIRED_ENV_VARS.filter((key) => {
     const value = process.env[key];
-    if (!value || value.trim() === '') {
-      missing.push(key);
-    }
-  }
+    return !value || value.trim() === '';
+  });
 
   return {
     valid: missing.length === 0,
