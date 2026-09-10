@@ -1,28 +1,26 @@
 /**
- * DARLEK CANN ARCHITECTURAL HEADER
+ * EMG Core Neural Code and Documentation Optimizer Engine
  * File: src/components/LicenseModal.tsx
  * Role: Core system component participating in autonomous cognitive evolution cycles.
  * Architecture: Type-safe modular unit with resilient state interfaces.
  */
 
-import React, { useState } from 'react';
+import React, { useState, useEffect, useCallback, FC } from 'react';
 import {
   Scale,
   X,
   Copy,
   Check,
   ExternalLink,
-  ShieldCheck,
   Share2,
   GitFork,
   Ban,
-  RefreshCw,
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 
-interface LicenseModalProps {
-  isOpen: boolean;
-  onClose: () => void;
+export interface LicenseModalProps {
+  readonly isOpen: boolean;
+  readonly onClose: () => void;
 }
 
 export const LICENSE_TEXT = `Creative Commons Attribution-NonCommercial-NoDerivatives 4.0 International (CC BY-NC-ND 4.0)
@@ -38,32 +36,36 @@ License Summary:
 - NoDerivatives: If you remix, transform, or build upon the material, you may not distribute the modified material.
 - Attribution/NonCommercial/NoDerivatives terms apply as detailed at the link above.`;
 
-export const LicenseModal: React.FC<LicenseModalProps> = ({ isOpen, onClose }) => {
-  const [copied, setCopied] = useState(false);
+export const LicenseModal: FC<LicenseModalProps> = ({ isOpen, onClose }) => {
+  const [copied, setCopied] = useState<boolean>(false);
 
-  React.useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') {
-        onClose();
-      }
-    };
+  const handleKeyDown = useCallback((e: KeyboardEvent): void => {
+    if (e.key === 'Escape') {
+      onClose();
+    }
+  }, [onClose]);
+
+  useEffect(() => {
     if (isOpen) {
       window.addEventListener('keydown', handleKeyDown);
     }
-    return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [isOpen, onClose]);
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [isOpen, handleKeyDown]);
 
-  if (!isOpen) return null;
-
-  const handleCopy = async () => {
+  const handleCopy = useCallback(async (): Promise<void> => {
     try {
       await navigator.clipboard.writeText(LICENSE_TEXT);
       setCopied(true);
-      setTimeout(() => setCopied(false), 2000);
+      const timer = setTimeout(() => setCopied(false), 2000);
+      return () => clearTimeout(timer);
     } catch {
-      // Fallback
+      // Fallback silently if clipboard API is unavailable
     }
-  };
+  }, []);
+
+  if (!isOpen) return null;
 
   return (
     <AnimatePresence>
@@ -78,7 +80,7 @@ export const LicenseModal: React.FC<LicenseModalProps> = ({ isOpen, onClose }) =
           animate={{ opacity: 1, scale: 1, y: 0 }}
           exit={{ opacity: 0, scale: 0.95, y: 15 }}
           transition={{ duration: 0.2, ease: 'easeOut' }}
-          onClick={(e) => e.stopPropagation()}
+          onClick={(e: React.MouseEvent<HTMLDivElement>) => e.stopPropagation()}
           className="w-full max-w-2xl max-h-[90vh] bg-neutral-900 border border-neutral-800 rounded-3xl shadow-2xl overflow-hidden flex flex-col my-auto"
         >
           {/* Header - Fixed / Sticky */}
