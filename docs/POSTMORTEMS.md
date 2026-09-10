@@ -479,3 +479,11 @@ Line 74, Col 8: Property declaration is missing its type annotation.
 [LINT REJECT: NO_DEAD_CONDITIONS] Detected redundant inner condition checking upper bound inside a loop already bounded by that parameter.
 ```
 **CONSTRAINT (Model Generalization):** Never repeat code patterns that produce this compiler/linter error on src/components/OracleModal.tsx.
+
+### ❌ [2026-09-10] src/utils/sanitizer.ts `source: mutation-cycle`
+**Symptom:** AST / TypeScript Compiler Validation Rejected
+**EVIDENCE (Machine-Copied Fact):**
+```
+Line 157, Col 26: Unterminated string literal.
+```
+**CONSTRAINT (Model Generalization):** Never repeat code patterns that produce this compiler/linter error on src/utils/sanitizer.ts.
