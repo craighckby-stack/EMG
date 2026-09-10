@@ -1,6 +1,6 @@
 /**
  * File: src/components/StatsGrid.tsx
- * Role: Core system component providing type-safe metric telemetry visualization.
+ * Role: System component providing type-safe metric telemetry visualization.
  * Architecture: Modular presentational unit with strict type definitions and accessible interaction handlers.
  */
 
