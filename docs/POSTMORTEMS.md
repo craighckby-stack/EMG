@@ -555,3 +555,16 @@ Line 437, Col 54: Unterminated string literal.
 Line 811, Col 44: Unterminated string literal.
 ```
 **CONSTRAINT (Model Generalization):** Never repeat code patterns that produce this compiler/linter error on src/App.tsx.
+
+### ❌ [2026-09-10] src/components/ConfigPanel.tsx `source: mutation-cycle`
+**Symptom:** AST / TypeScript Compiler Validation Rejected
+**EVIDENCE (Machine-Copied Fact):**
+```
+Line 682, Col 26: '*/' expected.
+Line 682, Col 10: Expression expected.
+Line 682, Col 26: '}' expected.
+Line 189, Col 8: JSX element 'div' has no corresponding closing tag.
+Line 682, Col 26: '</' expected.
+Line 154, Col 6: JSX element 'div' has no corresponding closing tag.
+```
+**CONSTRAINT (Model Generalization):** Never repeat code patterns that produce this compiler/linter error on src/components/ConfigPanel.tsx.
