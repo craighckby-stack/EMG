@@ -1,29 +1,29 @@
 /**
- * DARLEK CANN ARCHITECTURAL HEADER
  * File: src/components/SplashView.tsx
- * Role: Core system component participating in autonomous cognitive evolution cycles.
- * Architecture: Type-safe modular unit with resilient state interfaces.
+ * Role: System splash view component featuring keyboard event listeners and navigation triggers.
+ * Architecture: Type-safe React functional component using Lucide icons and motion animations.
  */
 
-import React, { useEffect } from 'react';
-import { Zap, Cpu, Activity, ShieldCheck, ArrowRight, Radio, Sparkles, Scale, X } from 'lucide-react';
+import React, { useEffect, useCallback } from 'react';
+import { Zap, Cpu, Activity, ShieldCheck, ArrowRight, Radio, Scale, X } from 'lucide-react';
 import { motion } from 'motion/react';
 
-interface SplashViewProps {
+export interface SplashViewProps {
   onInitialize: () => void;
   onOpenLicense: () => void;
 }
 
 export const SplashView: React.FC<SplashViewProps> = ({ onInitialize, onOpenLicense }) => {
+  const handleKeyDown = useCallback((e: KeyboardEvent) => {
+    if (e.key === 'Escape' || e.key === 'Enter') {
+      onInitialize();
+    }
+  }, [onInitialize]);
+
   useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'Escape' || e.key === 'Enter') {
-        onInitialize();
-      }
-    };
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [onInitialize]);
+  }, [handleKeyDown]);
 
   return (
     <div
