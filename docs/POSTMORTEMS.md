@@ -523,3 +523,11 @@ Line 144, Col 6: JSX element 'div' has no corresponding closing tag.
 Line 53, Col 8: Property declaration is missing its type annotation.
 ```
 **CONSTRAINT (Model Generalization):** Never repeat code patterns that produce this compiler/linter error on src/components/Header.tsx.
+
+### ❌ [2026-09-10] src/components/OracleModal.tsx `source: mutation-cycle`
+**Symptom:** Active Linter / Compiler Gate Rejection on LLM Output (Option B)
+**EVIDENCE (Machine-Copied Fact):**
+```
+[LINT REJECT: NO_UNUSED_MACROS] Macro 'WP_NONNULL' was defined but never applied in any function or type signature.
+```
+**CONSTRAINT (Model Generalization):** Do NOT define helper macros without applying them in the code.
