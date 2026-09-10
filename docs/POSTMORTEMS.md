@@ -330,3 +330,11 @@ Line 75, Col 8: Property declaration is missing its type annotation.
 [LINT REJECT: NO_STALE_DEFECT_CLAIMS] Detected stale defect claim or test scaffolding leaked into production code: "The poison: noexcept on a function". File documentation must reconcile with the actual fixed implementation.
 ```
 **CONSTRAINT (Model Generalization):** Do NOT emit C++ keywords (e.g. noexcept, constexpr) in pure C translation units.
+
+### ❌ [2026-09-10] src/utils/sanitizer.ts `source: mutation-cycle`
+**Symptom:** AST / TypeScript Compiler Validation Rejected
+**EVIDENCE (Machine-Copied Fact):**
+```
+Line 157, Col 26: Unterminated string literal.
+```
+**CONSTRAINT (Model Generalization):** Never repeat code patterns that produce this compiler/linter error on src/utils/sanitizer.ts.
