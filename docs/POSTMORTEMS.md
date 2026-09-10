@@ -78,3 +78,24 @@ Line 139, Col 26: Unterminated string literal.
 Line 69, Col 38: '}' expected.
 ```
 **CONSTRAINT (Model Generalization):** Never repeat code patterns that produce this compiler/linter error on src/utils/validator.ts.
+
+### ❌ [2026-09-10] test_splice2.js `source: mutation-cycle`
+**Symptom:** AST / TypeScript Compiler Validation Rejected
+**EVIDENCE (Machine-Copied Fact):**
+```
+Line 6, Col 11: 'interface' declarations can only be used in TypeScript files.
+Line 10, Col 19: Type annotations can only be used in TypeScript files.
+Line 11, Col 21: Type annotations can only be used in TypeScript files.
+Line 13, Col 30: Type annotations can only be used in TypeScript files.
+Line 13, Col 45: Type annotations can only be used in TypeScript files.
+Line 13, Col 60: Type annotations can only be used in TypeScript files.
+Line 15, Col 29: Type annotations can only be used in TypeScript files.
+Line 16, Col 51: Type annotations can only be used in TypeScript files.
+Line 16, Col 63: Type annotations can only be used in TypeScript files.
+Line 16, Col 72: Type annotations can only be used in TypeScript files.
+Line 20, Col 33: Type annotations can only be used in TypeScript files.
+Line 21, Col 29: Type annotations can only be used in TypeScript files.
+Line 31, Col 21: Type annotations can only be used in TypeScript files.
+Line 38, Col 22: Type annotations can only be used in TypeScript files.
+```
+**CONSTRAINT (Model Generalization):** Never repeat code patterns that produce this compiler/linter error on test_splice2.js.
