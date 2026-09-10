@@ -28,7 +28,7 @@ index 1f3bdcd..b580cb3 100644
   * CALLING ORDER: strictly after Phases 1–2, strictly before Phase 4.
   *
 - * STATUS: STUB.
-+ * STATUS: OPTIMIZED SOVEREIGN PRODUCTION ENGINE.
++ * STATUS: SOVEREIGN PRODUCTION ENGINE.
   */
  
  #ifndef PKM_BOOT_CORRUPT_H
@@ -358,3 +358,4 @@ index fa805a3..8d4f40d 100644
 +    return PKM_OK;
 +}
 \ No newline at end of file
+```
