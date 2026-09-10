@@ -4,7 +4,7 @@
  */
 
 import React from 'react';
-import { Play, Square, RefreshCw, Layers, Github, Scale, Activity, Trash2, ShieldAlert, Sparkles, Cpu } from 'lucide-react';
+import { Play, Square, RefreshCw, Layers, Github, Scale, Activity, Trash2, ShieldAlert, Sparkles, Cpu, Home } from 'lucide-react';
 import { EngineStatus } from '../types';
 
 interface HeaderProps {
@@ -120,6 +120,18 @@ export const Header: React.FC<HeaderProps> = ({
 
       {/* Action Controls */}
       <div className="flex items-center gap-2 flex-wrap">
+        {onOpenSplash && (
+          <button
+            id="btn-header-home"
+            onClick={onOpenSplash}
+            title="Return to Home & Splash Screen"
+            className="px-3.5 py-2 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-black font-bold text-xs transition-all flex items-center gap-1.5 cursor-pointer shadow-md shadow-emerald-500/20"
+          >
+            <Home className="w-3.5 h-3.5" />
+            <span>Home</span>
+          </button>
+        )}
+
         {onOpenEcosystem && (
           <button
             id="btn-header-ecosystem"
