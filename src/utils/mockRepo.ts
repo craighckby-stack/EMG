@@ -6,7 +6,12 @@
 
 import { SimulatedFile } from '../types';
 
-const INITIAL_SANDBOX_DEFINITIONS: Record<string, { description: string; files: SimulatedFile[] }> = {
+interface RepositoryDefinition {
+  description: string;
+  files: SimulatedFile[];
+}
+
+const INITIAL_SANDBOX_DEFINITIONS: Record<string, RepositoryDefinition> = {
   'craighckby/sovereign-kernel': {
     description: 'Sovereign low-latency neural routing & memory allocator kernel',
     files: [
@@ -17,34 +22,35 @@ const INITIAL_SANDBOX_DEFINITIONS: Record<string, { description: string; files: 
 export class SovereignBuffer {
   private capacity: number;
   private buffer: Uint8Array;
-  private offset: number = 0;
+  private offset = 0;
 
-  constructor(size: number = 1024 * 1024) {
+  constructor(size = 1024 * 1024) {
     this.capacity = size;
     this.buffer = new Uint8Array(size);
   }
 
   public write(data: number[]): number {
-    for (let i = 0; i < data.length; i++) {
+    for (const byte of data) {
       if (this.offset >= this.capacity) {
-        // Expand buffer
-        const newBuf = new Uint8Array(this.capacity * 2);
-        newBuf.set(this.buffer);
-        this.buffer = newBuf;
-        this.capacity = this.capacity * 2;
+        const newCapacity = this.capacity * 2;
+        const newBuffer = new Uint8Array(newCapacity);
+        newBuffer.set(this.buffer);
+        this.buffer = newBuffer;
+        this.capacity = newCapacity;
       }
-      this.buffer[this.offset] = data[i];
+      this.buffer[this.offset] = byte;
       this.offset++;
     }
     return this.offset;
   }
 
   public read(length: number): number[] {
-    const res: number[] = [];
-    for (let i = 0; i < length && i < this.offset; i++) {
-      res.push(this.buffer[i]);
+    const result: number[] = [];
+    const limit = Math.min(length, this.offset);
+    for (let i = 0; i < limit; i++) {
+      result.push(this.buffer[i]);
     }
-    return res;
+    return result;
   }
 }`
       },
@@ -62,12 +68,11 @@ export function balanceTraffic(metrics: RouteMetric[], payloadSize: number): str
   let optimalNode = '';
   let bestScore = Number.MAX_VALUE;
 
-  for (let i = 0; i < metrics.length; i++) {
-    const m = metrics[i];
-    const score = (m.latencyMs * 1.5) + (payloadSize / (m.weight + 0.001));
+  for (const metric of metrics) {
+    const score = (metric.latencyMs * 1.5) + (payloadSize / (metric.weight + 0.001));
     if (score < bestScore) {
       bestScore = score;
-      optimalNode = m.nodeId;
+      optimalNode = metric.nodeId;
     }
   }
 
@@ -152,11 +157,11 @@ cache.set('key', 42);
   private map = new Map<K, V>();
   private max: number;
 
-  constructor(max: number = 500) {
+  constructor(max = 500) {
     this.max = max;
   }
 
-  get(key: K): V | undefined {
+  public get(key: K): V | undefined {
     const item = this.map.get(key);
     if (item !== undefined) {
       this.map.delete(key);
@@ -165,7 +170,7 @@ cache.set('key', 42);
     return item;
   }
 
-  set(key: K, val: V): void {
+  public set(key: K, val: V): void {
     if (this.map.has(key)) {
       this.map.delete(key);
     } else if (this.map.size >= this.max) {
@@ -182,15 +187,17 @@ cache.set('key', 42);
         path: 'lib/utils/throttle.ts',
         language: 'typescript',
         content: `export function throttle<T extends (...args: any[]) => any>(fn: T, wait: number) {
-  let inThrottle: boolean = false;
-  let lastFn: ReturnType<typeof setTimeout> | undefined = undefined;
-  let lastTime: number = 0;
+  let inThrottle = false;
+  let lastFn: ReturnType<typeof setTimeout> | undefined;
+  let lastTime = 0;
 
   return function (this: any, ...args: Parameters<T>) {
     const context = this;
+    const now = Date.now();
+
     if (!inThrottle) {
       fn.apply(context, args);
-      lastTime = Date.now();
+      lastTime = now;
       inThrottle = true;
     } else {
       if (lastFn !== undefined) {
@@ -201,7 +208,7 @@ cache.set('key', 42);
           fn.apply(context, args);
           lastTime = Date.now();
         }
-      }, Math.max(wait - (Date.now() - lastTime), 0));
+      }, Math.max(wait - (now - lastTime), 0));
     }
   };
 }`
@@ -210,11 +217,11 @@ cache.set('key', 42);
   }
 };
 
-function cloneSandboxRepos(): Record<string, { description: string; files: SimulatedFile[] }> {
+function cloneSandboxRepos(): Record<string, RepositoryDefinition> {
   return JSON.parse(JSON.stringify(INITIAL_SANDBOX_DEFINITIONS));
 }
 
-export const SANDBOX_REPOSITORIES: Record<string, { description: string; files: SimulatedFile[] }> = cloneSandboxRepos();
+export const SANDBOX_REPOSITORIES: Record<string, RepositoryDefinition> = cloneSandboxRepos();
 
 export function resetSandboxRepositories(): void {
   const fresh = cloneSandboxRepos();
