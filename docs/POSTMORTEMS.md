@@ -123,3 +123,11 @@ Line 38, Col 22: Type annotations can only be used in TypeScript files.
 Line 382, Col 54: Unterminated string literal.
 ```
 **CONSTRAINT (Model Generalization):** Never repeat code patterns that produce this compiler/linter error on server.ts.
+
+### ❌ [2026-09-10] src/App.tsx `source: mutation-cycle`
+**Symptom:** AST / TypeScript Compiler Validation Rejected
+**EVIDENCE (Machine-Copied Fact):**
+```
+Line 806, Col 29: ')' expected.
+```
+**CONSTRAINT (Model Generalization):** Never repeat code patterns that produce this compiler/linter error on src/App.tsx.
