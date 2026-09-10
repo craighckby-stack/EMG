@@ -261,3 +261,11 @@ Line 60, Col 8: Property declaration is missing its type annotation.
 Line 77, Col 8: Property declaration is missing its type annotation.
 ```
 **CONSTRAINT (Model Generalization):** Never repeat code patterns that produce this compiler/linter error on src/components/LogStream.tsx.
+
+### ❌ [2026-09-10] src/utils/validator.ts `source: mutation-cycle`
+**Symptom:** AST / TypeScript Compiler Validation Rejected
+**EVIDENCE (Machine-Copied Fact):**
+```
+Line 70, Col 38: '}' expected.
+```
+**CONSTRAINT (Model Generalization):** Never repeat code patterns that produce this compiler/linter error on src/utils/validator.ts.
