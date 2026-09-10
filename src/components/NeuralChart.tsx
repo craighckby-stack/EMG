@@ -1,11 +1,11 @@
 /**
  * File: src/components/NeuralChart.tsx
- * Role: Core system component participating in cognitive evolution cycles.
- * Architecture: Type-safe modular unit with resilient state interfaces.
+ * Role: Renders real-time neural latency telemetry using Chart.js with responsive gradient styling.
+ * Architecture: Type-safe modular component with strict state integration.
  */
 
 import React, { useEffect, useRef } from 'react';
-import { Chart, registerables, ScriptableContext } from 'chart.js';
+import { Chart, registerables, ScriptableContext, TooltipItem } from 'chart.js';
 import { Activity, FileCode } from 'lucide-react';
 
 Chart.register(...registerables);
@@ -81,7 +81,7 @@ export const NeuralChart: React.FC<NeuralChartProps> = ({
             padding: 8,
             displayColors: false,
             callbacks: {
-              label: (context) => `${context.parsed.y} ms`,
+              label: (context: TooltipItem<'line'>) => `${context.parsed.y} ms`,
             },
           },
         },
@@ -101,7 +101,7 @@ export const NeuralChart: React.FC<NeuralChartProps> = ({
             ticks: {
               color: '#737373',
               font: { size: 10, family: 'monospace' },
-              callback: (value) => `${value}ms`,
+              callback: (value: string | number) => `${value}ms`,
             },
           },
         },
