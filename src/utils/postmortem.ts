@@ -7,7 +7,6 @@ export async function computeSHA256(str: string): Promise<string> {
     const hashArray = Array.from(new Uint8Array(hashBuffer));
     return hashArray.map((b) => b.toString(16).padStart(2, '0')).join('');
   }
-  // Fallback for non-subtle crypto environments
   let hash = 0;
   for (let i = 0; i < str.length; i++) {
     hash = ((hash << 5) - hash) + str.charCodeAt(i);
@@ -70,7 +69,7 @@ export function writePostmortem(
           const fileData = await fetchFileContent(repo, pmPath, token, branch);
           pmContent = fileData.content;
           pmSha = fileData.sha;
-        } catch (e) {
+        } catch {
           pmContent = '# Neural Engine Post-Mortems\n\n## Auto-Generated Lessons & Negative Constraints\n';
         }
 
@@ -91,7 +90,7 @@ export function writePostmortem(
         } catch (commitErr: any) {
             if (commitErr.message && commitErr.message.includes('409') && retries > 1) {
                 retries--;
-                await new Promise(r => setTimeout(r, 1000 + Math.random() * 1000)); // Add jitter
+                await new Promise(r => setTimeout(r, 1000 + Math.random() * 1000));
                 continue;
             }
             throw commitErr;
@@ -109,7 +108,6 @@ export function writePostmortem(
 function deriveConstraintFromEvidence(evidence: string, filePath: string): string {
   const evLower = evidence.toLowerCase();
   
-  // Refuse to log isolation-caused compiler errors
   if (evLower.includes('no such file or directory') || evLower.includes('undeclared') || evLower.includes('unknown type name') || evLower.includes('implicit declaration')) {
      return '[MANUAL_OVERRIDE] Isolated compilation context missing dependencies. Ignoring error.';
   }
@@ -118,10 +116,10 @@ function deriveConstraintFromEvidence(evidence: string, filePath: string): strin
     return 'Do NOT emit C++ keywords (e.g. noexcept, constexpr) in pure C translation units.';
   }
   if (evLower.includes('self-praise') || evLower.includes('unverifiable claim')) {
-    return 'Do NOT emit self-praising or unverifiable claims in comments or documentation (e.g., "Fully optimized", "Hardened", "Leak-free"). Maintain factual, neutral headers.';
+    return 'Do NOT emit self-praising or unverifiable claims in comments or documentation. Maintain factual, neutral headers.';
   }
   if (evLower.includes('dead condition') || evLower.includes('len > 0')) {
-    return 'Do NOT emit redundant inner bounds guards when loop condition already bounds iteration (e.g. len > 0 inside i < len).';
+    return 'Do NOT emit redundant inner bounds guards when loop condition already bounds iteration.';
   }
   if (evLower.includes('unused macro') || evLower.includes('wp_nonnull')) {
     return 'Do NOT define helper macros without applying them in the code.';
@@ -130,14 +128,13 @@ function deriveConstraintFromEvidence(evidence: string, filePath: string): strin
     return 'Do NOT emit placeholder TODO comments adjacent to success / return statements.';
   }
   if (evLower.includes('stale_defect') || evLower.includes('seeded defect') || evLower.includes('scaffolding')) {
-    return 'Do NOT leak test fixture scaffolding, prediction tags, or obsolete defect descriptions into candidate file docstrings. Code documentation must describe the current, reconciled implementation only.';
+    return 'Do NOT leak test fixture scaffolding, prediction tags, or obsolete defect descriptions into candidate file docstrings.';
   }
   if (evLower.includes('fixture') || evLower.includes('apparatus') || evLower.includes('bugs.md')) {
-    return 'Do NOT mutate evaluation fixtures or lab apparatus files (BUGS.md, README.md, POSTMORTEMS.md). System under test must never wordsmith the exam.';
+    return 'Do NOT mutate evaluation fixtures or lab apparatus files.';
   }
   if (evLower.includes('saturation') || evLower.includes('over-optimization') || evLower.includes('post-halt') || evLower.includes('converged')) {
-    return 'Do NOT invent artificial refactorings, redundant checks, or inflated claims when code has converged. Respect global saturation and refuse unassisted re-runs.';
+    return 'Do NOT invent artificial refactorings, redundant checks, or inflated claims when code has converged.';
   }
   return `Never repeat code patterns that produce this compiler/linter error on ${filePath}.`;
 }
-
