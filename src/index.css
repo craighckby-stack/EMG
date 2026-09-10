@@ -20,7 +20,7 @@
     font-family: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
   }
 
-  /* Custom subtle scrollbar with hardware-accelerated transitions */
+  /* Custom subtle scrollbar with smooth hover feedback */
   ::-webkit-scrollbar {
     width: 6px;
     height: 6px;
