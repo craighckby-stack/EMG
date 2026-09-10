@@ -1,11 +1,11 @@
-# Post-Mortems — Why the Stubs Say What They Say
+# Post-Mortems — Historical Analysis of Linter and Compiler Gate Rejections
 
-This repository previously held AI-generated implementation files.
+This repository contains historical documentation of AI-generated implementation files and their corresponding automated build-system validation outcomes.
 
-### ❌ [2026-09-09] tee/duress-ta/include/pkm_gesture_fsm.h `source: mutation-cycle`
-**Symptom:** Active Linter / Compiler Gate Rejection on LLM Output (Option B)
-**EVIDENCE (Machine-Copied Fact):**
-```
-[LINT REJECT: NO_UNUSED_MACROS] Macro 'PKM_HOLD_MIN_MS' was defined but never applied in any function or type signature.
-```
-**CONSTRAINT (Model Generalization):** Never repeat code patterns that produce this compiler/linter error on tee/duress-ta/include/pkm_gesture_fsm.h.
+### ❌ [2026-09-09] `tee/duress-ta/include/pkm_gesture_fsm.h` (`source: mutation-cycle`)
+* **Symptom:** Active Linter / Compiler Gate Rejection on LLM Output (Option B)
+* **Machine-Copied Evidence:**
+  ```text
+  [LINT REJECT: NO_UNUSED_MACROS] Macro 'PKM_HOLD_MIN_MS' was defined but never applied in any function or type signature.
+  ```
+* **Constraint / Generalization:** Ensure all defined preprocessor macros are actively referenced within functional logic or type signatures to prevent linter rejections.
