@@ -65,6 +65,57 @@ export function isConfigOrNonCodeFile(filePath: string): boolean {
 }
 
 /**
+ * Detect if a file path is a binary file (audio, image, font, archive, etc.)
+ */
+export function isBinaryFile(filePath: string): boolean {
+  if (!filePath || typeof filePath !== 'string') return false;
+  const normalized = filePath.trim().toLowerCase();
+  
+  // Audio & Video
+  if (/\.(m4a|mp3|wav|ogg|aac|mp4|mov|avi|flv|webm|mkv|3gp)$/i.test(normalized)) return true;
+  // Images & Vector
+  if (/\.(png|jpg|jpeg|gif|webp|ico|tiff|bmp|heic|psd)$/i.test(normalized)) return true;
+  // Fonts
+  if (/\.(woff|woff2|ttf|otf|eot)$/i.test(normalized)) return true;
+  // Archives & Compressed
+  if (/\.(zip|tar|gz|rar|7z|bz2|xz|exe|dll|so|dylib|bin|iso|dmg)$/i.test(normalized)) return true;
+  // Databases & Local Storage
+  if (/\.(db|sqlite|sqlite3|lock|pyc|class|o|obj)$/i.test(normalized)) return true;
+  
+  return false;
+}
+
+/**
+ * Determine if a file can be optimized by the neural engine
+ */
+export function isOptimizableFile(filePath: string): boolean {
+  if (!filePath || typeof filePath !== 'string') return false;
+  
+  // 1. Filter out binary files
+  if (isBinaryFile(filePath)) return false;
+  
+  // 2. Filter out configuration/non-code/metadata files
+  if (isConfigOrNonCodeFile(filePath)) return false;
+  
+  // 3. Filter out Lockfiles, lock references
+  const normalized = filePath.trim().toLowerCase();
+  if (/\.(lock|yaml|yml|json|toml|ini|xml)$/i.test(normalized)) {
+    return false;
+  }
+  
+  // 4. Base name check for standard config/metadata files
+  const basename = normalized.split('/').pop()?.split('\\').pop() || '';
+  if (
+    /^\./i.test(basename) || // All dotfiles
+    /^(package-lock|pnpm-lock|yarn|dockerfile|makefile)$/i.test(basename)
+  ) {
+    return false;
+  }
+  
+  return true;
+}
+
+/**
  * Determine language from file path
  */
 export function getLanguageFromFilePath(filePath: string): string {

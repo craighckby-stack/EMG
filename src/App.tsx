@@ -36,7 +36,7 @@ import {
 import { writePostmortem, computeSHA256 } from './utils/postmortem';
 import { optimizeSourceCode } from './utils/gemini';
 import { sanitizeCode, sanitizeText } from './utils/sanitizer';
-import { validateSourceCode, isMarkdownFile, lintSourceCode } from './utils/validator';
+import { validateSourceCode, isMarkdownFile, lintSourceCode, isOptimizableFile, isBinaryFile } from './utils/validator';
 import { SaturationAlert } from './types';
 
 const INITIAL_CONFIG: EngineConfig = {
@@ -241,6 +241,9 @@ export default function App() {
         const defaultSandbox = SANDBOX_REPOSITORIES['craighckby/sovereign-kernel'] || { name: 'Sandbox', description: '', files: [] };
         const repoData = SANDBOX_REPOSITORIES[config.targetRepo] || defaultSandbox;
         let candidateFiles = repoData.files;
+
+        // Filter out binary, config, and non-optimizable files to protect quota and ledger
+        candidateFiles = candidateFiles.filter((f) => isOptimizableFile(f.path));
 
         // Filter out skipped files
         const skippedSet = new Set(config.skippedFiles || []);
@@ -642,9 +645,22 @@ export default function App() {
             for (let i = 0; i < oldLines.length; i++) {
                 const line = oldLines[i] ?? '';
                 if (line.startsWith('### ❌')) {
+                    // Extract possible file path from header. e.g. "### ❌ [2026-09-10] .codespellrc `source: mutation-cycle`"
+                    const headerTokens = line.split(/\s+/);
+                    let isNonOptimizable = false;
+                    for (const tok of headerTokens) {
+                        const cleanTok = tok.trim().replace(/`/g, '');
+                        if (cleanTok.includes('.') || cleanTok.includes('/')) {
+                            if (isBinaryFile(cleanTok) || !isOptimizableFile(cleanTok)) {
+                                isNonOptimizable = true;
+                                break;
+                            }
+                        }
+                    }
+
                     // Check ahead for poisoned evidence
                     let lookahead = i + 1;
-                    let isPoisoned = false;
+                    let isPoisoned = isNonOptimizable;
                     while (lookahead < oldLines.length && !oldLines[lookahead]?.startsWith('### ')) {
                         const l = (oldLines[lookahead] ?? '').toLowerCase();
                         if (l.includes('fatal error:') && l.includes('no such file or directory')) isPoisoned = true;
@@ -735,6 +751,9 @@ export default function App() {
         }
 
         let candidateTree = tree.filter((item) => !skippedSet.has(item.path));
+
+        // Filter out binary, config, and non-optimizable files to protect quota and ledger (PM#13)
+        candidateTree = candidateTree.filter((item) => isOptimizableFile(item.path));
 
         // Apply File Scope filter
         if (config.fileScope === 'markdown-only') {
