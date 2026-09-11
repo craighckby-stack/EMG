@@ -62,12 +62,12 @@ export const Header: React.FC<HeaderProps> = ({
   return (
     <header
       id="emg-header"
-      className="cyber-card bg-[#070e0a]/90 border border-emerald-500/25 p-4 sm:px-6 rounded-2xl flex flex-wrap items-center justify-between gap-4 shadow-[0_8px_32px_rgba(0,0,0,0.6)]"
+      className="cyber-card bg-[#0B0F14]/95 border border-[#1B3A2F] p-4 sm:px-6 rounded-2xl flex flex-wrap items-center justify-between gap-4 shadow-[0_8px_32px_rgba(0,0,0,0.7)]"
     >
       {/* Brand & Live Indicator */}
       <div className="flex items-center gap-3.5">
-        <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-emerald-950 to-[#040805] border border-emerald-500/40 flex items-center justify-center text-emerald-400 shadow-md shadow-emerald-950">
-          <Cpu className="w-5 h-5 text-emerald-400" />
+        <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[#1B3A2F] to-[#0B0F14] border border-[#00F5A0]/40 flex items-center justify-center text-[#00F5A0] shadow-md shadow-black">
+          <Cpu className="w-5 h-5 text-[#00F5A0]" />
         </div>
 
         <div>
@@ -76,11 +76,11 @@ export const Header: React.FC<HeaderProps> = ({
               <h1 className="font-bold text-white text-base tracking-tight leading-tight flex items-center gap-2">
                 EMG
               </h1>
-              <p className="text-[10px] text-emerald-400 font-mono tracking-wide leading-none mt-0.5">
+              <p className="text-[10px] text-[#00F5A0] font-mono tracking-wide leading-none mt-0.5">
                 Ephemeral Mind Gem
               </p>
             </div>
-            <span className="hidden sm:inline-flex items-center text-[11px] font-mono text-zinc-300 bg-[#09150d] px-2 py-0.5 rounded-md border border-emerald-800/40">
+            <span className="hidden sm:inline-flex items-center text-[11px] font-mono text-zinc-300 bg-[#1B3A2F]/40 px-2 py-0.5 rounded-md border border-[#1B3A2F]">
               C-Dialect Engine
             </span>
           </div>
@@ -89,8 +89,8 @@ export const Header: React.FC<HeaderProps> = ({
             <span
               className={`w-2 h-2 rounded-full ${
                 isLive
-                  ? 'bg-emerald-400 shadow-[0_0_10px_rgba(52,211,153,1)] animate-pulse'
-                  : 'bg-emerald-900'
+                  ? 'bg-[#00F5A0] shadow-[0_0_10px_rgba(0,245,160,1)] animate-pulse'
+                  : 'bg-zinc-700'
               }`}
             />
             <span
@@ -104,12 +104,12 @@ export const Header: React.FC<HeaderProps> = ({
             {targetRepo && (
               <span className="text-xs text-zinc-300 flex items-center gap-1 font-mono">
                 {isSandbox ? (
-                  <span className="text-zinc-200 flex items-center gap-1 font-medium bg-[#0a170f] px-2 py-0.5 rounded-md border border-emerald-800/40">
-                    <Layers className="w-3 h-3 text-emerald-400" /> Sandbox
+                  <span className="text-zinc-200 flex items-center gap-1 font-medium bg-[#1B3A2F]/40 px-2 py-0.5 rounded-md border border-[#1B3A2F]">
+                    <Layers className="w-3 h-3 text-[#00F5A0]" /> Sandbox
                   </span>
                 ) : (
-                  <span className="text-zinc-200 flex items-center gap-1 font-medium bg-[#0a170f] px-2 py-0.5 rounded-md border border-emerald-800/40">
-                    <Github className="w-3 h-3 text-emerald-400" /> {targetRepo}
+                  <span className="text-zinc-200 flex items-center gap-1 font-medium bg-[#1B3A2F]/40 px-2 py-0.5 rounded-md border border-[#1B3A2F]">
+                    <Github className="w-3 h-3 text-[#00F5A0]" /> {targetRepo}
                   </span>
                 )}
               </span>
@@ -125,9 +125,9 @@ export const Header: React.FC<HeaderProps> = ({
             id="btn-header-home"
             onClick={onOpenSplash}
             title="Return to Home & Splash Screen"
-            className="px-3.5 py-2 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-black font-bold text-xs transition-all flex items-center gap-1.5 cursor-pointer shadow-md shadow-emerald-500/20"
+            className="px-3.5 py-2 rounded-xl bg-[#1B3A2F]/60 hover:bg-[#1B3A2F] text-zinc-200 hover:text-white border border-[#1B3A2F] text-xs font-semibold transition-all flex items-center gap-1.5 cursor-pointer"
           >
-            <Home className="w-3.5 h-3.5" />
+            <Home className="w-3.5 h-3.5 text-[#00F5A0]" />
             <span>Home</span>
           </button>
         )}
@@ -137,9 +137,9 @@ export const Header: React.FC<HeaderProps> = ({
             id="btn-header-ecosystem"
             onClick={onOpenEcosystem}
             title="Explore Developer Ecosystem & Repositories"
-            className="px-3 py-2 rounded-xl bg-[#09140c] hover:bg-emerald-950/70 text-zinc-200 hover:text-white border border-emerald-800/60 hover:border-emerald-500/60 text-xs font-semibold transition-all flex items-center gap-1.5 cursor-pointer"
+            className="px-3 py-2 rounded-xl bg-[#1B3A2F]/60 hover:bg-[#1B3A2F] text-zinc-200 hover:text-white border border-[#1B3A2F] text-xs font-semibold transition-all flex items-center gap-1.5 cursor-pointer"
           >
-            <Layers className="w-3.5 h-3.5 text-emerald-400" />
+            <Layers className="w-3.5 h-3.5 text-[#00F5A0]" />
             <span className="hidden sm:inline">Ecosystem</span>
           </button>
         )}
@@ -149,9 +149,9 @@ export const Header: React.FC<HeaderProps> = ({
             id="btn-header-splash"
             onClick={onOpenSplash}
             title="Open Intro & Security Advisory"
-            className="px-3 py-2 rounded-xl bg-[#09140c] hover:bg-emerald-950/70 text-zinc-200 hover:text-white border border-emerald-800/60 hover:border-emerald-500/60 text-xs font-semibold transition-all flex items-center gap-1.5 cursor-pointer"
+            className="px-3 py-2 rounded-xl bg-[#1B3A2F]/60 hover:bg-[#1B3A2F] text-zinc-200 hover:text-white border border-[#1B3A2F] text-xs font-semibold transition-all flex items-center gap-1.5 cursor-pointer"
           >
-            <Sparkles className="w-3.5 h-3.5 text-emerald-400" />
+            <Sparkles className="w-3.5 h-3.5 text-[#00F5A0]" />
             <span className="hidden sm:inline">Advisory</span>
           </button>
         )}
@@ -173,9 +173,9 @@ export const Header: React.FC<HeaderProps> = ({
             id="btn-header-diagnostics"
             onClick={onOpenDiagnostics}
             title="Kernel Diagnostics Probe"
-            className="px-3 py-2 rounded-xl bg-[#09140c] hover:bg-emerald-950/70 text-zinc-200 hover:text-white border border-emerald-800/60 hover:border-emerald-500/60 text-xs font-semibold transition-all flex items-center gap-1.5 cursor-pointer"
+            className="px-3 py-2 rounded-xl bg-[#1B3A2F]/60 hover:bg-[#1B3A2F] text-zinc-200 hover:text-white border border-[#1B3A2F] text-xs font-semibold transition-all flex items-center gap-1.5 cursor-pointer"
           >
-            <Activity className="w-3.5 h-3.5 text-emerald-400" />
+            <Activity className="w-3.5 h-3.5 text-[#00F5A0]" />
             <span className="hidden sm:inline">Diagnostics</span>
           </button>
         )}
@@ -185,7 +185,7 @@ export const Header: React.FC<HeaderProps> = ({
             id="btn-header-wipe-memory"
             onClick={onOpenWipeMemory}
             title="Wipe state and reset loop"
-            className="p-2 sm:px-3 sm:py-2 rounded-xl bg-[#09140c] hover:bg-red-950/60 text-zinc-300 hover:text-red-300 border border-emerald-900/60 hover:border-red-600/60 text-xs font-semibold transition-all flex items-center gap-1.5 cursor-pointer"
+            className="p-2 sm:px-3 sm:py-2 rounded-xl bg-[#1B3A2F]/60 hover:bg-red-950/60 text-zinc-300 hover:text-red-300 border border-[#1B3A2F] hover:border-red-600/60 text-xs font-semibold transition-all flex items-center gap-1.5 cursor-pointer"
           >
             <Trash2 className="w-3.5 h-3.5 text-zinc-400 hover:text-red-400" />
             <span className="hidden sm:inline">Reset</span>
@@ -196,9 +196,9 @@ export const Header: React.FC<HeaderProps> = ({
           id="btn-header-license"
           onClick={onOpenLicense}
           title="License Terms"
-          className="p-2 sm:px-3 sm:py-2 rounded-xl bg-[#09140c] hover:bg-emerald-950/70 text-zinc-300 hover:text-white border border-emerald-900/60 hover:border-emerald-700/60 text-xs font-semibold transition-all flex items-center gap-1.5 cursor-pointer"
+          className="p-2 sm:px-3 sm:py-2 rounded-xl bg-[#1B3A2F]/60 hover:bg-[#1B3A2F] text-zinc-300 hover:text-white border border-[#1B3A2F] text-xs font-semibold transition-all flex items-center gap-1.5 cursor-pointer"
         >
-          <Scale className="w-3.5 h-3.5 text-emerald-400" />
+          <Scale className="w-3.5 h-3.5 text-[#00F5A0]" />
           <span className="hidden sm:inline">License</span>
         </button>
 
@@ -207,9 +207,9 @@ export const Header: React.FC<HeaderProps> = ({
           onClick={onRunSingleCycle}
           disabled={isLive || isCycling}
           title="Execute a single optimization pass manually"
-          className="px-3.5 py-2 rounded-xl bg-[#09140c] hover:bg-emerald-900/60 disabled:opacity-40 disabled:pointer-events-none text-zinc-200 hover:text-white border border-emerald-600/60 text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer"
+          className="px-3.5 py-2 rounded-xl bg-[#1B3A2F]/60 hover:bg-[#1B3A2F] disabled:opacity-40 disabled:pointer-events-none text-zinc-200 hover:text-white border border-[#1B3A2F] text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer"
         >
-          <RefreshCw className={`w-3.5 h-3.5 text-emerald-400 ${isCycling ? 'animate-spin' : ''}`} />
+          <RefreshCw className={`w-3.5 h-3.5 text-[#00F5A0] ${isCycling ? 'animate-spin' : ''}`} />
           <span>Step</span>
         </button>
 
@@ -218,8 +218,8 @@ export const Header: React.FC<HeaderProps> = ({
           onClick={onToggleLive}
           className={`px-5 py-2 rounded-xl font-bold text-xs uppercase tracking-wider transition-all flex items-center gap-2 cursor-pointer shadow-lg transform active:scale-95 ${
             isLive
-              ? 'bg-red-500/90 text-white hover:bg-red-600 shadow-red-900/50'
-              : 'bg-emerald-500 hover:bg-emerald-400 text-black shadow-emerald-500/30'
+              ? 'bg-red-500 text-white hover:bg-red-600 shadow-red-900/50'
+              : 'bg-[#00F5A0] hover:bg-[#00d68f] text-black shadow-[0_0_20px_rgba(0,245,160,0.35)] font-extrabold'
           }`}
         >
           {isLive ? (

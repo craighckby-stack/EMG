@@ -41,6 +41,30 @@ export function isMarkdownFile(filePath: string): boolean {
 }
 
 /**
+ * Detect if a file path is a configuration, ignore, or non-code/metadata file
+ */
+export function isConfigOrNonCodeFile(filePath: string): boolean {
+  if (!filePath || typeof filePath !== 'string') return false;
+  const normalized = filePath.trim().toLowerCase();
+  
+  // Extension check
+  if (/\.(yaml|yml|toml|ini|xml|txt|env|example|lock|codespellrc)$/i.test(normalized)) {
+    return true;
+  }
+  
+  // Basename check for dotfiles or standard text documents
+  const basename = normalized.split('/').pop()?.split('\\').pop() || '';
+  if (
+    /^\.(gitignore|codespellrc|npmrc|eslintignore|prettierignore|env.*)$/i.test(basename) ||
+    /^(license|readme|notice|security|changelog|authors)$/i.test(basename)
+  ) {
+    return true;
+  }
+  
+  return false;
+}
+
+/**
  * Determine language from file path
  */
 export function getLanguageFromFilePath(filePath: string): string {
@@ -613,6 +637,17 @@ export async function validateSourceCode(
   const language = getLanguageFromFilePath(filePath);
   let autoHealed = false;
   let healedCode: string | undefined = undefined;
+
+  // Skip strict syntax verification for non-code configuration files
+  if (isConfigOrNonCodeFile(filePath)) {
+    return {
+      valid: true,
+      language,
+      errors: [],
+      warnings: ['Configuration or non-code metadata file validation bypassed.'],
+      autoHealed: false,
+    };
+  }
 
   // Auto-unwrap markdown fences if the model output raw markdown wrapper around source files
   const { unwrapped, wasWrapped } = unwrapMarkdownCodeFences(rawCode, language);
