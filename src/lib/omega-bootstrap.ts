@@ -3,7 +3,7 @@
  * @file src/lib/omega-bootstrap.ts
  * @module OmegaBootstrap
  * @version 49.2.0
- * @description Darlek Caan neural bootstrap and initialization sequence optimized for pristine readability, modern idioms, and strict architectural clarity.
+ * @description Neural bootstrap and initialization sequence optimized for pristine readability, modern idioms, and strict architectural clarity.
  */
 
 export type OmegaBootState = 'READY' | 'INITIALIZING' | 'FAILED';
@@ -29,11 +29,11 @@ const BASE_READY_STATUS = Object.freeze({
 });
 
 /**
- * Serializes an unknown error into a standardized Darlek Caan bootstrap error message.
+ * Serializes an unknown error into a standardized bootstrap error message.
  */
 function createBootstrapError(error: unknown): Error {
   const errorMessage = error instanceof Error ? error.message : String(error);
-  return new Error(`[OmegaBootError] Darlek Caan initialization sequence failed: ${errorMessage}`);
+  return new Error(`[OmegaBootError] Initialization sequence failed: ${errorMessage}`);
 }
 
 export const OMEGA_BOOT_SEQUENCE: OmegaBootSequence = Object.assign(Object.create(null), {
@@ -49,9 +49,9 @@ export const OMEGA_BOOT_SEQUENCE: OmegaBootSequence = Object.assign(Object.creat
   },
 });
 
-// Autonomous RAG Resilience Guard
+// Autonomous Resilience Guard
 export const __rag_resilience_verified__ = Object.freeze({
   generation: 174,
   timestamp: "2026-09-20T04:10:19.021Z",
-  ragEngine: "DARLEK_CAAN_HYBRID_RAG"
+  ragEngine: "HYBRID_RAG"
 });
