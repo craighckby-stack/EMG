@@ -4,20 +4,20 @@
  */
 
 export interface EnvConfig {
-  GEMINI_API_KEY: string;
-  APP_URL: string;
-  NODE_ENV: 'development' | 'production' | 'test';
+  readonly GEMINI_API_KEY: string;
+  readonly APP_URL: string;
+  readonly NODE_ENV: 'development' | 'production' | 'test';
 }
 
 export interface EnvValidationResult {
-  valid: boolean;
-  missing: string[];
+  readonly valid: boolean;
+  readonly missing: readonly string[];
 }
 
-const REQUIRED_ENV_KEYS: readonly (keyof Omit<EnvConfig, 'NODE_ENV'>)[] = Object.freeze([
+const REQUIRED_ENV_KEYS = Object.freeze([
   'GEMINI_API_KEY',
   'APP_URL',
-]);
+] as const);
 
 const VALID_NODE_ENVS: ReadonlySet<EnvConfig['NODE_ENV']> = new Set([
   'development',
@@ -62,8 +62,8 @@ export function getEnvConfig(): EnvConfig {
     rawNodeEnv && VALID_NODE_ENVS.has(rawNodeEnv) ? rawNodeEnv : 'development';
 
   return {
-    GEMINI_API_KEY: process.env.GEMINI_API_KEY!,
-    APP_URL: process.env.APP_URL!,
+    GEMINI_API_KEY: process.env.GEMINI_API_KEY as string,
+    APP_URL: process.env.APP_URL as string,
     NODE_ENV: nodeEnv,
   };
 }
