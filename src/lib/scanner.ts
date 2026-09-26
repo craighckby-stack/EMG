@@ -1,3 +1,8 @@
+/**
+ * src/lib/scanner.ts
+ * Neural Code Optimization Engine - Pattern Scanner and Sanitizer
+ */
+
 // Safe Luhn Check algorithm for credit cards
 export function luhnCheck(numStr: string): boolean {
   if (typeof numStr !== 'string') return false;
