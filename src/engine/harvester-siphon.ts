@@ -2,8 +2,8 @@
  * EMG Sovereign Kernel - GitHub Engine Harvester & Transpiler Siphon
  * File: src/engine/harvester-siphon.ts
  *
- * Role: Integrates siphoned intelligence from GitHub-Engine-Harvester and sanitized-agent-engines.
- *       Provides pattern harvesting, bespoke engine transpilation, and non-linear token budget tree management.
+ * Role: Integrates intelligence from target repositories and provides pattern harvesting,
+ *       engine transpilation, and token budget tree management.
  */
 
 export interface HarvestedEnginePattern {
@@ -34,16 +34,16 @@ export interface SessionTokenBudgetNode {
 }
 
 /**
- * Siphoned Engine Harvester: Extracts verified patterns from target repositories.
+ * Extracts verified patterns from target repositories.
  */
 export function harvestRepositoryPatterns(repoName: string, sourceFiles: Record<string, string>): HarvestedEnginePattern[] {
   const patterns: HarvestedEnginePattern[] = [];
 
-  Object.entries(sourceFiles).forEach(([filePath, content]) => {
+  for (const [filePath, content] of Object.entries(sourceFiles)) {
     if (filePath.endsWith('.ts') || filePath.endsWith('.tsx')) {
       const functionMatches = content.match(/export\s+(?:async\s+)?function\s+([A-Za-z0-9_]+)/g);
       if (functionMatches) {
-        functionMatches.forEach((fnMatch) => {
+        for (const fnMatch of functionMatches) {
           const fnName = fnMatch.replace(/export\s+(?:async\s+)?function\s+/, '');
           patterns.push({
             id: `pattern_${repoName.replace('/', '_')}_${fnName}`,
@@ -54,16 +54,16 @@ export function harvestRepositoryPatterns(repoName: string, sourceFiles: Record<
             sanitized: true,
             harvestedAt: new Date().toISOString(),
           });
-        });
+        }
       }
     }
-  });
+  }
 
   return patterns;
 }
 
 /**
- * Siphoned Bespoke Engine Transpiler: Wraps raw snippets into clean, type-safe EMG modules.
+ * Wraps raw snippets into clean, type-safe modules.
  */
 export function transpileBespokeEngineSnippet(rawSnippet: string, moduleName: string): TranspilerResult {
   try {
@@ -84,23 +84,24 @@ export const __emg_transpiled_verified__ = true;
       targetFramework: 'React 19 / TypeScript 5.8',
       astClean: true,
     };
-  } catch (err: any) {
+  } catch (err: unknown) {
+    const errorMessage = err instanceof Error ? err.message : String(err);
     return {
       success: false,
       transpiledModule: '',
       targetFramework: 'React 19 / TypeScript 5.8',
       astClean: false,
-      error: err.message,
+      error: errorMessage,
     };
   }
 }
 
 /**
- * Siphoned Non-Linear Session Tree & Token Budget Manager.
+ * Non-Linear Session Tree & Token Budget Manager.
  */
 export class SessionTokenBudgetTree {
-  private nodes: Map<string, SessionTokenBudgetNode> = new Map();
-  private maxTokenLimit: number;
+  private readonly nodes: Map<string, SessionTokenBudgetNode> = new Map();
+  private readonly maxTokenLimit: number;
 
   constructor(maxTokenLimit: number = 100000) {
     this.maxTokenLimit = maxTokenLimit;
