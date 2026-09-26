@@ -6,10 +6,11 @@
 
 ---
 
-## Live Applications
+## Live Applications & User Onboarding
 
 * **Development Preview:** [https://ais-dev-ipgdsocr7adysm4iwxj2rb-483535245139.asia-southeast1.run.app](https://ais-dev-ipgdsocr7adysm4iwxj2rb-483535245139.asia-southeast1.run.app)
 * **Production Preview:** [https://ais-pre-ipgdsocr7adysm4iwxj2rb-483535245139.asia-southeast1.run.app](https://ais-pre-ipgdsocr7adysm4iwxj2rb-483535245139.asia-southeast1.run.app)
+* **New User & Preview Guide:** [`USER_GUIDE.md`](./USER_GUIDE.md) — Step-by-step onboarding, preview environment overview, and dashboard controls.
 
 ---
 
