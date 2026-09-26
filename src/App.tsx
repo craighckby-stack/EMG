@@ -34,6 +34,7 @@ import {
   commitFileUpdate,
 } from './utils/github';
 import { writePostmortem, computeSHA256 } from './utils/postmortem';
+import { decomposeFile, reassembleChunks } from './utils/fileSplitter';
 import { optimizeSourceCode } from './utils/gemini';
 import { sanitizeCode, sanitizeText } from './utils/sanitizer';
 import { validateSourceCode, isMarkdownFile, lintSourceCode, isOptimizableFile, isBinaryFile } from './utils/validator';
@@ -112,12 +113,11 @@ async function processChunkedFileOptimization(
   modelUsed?: string;
   redactedSecretsCount?: number;
 }> {
-  const lines = fullContent.split('\n');
-  const chunkSize = 350;
-  const totalChunks = Math.ceil(lines.length / chunkSize);
+  const decomposition = decomposeFile(filePath, fullContent, 1000);
+  const totalChunks = decomposition.chunks.length;
 
   pushLog?.(
-    `[CHUNKED PATCHING] File ${filePath} (${lines.length} lines) exceeds token budget limit (>1000 lines). Splitting into ${totalChunks} module chunks to prevent truncation...`,
+    `[FILE DECOMPOSITION] File ${filePath} (${decomposition.originalLineCount} lines) decomposed into ${totalChunks} structural module units to prevent token truncation...`,
     'warning',
     undefined,
     filePath
@@ -130,20 +130,18 @@ async function processChunkedFileOptimization(
   const summaries: string[] = [];
 
   for (let i = 0; i < totalChunks; i++) {
-    const chunkStart = i * chunkSize;
-    const chunkLines = lines.slice(chunkStart, chunkStart + chunkSize);
-    const chunkContent = chunkLines.join('\n');
-    const chunkLabel = `${filePath} (Chunk ${i + 1}/${totalChunks})`;
+    const chunk = decomposition.chunks[i]!;
+    const chunkLabel = `${filePath} [${chunk.name} - lines ${chunk.startLine}-${chunk.endLine}]`;
 
     pushLog?.(
-      `[CHUNK ${i + 1}/${totalChunks}] Optimizing module chunk (${chunkLines.length} lines)...`,
+      `[MODULE PASS ${i + 1}/${totalChunks}] Optimizing ${chunk.name} (${chunk.lineCount} lines)...`,
       'neural',
       undefined,
       filePath
     );
 
     const chunkResult = await optimizeSourceCode(
-      chunkContent,
+      chunk.content,
       chunkLabel,
       geminiKey,
       goal,
@@ -153,19 +151,19 @@ async function processChunkedFileOptimization(
       previousError
     );
 
-    optimizedChunks.push(chunkResult.optimizedCode || chunkContent);
+    optimizedChunks.push(chunkResult.optimizedCode || chunk.content);
     totalLatency += chunkResult.latencyMs || 0;
     totalTokens += chunkResult.tokensEstimate || 0;
     redactedSecretsCount += chunkResult.redactedSecretsCount || 0;
     if (chunkResult.summary) {
-      summaries.push(`[Module ${i + 1}]: ${chunkResult.summary}`);
+      summaries.push(`[${chunk.name}]: ${chunkResult.summary}`);
     }
   }
 
-  const reassembledCode = optimizedChunks.join('\n');
+  const reassembledCode = reassembleChunks(decomposition, optimizedChunks);
   return {
     optimizedCode: reassembledCode,
-    summary: summaries.length > 0 ? summaries.join(' | ') : `Chunked patching completed across ${totalChunks} module chunks.`,
+    summary: summaries.length > 0 ? summaries.join(' | ') : `Structural decomposition patching completed across ${totalChunks} module units.`,
     latencyMs: totalLatency,
     tokensEstimate: totalTokens,
     modelUsed: model,

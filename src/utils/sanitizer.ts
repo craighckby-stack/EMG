@@ -254,3 +254,32 @@ export function containsSensitiveTokens(str: string): boolean {
   }
   return false;
 }
+
+/**
+ * Sanitizer Rule: checkUnimplementedStubs
+ * Flags method/function bodies containing only a single return statement
+ * with hardcoded or stubbed values without branching or logic.
+ */
+export function checkUnimplementedStubs(code: string): { found: boolean; stubs: string[] } {
+  if (!code || typeof code !== 'string') return { found: false, stubs: [] };
+
+  const stubPatterns = [
+    // Python def evaluate/analyze/audit... returning single-line hardcoded payload
+    /def\s+(?:evaluate|analyze|audit|synthesize|estimate)\s*\([^)]*\)\s*:\s*(?:\n\s*|\n\s*"""[\s\S]*?"""\s*\n\s*)return\s+(?:EvidenceEntry|dict|\{|\w+\()\s*(?:persona=[^,]+,\s*)?(?:confidence_score|confidence|score)\s*=\s*(?:0\.\d+|0|None|\[\]|"\w+")\s*\)?/g,
+    // TS/JS async evaluate/analyze... returning single-line hardcoded object
+    /async?\s+(?:evaluate|analyze|audit|synthesize|estimate)\s*\([^)]*\)\s*(?::\s*[^{]+)?\{\s*return\s*\{\s*(?:persona|confidence|score)\s*:\s*(?:0\.\d+|0|None|null|"\w+")\s*\}\s*;?\s*\}/g,
+  ];
+
+  const stubs: string[] = [];
+  for (const pattern of stubPatterns) {
+    const matches = code.matchAll(pattern);
+    for (const m of matches) {
+      if (m[0]) stubs.push(m[0].slice(0, 60) + '...');
+    }
+  }
+
+  return {
+    found: stubs.length > 0,
+    stubs,
+  };
+}

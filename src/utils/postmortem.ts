@@ -63,7 +63,7 @@ export function fingerprintError(file: string, evidence: string): string {
     .trim();
 
   // If evidence is dominated by truncation syntax cascades (unclosed delimiters/EOF errors),
-  // collapse into a unified error category signature to prevent counter fragmentation.
+  // collapse into a unified error category signature ('EOF_TRUNCATION') to prevent counter fragmentation.
   const evLower = evidence.toLowerCase();
   if (
     evLower.includes('unclosed opening delimiter') ||
@@ -72,9 +72,10 @@ export function fingerprintError(file: string, evidence: string): string {
     evLower.includes('unexpected eof') ||
     evLower.includes('unexpected end of input') ||
     evLower.includes('syntax_unclosed') ||
+    evLower.includes('unclosed delimiter') ||
     (evLower.includes('expected') && evLower.includes('delimiter'))
   ) {
-    normalized = "SYNTAX_TRUNCATION_UNCLOSED_DELIMITERS";
+    normalized = "EOF_TRUNCATION";
   }
 
   return `${file}::${normalized}`;
