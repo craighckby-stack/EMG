@@ -2,7 +2,7 @@
 /**
  * Darlek Caan
  * File Path: "src/lib/binaryShield.ts"
- * Optimized cryptography pipeline featuring strict input boundary validation, deterministic key length verification, and robust exception propagation safety.
+ * Cryptography pipeline featuring strict input boundary validation, deterministic key length verification, and exception propagation safety.
  */
 
 export interface EncryptionPacket {
