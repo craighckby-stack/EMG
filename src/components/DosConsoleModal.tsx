@@ -1,7 +1,7 @@
 /* DARLEK CAAN RAG SYNTHESIS - Autonomous Generation G-118 [2026-09-20T05:50:41.881Z] */
 /**
  * DARLEK CANN ARCHITECTURAL HEADER
- * File: src/components/DosConsoleModal.tsx
+ * File: src/components/DosConsoleModal.tsx (Optimized)
  * Role: Full-time interactive MS-DOS terminal monitor displaying real system telemetry,
  *       triggering autonomous file hotswaps, and visualizing RAG brain ingestion.
  */
@@ -93,8 +93,8 @@ export default function DosConsoleModal({
 
     try {
       await msDosEngine.executeCommand(cmd);
-    } catch (err) {
-      console.error('Failed to execute command:', err);
+    } catch (err: unknown) {
+      console.error('Failed to execute command:', err instanceof Error ? err.message : String(err));
     }
   };
 
