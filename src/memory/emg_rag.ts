@@ -184,23 +184,127 @@ export function parseSynthesisMd(content: string): VectorEntry[] {
 }
 
 /**
- * Initializes the EMG RAG vector store from memory or attachments.
+ * IndexedDB high-capacity persistence layer for EMG RAG vectors (supports 1GB+ storage).
+ */
+const IDB_NAME = 'EMG_SOVEREIGN_RAG_DB';
+const IDB_STORE = 'vectors_store';
+
+function openIndexedDB(): Promise<IDBDatabase> {
+  return new Promise((resolve, reject) => {
+    if (typeof window === 'undefined' || !window.indexedDB) {      reject(new Error('IndexedDB not supported in current runtime environment'));
+      return;
+    }
+    const request = window.indexedDB.open(IDB_NAME, 1);
+    request.onupgradeneeded = () => {      const db = request.result;      if (!db.objectStoreNames.contains(IDB_STORE)) {        db.createObjectStore(IDB_STORE, { keyPath: 'id' });      }    };
+    request.onsuccess = () => resolve(request.result);
+    request.onerror = () => reject(request.error);
+  });
+}
+
+async function saveVectorsToIndexedDB(vectors: VectorEntry[]): Promise<void> {
+  try {
+    const db = await openIndexedDB();
+    const tx = db.transaction(IDB_STORE, 'readwrite');
+    const store = tx.objectStore(IDB_STORE);
+    store.clear();
+    for (const v of vectors) {      store.put(v);
+    }
+    await new Promise((res, rej) => {      tx.oncomplete = res;      tx.onerror = rej;    });
+  } catch (err) {
+    console.warn('[EMG RAG] IndexedDB save failed, falling back to local memory:', err);
+    // Fallback to safeStorage for small capacity environments
+    try {
+      safeSetLocalStorage('emg_rag_vectors', JSON.stringify(vectors.slice(0, 100)));
+    } catch {}
+  }
+}
+
+async function loadVectorsFromIndexedDB(): Promise<VectorEntry[]> {
+  try {
+    const db = await openIndexedDB();
+    const tx = db.transaction(IDB_STORE, 'readonly');
+    const store = tx.objectStore(IDB_STORE);
+    const request = store.getAll();
+    return new Promise((resolve, reject) => {      request.onsuccess = () => resolve(request.result as VectorEntry[]);      request.onerror = () => reject(request.error);    });
+  } catch (err) {
+    console.warn('[EMG RAG] IndexedDB load failed, trying fallback:', err);
+    const cachedStr = safeGetLocalStorage('emg_rag_vectors');
+    if (cachedStr) {
+      try {
+        return JSON.parse(cachedStr) as VectorEntry[];
+      } catch {}
+    }
+    return [];
+  }
+}
+
+/**
+ * Publishes updated RAG vectors and ledgers directly back to the GitHub repository.
+ */
+export async function publishRagToGithub(target?: {
+  token: string;
+  owner: string;
+  repo: string;
+  branch: string;
+}): Promise<{ success: boolean; commitSha?: string; error?: string }> {
+  const activeTarget = target || getStoredGithubTarget();
+  if (!activeTarget || !activeTarget.token || !activeTarget.owner || !activeTarget.repo) {    return { success: false, error: 'No GitHub parameters or Personal Access Token configured' };
+  }
+
+  try {
+    const { commitToGitHubFile } = await import('../lib/github-writer');
+    
+    // Format JSONL string of all vectors
+    const jsonlContent = vectorStore.map((v) => JSON.stringify(v)).join('\n');
+    
+    // Commit vectors.jsonl
+    const res = await commitToGitHubFile(
+      activeTarget,
+      'SOVEREIGN-KERNEL/memory/vectors.jsonl',
+      jsonlContent,
+      `[EMG RAG] Auto-publish updated RAG vector database (${vectorStore.length} entries)`
+    );
+
+    return { success: true, commitSha: res.commitSha };
+  } catch (err: any) {
+    console.error('[EMG RAG] Failed to publish RAG vectors to GitHub repository:', err);
+    return { success: false, error: err instanceof Error ? err.message : String(err) };
+  }
+}
+
+function getStoredGithubTarget() {
+  if (typeof window === 'undefined') return null;
+  try {
+    const saved = localStorage.getItem('darlek_cann_system_state');
+    if (saved) {
+      const parsed = JSON.parse(saved);
+      if (parsed?.githubToken && parsed?.githubRepo) {
+        const [owner, repo] = parsed.githubRepo.split('/');
+        return {
+          token: parsed.githubToken,
+          owner: owner || 'craighckby-stack',
+          repo: repo || 'SOVEREIGN-KERNEL',
+          branch: parsed.githubBranch || 'main',
+        };
+      }
+    }
+  } catch {}
+  return null;
+}
+
+/**
+ * Initializes the EMG RAG vector store from IndexedDB high-capacity memory or attachments.
  */
 export async function initializeEmgRag(
   correctContent?: string,
   wrongContent?: string,
   synthesisContent?: string
 ): Promise<VectorEntry[]> {
-  const cachedStr = safeGetLocalStorage('emg_rag_vectors');
-  if (cachedStr) {
-    try {
-      const cached = JSON.parse(cachedStr) as VectorEntry[];
-      if (cached && cached.length > 0) {
-        vectorStore = cached;
-        isInitialized = true;
-        return vectorStore;
-      }
-    } catch {}
+  const cachedVectors = await loadVectorsFromIndexedDB();
+  if (cachedVectors && cachedVectors.length > 0) {
+    vectorStore = cachedVectors;
+    isInitialized = true;
+    return vectorStore;
   }
 
   const cleanEntries = correctContent ? parseCorrectMd(correctContent) : [];
@@ -214,7 +318,7 @@ export async function initializeEmgRag(
   });
 
   vectorStore = Array.from(dedupMap.values());
-  safeSetLocalStorage('emg_rag_vectors', JSON.stringify(vectorStore));
+  await saveVectorsToIndexedDB(vectorStore);
   isInitialized = true;
   return vectorStore;
 }
@@ -284,7 +388,8 @@ export function appendCleanCommit(commitHash: string, filePath: string, diffSnip
 
   vectorStore = vectorStore.filter((e) => e.id !== newEntry.id);
   vectorStore.push(newEntry);
-  safeSetLocalStorage('emg_rag_vectors', JSON.stringify(vectorStore));
+  saveVectorsToIndexedDB(vectorStore).catch(() => {});
+  publishRagToGithub().catch(() => {});
 }
 
 /**
@@ -318,7 +423,8 @@ export function appendFailureAndFix(
 
   vectorStore = vectorStore.filter((e) => e.id !== newEntry.id);
   vectorStore.push(newEntry);
-  safeSetLocalStorage('emg_rag_vectors', JSON.stringify(vectorStore));
+  saveVectorsToIndexedDB(vectorStore).catch(() => {});
+  publishRagToGithub().catch(() => {});
 }
 
 export function getAllEmgVectors(): VectorEntry[] {
