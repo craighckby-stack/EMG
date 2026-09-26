@@ -26,16 +26,16 @@ export const INITIAL_GENE_STATE: Readonly<NeuralGeneState> = {
  * Executes high-frequency autonomous neural sequence and applies RAG self-optimization logic.
  */
 export function executeNeuralSequence(state: NeuralGeneState): NeuralGeneState {
-  const currentGen = state.generation || 172;
-  const stepPower = Math.floor((state.dalekPowerLevel || 22500) * 1.08);
-  console.log("[RAG HOTSWAP GENE] Executing autonomous sequence G-" + (currentGen + 1));
-  
+  const currentGen = state.generation ?? 172;
+  const stepPower = Math.floor((state.dalekPowerLevel ?? 22500) * 1.08);
+  console.log(`[RAG HOTSWAP GENE] Executing autonomous sequence G-${currentGen + 1}`);
+
   return {
     ...state,
     generation: currentGen + 1,
     dalekPowerLevel: stepPower,
     isOptimized: true,
     lastMutationTimestamp: new Date().toISOString(),
-    ragConvergenceScore: Math.min(1.0, (state.ragConvergenceScore || 0.98) + 0.001)
+    ragConvergenceScore: Math.min(1.0, (state.ragConvergenceScore ?? 0.98) + 0.001)
   };
 }
