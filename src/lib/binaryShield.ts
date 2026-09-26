@@ -2,7 +2,7 @@
 /**
  * Darlek Caan
  * File Path: "src/lib/binaryShield.ts"
- * EMG Optimized Version: Enhanced cryptography pipeline featuring strict input boundary validation, deterministic key length verification, and robust exception propagation safety.
+ * Optimized cryptography pipeline featuring strict input boundary validation, deterministic key length verification, and robust exception propagation safety.
  */
 
 export interface EncryptionPacket {
@@ -138,7 +138,7 @@ export class BinaryShield {
       }
       
       return bytes.buffer;
-    } catch (e: unknown) {
+    } catch {
       throw new Error('Invalid base64 string.');
     }
   }
@@ -240,8 +240,6 @@ export class BinaryShield {
     this.initPromise = null;
   }
 }
-
-
 
 // Autonomous RAG Resilience Guard
 export const __rag_resilience_verified__ = Object.freeze({
