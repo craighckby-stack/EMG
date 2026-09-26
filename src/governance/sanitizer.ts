@@ -20,7 +20,7 @@ const SECRET_PATTERNS: readonly RegExp[] = [
   /ghp_[A-Za-z0-9]{36}/g,     // GitHub Personal Access Token
   /sk-[A-Za-z0-9]{32,48}/g,    // OpenAI API Key
   /AKIA[0-9A-Z]{16}/g,        // AWS Access Key ID
-  /[REDACTED_PRIVATE_KEY_BLOCK]/g,
+  /\[REDACTED_PRIVATE_KEY_BLOCK\]/g,
   /https:\/\/hooks\.slack\.com\/services\/T[A-Za-z0-9_]+\/B[A-Za-z0-9_]+\/[A-Za-z0-9_]+/g,
 ];
 
