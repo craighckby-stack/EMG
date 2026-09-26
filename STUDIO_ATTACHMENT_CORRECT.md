@@ -1,12 +1,12 @@
 # Content Sanitization Utility
 
-The `sanitizeContent` module provides a security utility designed to detect and redact sensitive credentials (such as API keys and personal access tokens) from arbitrary text inputs prior to storage or transmission.
+The `sanitizeContent` module is a security utility designed to detect and redact sensitive credentials—such as API keys and personal access tokens—from arbitrary text inputs prior to storage or transmission.
 
 ## Overview
 
-When processing user-generated content or logs, accidental inclusion of secrets poses a security risk. This utility scans strings against predefined regular expressions to identify common secret patterns and replaces them with a placeholder string.
+When processing user-generated content or logs, the accidental inclusion of secrets poses a security risk. This utility scans input strings against predefined regular expressions to identify common secret patterns and replaces them with a placeholder string.
 
-## Installation / Usage
+## Installation and Usage
 
 Import the `sanitizeContent` function into your TypeScript or JavaScript module:
 
@@ -14,7 +14,7 @@ Import the `sanitizeContent` function into your TypeScript or JavaScript module:
 import { sanitizeContent } from './STUDIO_ATTACHMENT_CORRECT';
 
 const result = sanitizeContent("My key is AIzaSyA1B2C3D4E5F6G7H8I9J0K1L2M3N4O5P");
-console.log(result.blocked); // true
+console.log(result.blocked);   // true
 console.log(result.sanitized); // "My key is [REDACTED_SECRET]"
 ```
 
