@@ -19,29 +19,31 @@ export interface HaltEvaluationState {
 }
 
 let historyGrowthTracker: number[] = [];
+const MAX_HISTORY_LENGTH = 5;
+const REQUIRED_NO_GROWTH_CYCLES = 3;
 
 /**
  * Evaluates whether EMG should trigger an Archaeological Proof of Clean Halt.
  */
 export function checkSelfStoppingPoint(
   currentCorrectCount: number,
-  currentFileSample: { path: string; code: string }[]
+  currentFileSample: readonly { readonly path: string; readonly code: string }[]
 ): HaltEvaluationState {
   historyGrowthTracker.push(currentCorrectCount);
-  if (historyGrowthTracker.length > 5) {
+  if (historyGrowthTracker.length > MAX_HISTORY_LENGTH) {
     historyGrowthTracker.shift();
   }
 
   // Check growth over last 3 cycles
   let consecutiveNoGrowthCycles = 0;
-  if (historyGrowthTracker.length >= 3) {
+  if (historyGrowthTracker.length >= REQUIRED_NO_GROWTH_CYCLES) {
     const len = historyGrowthTracker.length;
     const c1 = historyGrowthTracker[len - 3] ?? 0;
     const c2 = historyGrowthTracker[len - 2] ?? 0;
     const c3 = historyGrowthTracker[len - 1] ?? 0;
 
     if (c1 === c2 && c2 === c3) {
-      consecutiveNoGrowthCycles = 3;
+      consecutiveNoGrowthCycles = REQUIRED_NO_GROWTH_CYCLES;
     }
   }
 
@@ -59,10 +61,13 @@ export function checkSelfStoppingPoint(
     totalWrongRetrievals += ragRes.topFixes.length;
   }
 
-  const isHalted = consecutiveNoGrowthCycles >= 3 && totalWrongRetrievals === 0 && allSanitizerClean;
+  const isHalted =
+    consecutiveNoGrowthCycles >= REQUIRED_NO_GROWTH_CYCLES &&
+    totalWrongRetrievals === 0 &&
+    allSanitizerClean;
 
   const haltReason = isHalted
-    ? `HALT: CORRECT growth 0, WRONG retrieval 0, sanitizer clean`
+    ? 'HALT: CORRECT growth 0, WRONG retrieval 0, sanitizer clean'
     : undefined;
 
   return {
