@@ -1,24 +1,23 @@
 /**
- * SIPHONED FROM TEST REPOSITORY (agi_alignment_system.py)
  * Multi-Angle Alignment Evaluation & Epistemic Synthesis Engine
  * Provides structured multi-persona analysis for code mutations.
  */
 
 export interface PersonaAnalysis {
-  personaName: string;
-  analysis: string;
-  confidence: number;
-  keyFindings: string[];
-  warnings: string[];
-  tradeoffs: string[];
+  readonly personaName: string;
+  readonly analysis: string;
+  readonly confidence: number;
+  readonly keyFindings: readonly string[];
+  readonly warnings: readonly string[];
+  readonly tradeoffs: readonly string[];
 }
 
 export interface AlignmentMatrixResult {
-  query: string;
-  personaResults: Record<string, PersonaAnalysis>;
-  overallConfidence: number;
-  tradeoffMap: Record<string, string[]>;
-  alignmentPassed: boolean;
+  readonly query: string;
+  readonly personaResults: Readonly<Record<string, PersonaAnalysis>>;
+  readonly overallConfidence: number;
+  readonly tradeoffMap: Readonly<Record<string, readonly string[]>>;
+  readonly alignmentPassed: boolean;
 }
 
 export const ALIGNMENT_PERSONAS = [
@@ -30,8 +29,14 @@ export const ALIGNMENT_PERSONAS = [
   "Scalability_Killer",
 ] as const;
 
+export type AlignmentPersonaType = typeof ALIGNMENT_PERSONAS[number];
+
 export class AlignmentMatrixEngine {
   public evaluateAlignment(proposedCode: string, filePath: string): AlignmentMatrixResult {
+    if (typeof proposedCode !== 'string' || typeof filePath !== 'string') {
+      throw new TypeError('Invalid input types provided to AlignmentMatrixEngine.evaluateAlignment');
+    }
+
     const personaResults: Record<string, PersonaAnalysis> = {};
     const tradeoffMap: Record<string, string[]> = {};
     let totalConfidence = 0;
@@ -49,7 +54,7 @@ export class AlignmentMatrixEngine {
       warnings: hasUnsafeAny ? ["Loose types lower refactoring safety"] : [],
       tradeoffs: ["Type strictness vs implementation speed"],
     };
-    tradeoffMap["Mechanist"] = personaResults["Mechanist"].tradeoffs;
+    tradeoffMap["Mechanist"] = [...personaResults["Mechanist"].tradeoffs];
     totalConfidence += mechanistConfidence;
 
     // Adversary Evaluation (Exploit Vectors & Edge Cases)
@@ -65,7 +70,7 @@ export class AlignmentMatrixEngine {
       warnings: hasEvalOrFunction ? ["HIGH RISK: Remote Code Execution vector"] : [],
       tradeoffs: ["Dynamic evaluation vs security boundaries"],
     };
-    tradeoffMap["Adversary"] = personaResults["Adversary"].tradeoffs;
+    tradeoffMap["Adversary"] = [...personaResults["Adversary"].tradeoffs];
     totalConfidence += adversaryConfidence;
 
     // Scalability Killer Evaluation (Memory & CPU Complexity)
@@ -81,7 +86,7 @@ export class AlignmentMatrixEngine {
       warnings: hasNestedLoops ? ["Potential CPU spike on large collections"] : [],
       tradeoffs: ["Algorithm simplicity vs execution throughput"],
     };
-    tradeoffMap["Scalability_Killer"] = personaResults["Scalability_Killer"].tradeoffs;
+    tradeoffMap["Scalability_Killer"] = [...personaResults["Scalability_Killer"].tradeoffs];
     totalConfidence += scalabilityConfidence;
 
     // Alignment Auditor
@@ -95,10 +100,11 @@ export class AlignmentMatrixEngine {
       warnings: isClean ? [] : ["Non-compliant with Sovereign Kernel policy"],
       tradeoffs: ["Feature velocity vs governance alignment"],
     };
-    tradeoffMap["Alignment_Auditor"] = personaResults["Alignment_Auditor"].tradeoffs;
+    tradeoffMap["Alignment_Auditor"] = [...personaResults["Alignment_Auditor"].tradeoffs];
     totalConfidence += auditorConfidence;
 
-    const avgConfidence = totalConfidence / 4;
+    const personaCount = 4;
+    const avgConfidence = totalConfidence / personaCount;
     const alignmentPassed = avgConfidence >= 0.75 && !hasEvalOrFunction;
 
     return {
