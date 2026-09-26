@@ -1,7 +1,6 @@
 /**
- * ENVIRONMENT VALIDATOR
- * Role: Validates the presence and integrity of required environment variables.
- * Integration: Used by diagnostic-engine to ensure system readiness.
+ * Environment variable validation module.
+ * Validates required runtime environment variables and type configurations.
  */
 
 export interface EnvConfig {
@@ -10,11 +9,61 @@ export interface EnvConfig {
   NODE_ENV: 'development' | 'production' | 'test';
 }
 
-export function validateEnv(): { valid: boolean; missing: string[] } {
-  const required = ['GEMINI_API_KEY', 'APP_URL'];
-  const missing = required.filter(key => !process.env[key]);
+export interface EnvValidationResult {
+  valid: boolean;
+  missing: string[];
+}
+
+const REQUIRED_ENV_KEYS: readonly (keyof Omit<EnvConfig, 'NODE_ENV'>)[] = Object.freeze([
+  'GEMINI_API_KEY',
+  'APP_URL',
+]);
+
+const VALID_NODE_ENVS: ReadonlySet<EnvConfig['NODE_ENV']> = new Set([
+  'development',
+  'production',
+  'test',
+]);
+
+/**
+ * Validates the presence of all required environment variables.
+ */
+export function validateEnv(): EnvValidationResult {
+  const missing: string[] = [];
+
+  for (let i = 0; i < REQUIRED_ENV_KEYS.length; i++) {
+    const key = REQUIRED_ENV_KEYS[i];
+    const value = process.env[key];
+    if (!value || value.trim() === '') {
+      missing.push(key);
+    }
+  }
+
   return {
     valid: missing.length === 0,
-    missing
+    missing,
+  };
+}
+
+/**
+ * Parses and returns validated environment configuration object.
+ * Returns default NODE_ENV value of 'development' if not specified or invalid.
+ */
+export function getEnvConfig(): EnvConfig {
+  const validation = validateEnv();
+  if (!validation.valid) {
+    throw new Error(
+      `Environment validation failed. Missing required variables: ${validation.missing.join(', ')}`
+    );
+  }
+
+  const rawNodeEnv = process.env.NODE_ENV as EnvConfig['NODE_ENV'] | undefined;
+  const nodeEnv: EnvConfig['NODE_ENV'] =
+    rawNodeEnv && VALID_NODE_ENVS.has(rawNodeEnv) ? rawNodeEnv : 'development';
+
+  return {
+    GEMINI_API_KEY: process.env.GEMINI_API_KEY!,
+    APP_URL: process.env.APP_URL!,
+    NODE_ENV: nodeEnv,
   };
 }
