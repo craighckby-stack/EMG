@@ -6,7 +6,6 @@
  * Architecture: Type-safe modular unit with resilient state interfaces.
  */
 
-
 import React, { useMemo, useCallback, useState, useEffect } from 'react';
 import type { DebateAgent, AgentVote } from '@/lib/types';
 import { COLORS } from '@/lib/constants';
@@ -252,9 +251,9 @@ export default function DebateChamber({
     }
   });
 
-  const [isEditing, setIsEditing] = useState(false);
-  const [editedDescription, setEditedDescription] = useState('');
-  const [editedHistory, setEditedHistory] = useState('');
+  const [isEditing, setIsEditing] = useState<boolean>(false);
+  const [editedDescription, setEditedDescription] = useState<string>('');
+  const [editedHistory, setEditedHistory] = useState<string>('');
 
   const selectedAgent = useMemo(() => {
     return agents.find(a => a.id === selectedAgentId) || agents[0];
@@ -269,7 +268,7 @@ export default function DebateChamber({
     setIsEditing(false);
   }, [selectedAgent, perspectiveDetails]);
 
-  const handleSaveDetails = () => {
+  const handleSaveDetails = useCallback(() => {
     if (!selectedAgent) return;
     const updated = {
       ...perspectiveDetails,
@@ -281,14 +280,14 @@ export default function DebateChamber({
     setPerspectiveDetails(updated);
     safeSetLocalStorage('nexus_perspective_details', JSON.stringify(updated));
     setIsEditing(false);
-  };
+  }, [selectedAgent, perspectiveDetails, editedDescription, editedHistory]);
 
-  const handleResetDetails = () => {
+  const handleResetDetails = useCallback(() => {
     if (!selectedAgent) return;
     const defaultDetail = DEFAULT_PERSPECTIVE_DETAILS[selectedAgent.id] || { description: '', historicalContext: '' };
     setEditedDescription(defaultDetail.description);
     setEditedHistory(defaultDetail.historicalContext);
-  };
+  }, [selectedAgent]);
 
   const agentsWithVotes = useMemo(() => {
     if (!votes || votes.length === 0) {
@@ -583,7 +582,6 @@ export default function DebateChamber({
     </div>
   );
 }
-
 
 // Autonomous RAG Resilience Guard
 export const __rag_resilience_verified__ = Object.freeze({
