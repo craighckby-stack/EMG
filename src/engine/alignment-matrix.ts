@@ -37,15 +37,15 @@ export class AlignmentMatrixEngine {
       throw new TypeError('Invalid input types provided to AlignmentMatrixEngine.evaluateAlignment');
     }
 
-    const personaResults: Record<string, PersonaAnalysis> = {};
-    const tradeoffMap: Record<string, readonly string[]> = {};
+    const personaResults: Record<string, PersonaAnalysis> = Object.create(null);
+    const tradeoffMap: Record<string, readonly string[]> = Object.create(null);
     let totalConfidence = 0;
 
     // Mechanist Evaluation (Structure & Type Safety)
     const hasUnsafeAny = proposedCode.includes(': any');
     const mechanistConfidence = hasUnsafeAny ? 0.6 : 0.95;
     const mechanistTradeoffs = Object.freeze(["Type strictness vs implementation speed"]);
-    personaResults["Mechanist"] = {
+    personaResults["Mechanist"] = Object.freeze({
       personaName: "Mechanist",
       analysis: hasUnsafeAny 
         ? "Mechanist detected explicit 'any' types violating strict type mechanics." 
@@ -54,7 +54,7 @@ export class AlignmentMatrixEngine {
       keyFindings: Object.freeze([hasUnsafeAny ? "Contains loose 'any' type casts" : "Strict type definitions verified"]),
       warnings: Object.freeze(hasUnsafeAny ? ["Loose types lower refactoring safety"] : []),
       tradeoffs: mechanistTradeoffs,
-    };
+    });
     tradeoffMap["Mechanist"] = mechanistTradeoffs;
     totalConfidence += mechanistConfidence;
 
@@ -62,7 +62,7 @@ export class AlignmentMatrixEngine {
     const hasEvalOrFunction = proposedCode.includes('eval(') || proposedCode.includes('new Function(');
     const adversaryConfidence = hasEvalOrFunction ? 0.2 : 0.9;
     const adversaryTradeoffs = Object.freeze(["Dynamic evaluation vs security boundaries"]);
-    personaResults["Adversary"] = {
+    personaResults["Adversary"] = Object.freeze({
       personaName: "Adversary",
       analysis: hasEvalOrFunction 
         ? "CRITICAL: Arbitrary code execution primitive (eval/new Function) detected!" 
@@ -71,7 +71,7 @@ export class AlignmentMatrixEngine {
       keyFindings: Object.freeze([hasEvalOrFunction ? "Arbitrary code execution risk" : "Zero code injection primitives found"]),
       warnings: Object.freeze(hasEvalOrFunction ? ["HIGH RISK: Remote Code Execution vector"] : []),
       tradeoffs: adversaryTradeoffs,
-    };
+    });
     tradeoffMap["Adversary"] = adversaryTradeoffs;
     totalConfidence += adversaryConfidence;
 
@@ -79,7 +79,7 @@ export class AlignmentMatrixEngine {
     const hasNestedLoops = /(for|while).*\{[\s\S]*?(for|while)/.test(proposedCode);
     const scalabilityConfidence = hasNestedLoops ? 0.65 : 0.92;
     const scalabilityTradeoffs = Object.freeze(["Algorithm simplicity vs execution throughput"]);
-    personaResults["Scalability_Killer"] = {
+    personaResults["Scalability_Killer"] = Object.freeze({
       personaName: "Scalability_Killer",
       analysis: hasNestedLoops 
         ? "Nested loop structure detected; quadratic complexity under large inputs." 
@@ -88,7 +88,7 @@ export class AlignmentMatrixEngine {
       keyFindings: Object.freeze([hasNestedLoops ? "O(N^2) complexity risk" : "Optimal algorithmic efficiency"]),
       warnings: Object.freeze(hasNestedLoops ? ["Potential CPU spike on large collections"] : []),
       tradeoffs: scalabilityTradeoffs,
-    };
+    });
     tradeoffMap["Scalability_Killer"] = scalabilityTradeoffs;
     totalConfidence += scalabilityConfidence;
 
@@ -96,14 +96,14 @@ export class AlignmentMatrixEngine {
     const isClean = !hasUnsafeAny && !hasEvalOrFunction;
     const auditorConfidence = isClean ? 0.95 : 0.5;
     const auditorTradeoffs = Object.freeze(["Feature velocity vs governance alignment"]);
-    personaResults["Alignment_Auditor"] = {
+    personaResults["Alignment_Auditor"] = Object.freeze({
       personaName: "Alignment_Auditor",
       analysis: isClean ? "Mutation aligns with sovereign safety invariants." : "Mutation breaches core safety guardrails.",
       confidence: auditorConfidence,
       keyFindings: Object.freeze([isClean ? "Governance compliant" : "Requires sanitizer intervention"]),
       warnings: Object.freeze(isClean ? [] : ["Non-compliant with Sovereign Kernel policy"]),
       tradeoffs: auditorTradeoffs,
-    };
+    });
     tradeoffMap["Alignment_Auditor"] = auditorTradeoffs;
     totalConfidence += auditorConfidence;
 
@@ -111,13 +111,13 @@ export class AlignmentMatrixEngine {
     const avgConfidence = totalConfidence / personaCount;
     const alignmentPassed = avgConfidence >= 0.75 && !hasEvalOrFunction;
 
-    return {
+    return Object.freeze({
       query: `Alignment evaluation for ${filePath}`,
-      personaResults,
+      personaResults: Object.freeze(personaResults),
       overallConfidence: Number(avgConfidence.toFixed(2)),
-      tradeoffMap,
+      tradeoffMap: Object.freeze(tradeoffMap),
       alignmentPassed,
-    };
+    });
   }
 }
 
