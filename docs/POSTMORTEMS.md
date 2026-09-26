@@ -658,3 +658,20 @@ Line 13, Col 17: Type annotations can only be used in TypeScript files.
 Line 65, Col 17: Type annotations can only be used in TypeScript files.
 ```
 **CONSTRAINT (Model Generalization):** Never repeat code patterns that produce this compiler/linter error on patch-server-diff.cjs.
+
+### ❌ [2026-09-26] server.ts.backup `source: mutation-cycle`
+**Symptom:** AST / TypeScript Compiler Validation Rejected
+**EVIDENCE (Machine-Copied Fact):**
+```
+Line 29, Col 71: Unclosed single-quote string literal.
+Line 31, Col 1: Mismatched closing delimiter: expected matching ')' but found '}' (opened on Line 29).
+Line 363, Col 22: Unclosed template literal string (`).
+Line 379, Col 4: Unclosed opening delimiter '{'.
+Line 303, Col 9: Unclosed opening delimiter '{'.
+Line 302, Col 83: Unclosed opening delimiter '{'.
+Line 302, Col 11: Unclosed opening delimiter '('.
+Line 72, Col 45: Unclosed opening delimiter '{'.
+Line 18, Col 52: Unclosed opening delimiter '{'.
+[OUTPUT_LIKELY_TRUNCATED] The output is < 80% of original length and syntactically invalid. The model likely hit its output token limit.
+```
+**CONSTRAINT (Model Generalization):** Never repeat code patterns that produce this compiler/linter error on server.ts.backup.
