@@ -1,4 +1,4 @@
-/* DARLEK CAAN RAG SYNTHESIS - Autonomous Generation G-118 [2026-09-20T05:50:41.881Z] */
+/* DARLEK CAAN RAG SYNTHESIS - Autonomous Generation G-119 */
 /**
  * DARLEK CANN ARCHITECTURAL HEADER
  * File: src/components/DosConsoleModal.tsx (Optimized)
@@ -36,7 +36,6 @@ export default function DosConsoleModal({
   const terminalEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
-  // Subscribe to the full-time running background MS-DOS engine
   useEffect(() => {
     const unsubscribe = msDosEngine.subscribe((state: MsDosEngineState) => {
       setEngineState(state);
@@ -44,7 +43,6 @@ export default function DosConsoleModal({
     return unsubscribe;
   }, []);
 
-  // Focus input when opened and not docked
   useEffect(() => {
     if (isOpen && !isDocked) {
       const timer = window.setTimeout(() => inputRef.current?.focus(), 100);
@@ -52,7 +50,6 @@ export default function DosConsoleModal({
     }
   }, [isOpen, isDocked]);
 
-  // Handle ESC key to close or dock
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent): void => {
       if (e.key === 'Escape' && isOpen && !isDocked) {
@@ -67,7 +64,6 @@ export default function DosConsoleModal({
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [isOpen, isDocked, onClose, onToggleDock]);
 
-  // Auto-scroll to bottom
   useEffect(() => {
     if (autoScroll && terminalEndRef.current && isOpen && !isDocked) {
       terminalEndRef.current.scrollIntoView({ behavior: 'smooth' });
@@ -120,7 +116,6 @@ export default function DosConsoleModal({
     }
   };
 
-  // If docked, render a compact retro floating bottom bar so it's always running & visible
   if (isDocked) {
     const latestLine = engineState.lines[engineState.lines.length - 1];
     return (
@@ -163,7 +158,6 @@ export default function DosConsoleModal({
         }`}
         style={{ fontFamily: '"Courier New", Courier, monospace, monospace' }}
       >
-        {/* MS-DOS Title Bar */}
         <div className="bg-white text-black px-3 py-1 flex items-center justify-between font-bold text-xs sm:text-sm select-none shrink-0 border-b border-white">
           <div className="flex items-center gap-2 truncate">
             <Terminal size={14} className="stroke-[2.5]" />
@@ -173,7 +167,6 @@ export default function DosConsoleModal({
           </div>
 
           <div className="flex items-center gap-2">
-            {/* Quick action triggers */}
             <button
               onClick={() => void msDosEngine.triggerAutonomousHotswap()}
               className="hidden md:flex px-1.5 py-0.5 text-[9px] font-mono border border-black bg-black text-white hover:bg-gray-800 transition-colors items-center gap-1 cursor-pointer font-bold"
@@ -247,7 +240,6 @@ export default function DosConsoleModal({
           </div>
         </div>
 
-        {/* Real-Time Telemetry Bar */}
         <div className="bg-white/10 text-white px-3 py-1 text-[10px] border-b border-white/20 flex flex-wrap items-center justify-between gap-2 font-mono">
           <div className="flex items-center gap-3">
             <span className="text-green-400 font-bold">DAEMON: RUNNING</span>
@@ -274,7 +266,6 @@ export default function DosConsoleModal({
           </div>
         </div>
 
-        {/* MS-DOS Main Text Screen */}
         <div
           className="flex-1 p-3 sm:p-4 overflow-y-auto space-y-1 text-white text-xs sm:text-sm leading-snug selection:bg-white selection:text-black"
           style={{
@@ -315,7 +306,6 @@ export default function DosConsoleModal({
           <div ref={terminalEndRef} />
         </div>
 
-        {/* MS-DOS Command Line Input Area */}
         <form
           onSubmit={(e) => void handleCommandSubmit(e)}
           className="bg-black border-t border-white/40 p-2 sm:p-3 flex items-center gap-2 shrink-0 text-white font-mono text-xs sm:text-sm"
