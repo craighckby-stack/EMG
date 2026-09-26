@@ -1,6 +1,5 @@
 /**
- * SIPHONED FROM HUXLEY SINGULARITY LOOP (V3.2_CORE)
- * Siphon Engine with Generational Stamping & AST Weighting
+ * Siphon Engine with Generational Stamping and AST Weighting
  * Pattern: Functional Result-Type Error Handling
  * Mutation: Deterministic DNA Extraction with Generational Stamping
  */
@@ -17,7 +16,7 @@ export type SiphonResult<T> =
   | { success: false; error: string; entropyLevel: number };
 
 export class SiphonEngine {
-  private currentGeneration: string = "EMG_SOVEREIGN_V3.2";
+  private readonly currentGeneration: string = "EMG_SOVEREIGN_V3.2";
 
   /**
    * Siphons logic-DNA from raw source code buffers.
@@ -34,18 +33,19 @@ export class SiphonEngine {
         return { success: false, error: "NO_SURVIVABLE_TRAITS_FOUND", entropyLevel: 0.85 };
       }
 
-      // Inject Generational Stamping to prevent regressive cannibalization
+      const timestamp = Date.now();
       const stampedFragments = fragments.map(f => ({
         ...f,
-        ancestry: `${this.currentGeneration}::${Date.now()}`,
+        ancestry: `${this.currentGeneration}::${timestamp}`,
         weight: this.calculateInitialWeight(f)
       }));
 
       return { success: true, data: stampedFragments };
-    } catch (criticalFailure: any) {
+    } catch (criticalFailure: unknown) {
+      const errorMessage = criticalFailure instanceof Error ? criticalFailure.message : String(criticalFailure);
       return { 
         success: false, 
-        error: `CRITICAL_PIPELINE_COLLAPSE: ${criticalFailure.message || String(criticalFailure)}`, 
+        error: `CRITICAL_PIPELINE_COLLAPSE: ${errorMessage}`, 
         entropyLevel: 1.0 
       };
     }
@@ -57,14 +57,13 @@ export class SiphonEngine {
 
     if (matches.length > 0) {
       return matches.map(m => ({
-        title: m[1] || 'Pattern',
-        mutation: m[2] || 'Strategy',
+        title: m[1]?.trim() || 'Pattern',
+        mutation: m[2]?.trim() || 'Strategy',
         ancestry: "pending",
         weight: 0
       }));
     }
 
-    // Fallback block parser for raw functions / exports
     const exportMatches = [...raw.matchAll(/export\s+(?:function|const|class)\s+([a-zA-Z0-9_]+)/g)];
     if (exportMatches.length > 0) {
       return exportMatches.map(m => ({
