@@ -11,6 +11,13 @@ export interface DNA {
   readonly ancestry?: string;
 }
 
+const DECAY_INTERVAL_MS = 10000;
+const BASE_LIFESPAN_MS = 3600000;
+const ENTROPY_LIFESPAN_MULTIPLIER_MS = 7200000;
+const HIGH_PRESSURE_THRESHOLD = 0.7;
+const HIGH_PRESSURE_MULTIPLIER = 10;
+const LOW_ENTROPY_THRESHOLD = 0.2;
+
 export class EphemeralStorage {
   private readonly state: Map<string, DNA> = new Map<string, DNA>();
   private memoryPressure: number = 0;
@@ -18,7 +25,7 @@ export class EphemeralStorage {
 
   constructor() {
     if (typeof globalThis !== 'undefined' && typeof globalThis.setInterval === 'function') {
-      this.decayTimer = globalThis.setInterval(() => this.applyDecay(), 10000);
+      this.decayTimer = globalThis.setInterval(() => this.applyDecay(), DECAY_INTERVAL_MS);
     }
   }
 
@@ -27,7 +34,7 @@ export class EphemeralStorage {
       return;
     }
     this.memoryPressure = Math.max(0, Math.min(1, pressure));
-    if (this.memoryPressure > 0.7) {
+    if (this.memoryPressure > HIGH_PRESSURE_THRESHOLD) {
       this.applyDecay();
     }
   }
@@ -45,15 +52,17 @@ export class EphemeralStorage {
 
   private applyDecay(): void {
     const now = Date.now();
-    const pressureMultiplier = this.memoryPressure > 0.7 ? 10 : 1;
+    const pressureMultiplier = this.memoryPressure > HIGH_PRESSURE_THRESHOLD 
+      ? HIGH_PRESSURE_MULTIPLIER 
+      : 1;
 
     for (const [hash, dna] of this.state.entries()) {
-      const entropyBonus = dna.entropy * 7200000;
-      const baseLifespan = 3600000 + entropyBonus;
+      const entropyBonus = dna.entropy * ENTROPY_LIFESPAN_MULTIPLIER_MS;
+      const baseLifespan = BASE_LIFESPAN_MS + entropyBonus;
       const effectiveLifespan = baseLifespan / pressureMultiplier;
 
-      const isLowEntropyNoise = dna.entropy < 0.2;
-      const shouldPurgeImmediately = isLowEntropyNoise && this.memoryPressure > 0.7;
+      const isLowEntropyNoise = dna.entropy < LOW_ENTROPY_THRESHOLD;
+      const shouldPurgeImmediately = isLowEntropyNoise && this.memoryPressure > HIGH_PRESSURE_THRESHOLD;
 
       if (shouldPurgeImmediately || (now - dna.timestamp) > effectiveLifespan) {
         this.state.delete(hash);
