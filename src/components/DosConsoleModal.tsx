@@ -6,7 +6,7 @@
  *       triggering autonomous file hotswaps, and visualizing RAG brain ingestion.
  */
 
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, type JSX } from 'react';
 import type { SystemState } from '@/lib/types';
 import { Terminal, X, Minimize2, Maximize2, Play, Pause, Zap, Database, RefreshCw, ChevronUp, Brain, HardDrive } from 'lucide-react';
 import { msDosEngine, type DosLogLine, type MsDosEngineState } from '@/lib/msDosEngine';
@@ -26,19 +26,19 @@ export default function DosConsoleModal({
   systemState,
   isDocked = false,
   onToggleDock,
-}: DosConsoleModalProps) {
+}: DosConsoleModalProps): JSX.Element | null {
   const [engineState, setEngineState] = useState<MsDosEngineState>(() => msDosEngine.getState());
-  const [dosInput, setDosInput] = useState('');
+  const [dosInput, setDosInput] = useState<string>('');
   const [commandHistory, setCommandHistory] = useState<string[]>([]);
   const [historyIndex, setHistoryIndex] = useState<number>(-1);
-  const [autoScroll, setAutoScroll] = useState(true);
-  const [isMaximized, setIsMaximized] = useState(false);
+  const [autoScroll, setAutoScroll] = useState<boolean>(true);
+  const [isMaximized, setIsMaximized] = useState<boolean>(false);
   const terminalEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
   // Subscribe to the full-time running background MS-DOS engine
   useEffect(() => {
-    const unsubscribe = msDosEngine.subscribe((state) => {
+    const unsubscribe = msDosEngine.subscribe((state: MsDosEngineState) => {
       setEngineState(state);
     });
     return unsubscribe;
@@ -47,13 +47,14 @@ export default function DosConsoleModal({
   // Focus input when opened and not docked
   useEffect(() => {
     if (isOpen && !isDocked) {
-      setTimeout(() => inputRef.current?.focus(), 100);
+      const timer = window.setTimeout(() => inputRef.current?.focus(), 100);
+      return () => window.clearTimeout(timer);
     }
   }, [isOpen, isDocked]);
 
   // Handle ESC key to close or dock
   useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
+    const handleKeyDown = (e: KeyboardEvent): void => {
       if (e.key === 'Escape' && isOpen && !isDocked) {
         if (onToggleDock) {
           onToggleDock();
@@ -75,24 +76,29 @@ export default function DosConsoleModal({
 
   if (!isOpen) return null;
 
-  const handleCommandSubmit = async (e: React.FormEvent) => {
+  const handleCommandSubmit = async (e: React.FormEvent<HTMLFormElement>): Promise<void> => {
     e.preventDefault();
     const cmd = dosInput.trim();
     if (!cmd) return;
 
-    setCommandHistory((prev) => [...prev, cmd]);
+    setCommandHistory((prev: string[]) => [...prev, cmd]);
     setHistoryIndex(-1);
     setDosInput('');
 
-    if (cmd.toLowerCase() === 'exit' || cmd.toLowerCase() === 'quit') {
+    const lowerCmd = cmd.toLowerCase();
+    if (lowerCmd === 'exit' || lowerCmd === 'quit') {
       onClose();
       return;
     }
 
-    await msDosEngine.executeCommand(cmd);
+    try {
+      await msDosEngine.executeCommand(cmd);
+    } catch (err) {
+      console.error('Failed to execute command:', err);
+    }
   };
 
-  const handleKeyDownHistory = (e: React.KeyboardEvent<HTMLInputElement>) => {
+  const handleKeyDownHistory = (e: React.KeyboardEvent<HTMLInputElement>): void => {
     if (e.key === 'ArrowUp') {
       e.preventDefault();
       if (commandHistory.length === 0) return;
@@ -132,6 +138,7 @@ export default function DosConsoleModal({
           onClick={onToggleDock}
           className="ml-2 px-2 py-0.5 bg-white text-black font-bold hover:bg-gray-200 transition-colors cursor-pointer flex items-center gap-1 rounded text-[9px]"
           title="Expand MS-DOS Console"
+          type="button"
         >
           <ChevronUp size={11} />
           EXPAND
@@ -140,6 +147,7 @@ export default function DosConsoleModal({
           onClick={onClose}
           className="p-1 hover:bg-red-600 transition-colors cursor-pointer text-white"
           title="Hide Monitor"
+          type="button"
         >
           <X size={11} />
         </button>
@@ -167,9 +175,10 @@ export default function DosConsoleModal({
           <div className="flex items-center gap-2">
             {/* Quick action triggers */}
             <button
-              onClick={() => msDosEngine.triggerAutonomousHotswap()}
+              onClick={() => void msDosEngine.triggerAutonomousHotswap()}
               className="hidden md:flex px-1.5 py-0.5 text-[9px] font-mono border border-black bg-black text-white hover:bg-gray-800 transition-colors items-center gap-1 cursor-pointer font-bold"
               title="Force immediate RAG mutation & file hotswap"
+              type="button"
             >
               <Zap size={9} className="text-yellow-400" />
               HOTSWAP NOW
@@ -181,15 +190,17 @@ export default function DosConsoleModal({
                 engineState.autonomousHotswap ? 'bg-black text-white' : 'bg-gray-300 text-black'
               }`}
               title="Toggle Full-Time Autonomous Hotswapping"
+              type="button"
             >
               <RefreshCw size={9} className={engineState.autonomousHotswap ? 'animate-spin' : ''} />
               AUTORUN: {engineState.autonomousHotswap ? 'ON' : 'OFF'}
             </button>
 
             <button
-              onClick={() => msDosEngine.executeCommand('rag stats')}
+              onClick={() => void msDosEngine.executeCommand('rag stats')}
               className="hidden lg:flex px-1.5 py-0.5 text-[9px] font-mono border border-black hover:bg-black hover:text-white transition-colors items-center gap-1 cursor-pointer"
               title="Inspect RAG Brain"
+              type="button"
             >
               <Database size={9} />
               RAG STATS
@@ -199,6 +210,7 @@ export default function DosConsoleModal({
               onClick={() => setAutoScroll(!autoScroll)}
               className="px-1.5 py-0.5 text-[10px] font-mono border border-black hover:bg-black hover:text-white transition-colors flex items-center gap-1 cursor-pointer"
               title="Toggle Auto Scroll"
+              type="button"
             >
               {autoScroll ? <Pause size={10} /> : <Play size={10} />}
               {autoScroll ? 'SCROLL' : 'PAUSED'}
@@ -209,6 +221,7 @@ export default function DosConsoleModal({
                 onClick={onToggleDock}
                 className="p-1 hover:bg-black hover:text-white transition-colors cursor-pointer"
                 title="Dock to corner (Keep running)"
+                type="button"
               >
                 <Minimize2 size={12} />
               </button>
@@ -218,6 +231,7 @@ export default function DosConsoleModal({
               onClick={() => setIsMaximized(!isMaximized)}
               className="p-1 hover:bg-black hover:text-white transition-colors cursor-pointer"
               title={isMaximized ? 'Restore Window' : 'Maximize Window'}
+              type="button"
             >
               {isMaximized ? <Minimize2 size={12} /> : <Maximize2 size={12} />}
             </button>
@@ -226,6 +240,7 @@ export default function DosConsoleModal({
               onClick={onClose}
               className="p-1 bg-black text-white hover:bg-red-600 hover:text-white transition-colors cursor-pointer"
               title="Close DOS Window (ESC)"
+              type="button"
             >
               <X size={12} />
             </button>
@@ -270,7 +285,7 @@ export default function DosConsoleModal({
           }}
           onClick={() => inputRef.current?.focus()}
         >
-          {engineState.lines.map((line) => (
+          {engineState.lines.map((line: DosLogLine) => (
             <div
               key={line.id}
               className="flex gap-2 items-start break-all hover:bg-white/5 px-1 py-0.5 rounded"
@@ -302,7 +317,7 @@ export default function DosConsoleModal({
 
         {/* MS-DOS Command Line Input Area */}
         <form
-          onSubmit={handleCommandSubmit}
+          onSubmit={(e) => void handleCommandSubmit(e)}
           className="bg-black border-t border-white/40 p-2 sm:p-3 flex items-center gap-2 shrink-0 text-white font-mono text-xs sm:text-sm"
           style={{ unicodeBidi: 'normal', direction: 'ltr' }}
         >
@@ -332,7 +347,6 @@ export default function DosConsoleModal({
     </div>
   );
 }
-
 
 // Autonomous RAG Resilience Guard
 export const __rag_resilience_verified__ = Object.freeze({
