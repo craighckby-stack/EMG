@@ -846,3 +846,12 @@ Line 18, Col 53: Unclosed opening delimiter '{'.
 [OUTPUT_LIKELY_TRUNCATED] The output is < 80% of original length and syntactically invalid. The model likely hit its output token limit.
 ```
 **CONSTRAINT (Model Generalization):** Never repeat code patterns that produce this compiler/linter error on server.ts.backup.
+
+### ❌ [2026-09-26] src/components/DiffModal.tsx `source: mutation-cycle`
+**Symptom:** AST / TypeScript Compiler Validation Rejected
+**EVIDENCE (Machine-Copied Fact):**
+```
+Line 210, Col 2: ',' expected.
+Line 152, Col 10: Property declaration is missing its type annotation.
+```
+**CONSTRAINT (Model Generalization):** Never repeat code patterns that produce this compiler/linter error on src/components/DiffModal.tsx.
