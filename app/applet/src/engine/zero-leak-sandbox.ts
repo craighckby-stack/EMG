@@ -3,44 +3,67 @@
  * WeakMap-backed execution isolation to prevent memory leaks during dynamic module loading and mutation execution.
  */
 
-export class ZeroLeakSandbox {
-  // WeakMap ensures that once the context object is dereferenced, its metadata is garbage collected automatically
-  private activeContexts: WeakMap<object, Record<string, any>> = new WeakMap();
+export interface SandboxContext {
+  createdAt: number;
+  status: 'active' | 'completed' | 'failed';
+  taskName?: string;
+  error?: string;
+  durationMs?: number;
+  [key: string]: unknown;
+}
 
-  public createContext(owner: object, initialMetadata: Record<string, any> = {}): void {
-    this.activeContexts.set(owner, {
+export interface SandboxExecutionResult<T> {
+  result?: T;
+  error?: string;
+  durationMs: number;
+}
+
+export class ZeroLeakSandbox {
+  private readonly activeContexts = new WeakMap<object, SandboxContext>();
+
+  public createContext(owner: object, initialMetadata: Record<string, unknown> = {}): void {
+    const context: SandboxContext = {
       ...initialMetadata,
       createdAt: Date.now(),
       status: 'active',
-    });
+    };
+    this.activeContexts.set(owner, context);
   }
 
-  public getContext(owner: object): Record<string, any> | undefined {
+  public getContext(owner: object): SandboxContext | undefined {
     return this.activeContexts.get(owner);
   }
 
-  public updateContext(owner: object, updates: Record<string, any>): void {
-    const current = this.activeContexts.get(owner);
-    if (current) {
-      this.activeContexts.set(owner, { ...current, ...updates });
+  public updateContext(owner: object, updates: Partial<SandboxContext>): void {
+    const currentContext = this.activeContexts.get(owner);
+    if (currentContext) {
+      this.activeContexts.set(owner, { ...currentContext, ...updates });
     }
   }
 
-  public executeInSandbox<T>(owner: object, taskName: string, taskFn: () => T): { result?: T; error?: string; durationMs: number } {
-    const start = performance.now();
+  public executeInSandbox<T>(
+    owner: object,
+    taskName: string,
+    taskFn: () => T
+  ): SandboxExecutionResult<T> {
+    const startTime = performance.now();
     this.createContext(owner, { taskName });
 
     try {
       const result = taskFn();
-      const durationMs = parseFloat((performance.now() - start).toFixed(2));
+      const durationMs = this.calculateDuration(startTime);
       this.updateContext(owner, { status: 'completed', durationMs });
       return { result, durationMs };
-    } catch (err: any) {
-      const durationMs = parseFloat((performance.now() - start).toFixed(2));
-      const errorMsg = err instanceof Error ? err.message : String(err);
-      this.updateContext(owner, { status: 'failed', error: errorMsg, durationMs });
-      return { error: errorMsg, durationMs };
+    } catch (error: unknown) {
+      const durationMs = this.calculateDuration(startTime);
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      this.updateContext(owner, { status: 'failed', error: errorMessage, durationMs });
+      return { error: errorMessage, durationMs };
     }
+  }
+
+  private calculateDuration(startTime: number): number {
+    return parseFloat((performance.now() - startTime).toFixed(2));
   }
 }
 
