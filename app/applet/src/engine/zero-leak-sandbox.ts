@@ -4,24 +4,24 @@
  */
 
 export interface SandboxContext {
-  createdAt: number;
-  status: 'active' | 'completed' | 'failed';
-  taskName?: string;
-  error?: string;
-  durationMs?: number;
-  [key: string]: unknown;
+  readonly createdAt: number;
+  readonly status: 'active' | 'completed' | 'failed';
+  readonly taskName?: string;
+  readonly error?: string;
+  readonly durationMs?: number;
+  readonly [key: string]: unknown;
 }
 
 export interface SandboxExecutionResult<T> {
-  result?: T;
-  error?: string;
-  durationMs: number;
+  readonly result?: T;
+  readonly error?: string;
+  readonly durationMs: number;
 }
 
 export class ZeroLeakSandbox {
   private readonly activeContexts = new WeakMap<object, SandboxContext>();
 
-  public createContext(owner: object, initialMetadata: Record<string, unknown> = {}): void {
+  public createContext(owner: object, initialMetadata: Readonly<Record<string, unknown>> = {}): void {
     const context: SandboxContext = {
       ...initialMetadata,
       createdAt: Date.now(),
@@ -36,7 +36,7 @@ export class ZeroLeakSandbox {
 
   public updateContext(owner: object, updates: Partial<SandboxContext>): void {
     const currentContext = this.activeContexts.get(owner);
-    if (currentContext) {
+    if (currentContext !== undefined) {
       this.activeContexts.set(owner, { ...currentContext, ...updates });
     }
   }
@@ -63,7 +63,7 @@ export class ZeroLeakSandbox {
   }
 
   private calculateDuration(startTime: number): number {
-    return parseFloat((performance.now() - startTime).toFixed(2));
+    return Number((performance.now() - startTime).toFixed(2));
   }
 }
 
