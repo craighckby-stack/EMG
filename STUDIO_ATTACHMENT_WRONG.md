@@ -7,7 +7,7 @@
 - Description: Hardcoded API Key leaked in client configuration.
 - Failure Diff:
 ```typescript
-const GEMINI_API_KEY = "AIzaSyDUMMYKEY1234567890123456789012345";
+const GEMINI_API_KEY = "[REDACTED_GEMINI_KEY]";
 ```
 - Paired Fix Diff:
 ```typescript
