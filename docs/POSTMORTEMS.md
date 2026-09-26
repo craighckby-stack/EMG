@@ -766,3 +766,14 @@ Line 55, Col 8: Property declaration is missing its type annotation.
 [LINT REJECT: NO_UNUSED_MACROS] Macro 'WP_NONNULL' was defined in [src/components/OracleModal.tsx] but never referenced in any function or type signature across the repository tree.
 ```
 **CONSTRAINT (Model Generalization):** [STRUCK] Original constraint invalidated. Artifact of isolated compilation missing project context.
+
+### ❌ [2026-09-26] src/lib/ast-diff-gate.ts `source: mutation-cycle`
+**Symptom:** AST / TypeScript Compiler Validation Rejected
+**EVIDENCE (Machine-Copied Fact):**
+```
+Line 352, Col 1: ',' expected.
+Line 352, Col 14: ':' expected.
+Line 356, Col 3: ',' expected.
+Line 356, Col 4: '}' expected.
+```
+**CONSTRAINT (Model Generalization):** Never repeat code patterns that produce this compiler/linter error on src/lib/ast-diff-gate.ts.
