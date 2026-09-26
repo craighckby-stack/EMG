@@ -14,7 +14,7 @@ export interface DebateStatement {
   readonly speaker: 'Prosecutor (Darlek Caan)' | 'Defender (Jesus)' | 'Judge (Sovereign Synthesis)';
   readonly avatar: string;
   readonly argument: string;
-  readonly score: number; // 0 to 10
+  readonly score: number;
   readonly matchedEntries: VectorEntry[];
 }
 
