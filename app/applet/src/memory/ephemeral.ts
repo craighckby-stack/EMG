@@ -1,5 +1,5 @@
 /**
- * Ephemeral Memory Storage with Pressure-Based Decay
+ * Ephemeral memory storage with pressure-based decay.
  * Manages transient DNA mutations, temporary vectors, and memory pressure.
  */
 
@@ -12,8 +12,8 @@ export interface DNA {
 }
 
 export class EphemeralStorage {
-  private readonly state = new Map<string, DNA>();
-  private memoryPressure: number = 0; // 0 to 1
+  private readonly state: Map<string, DNA> = new Map<string, DNA>();
+  private memoryPressure: number = 0;
   private decayTimer: ReturnType<typeof setInterval> | null = null;
 
   constructor() {
@@ -25,7 +25,7 @@ export class EphemeralStorage {
   public setMemoryPressure(pressure: number): void {
     this.memoryPressure = Math.max(0, Math.min(1, pressure));
     if (this.memoryPressure > 0.7) {
-      this.applyDecay(); // Immediate cull on high pressure
+      this.applyDecay();
     }
   }
 
@@ -80,4 +80,4 @@ export class EphemeralStorage {
   }
 }
 
-export const ephemeralStorage = new EphemeralStorage();
+export const ephemeralStorage: EphemeralStorage = new EphemeralStorage();
