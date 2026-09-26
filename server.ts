@@ -344,6 +344,21 @@ async function startServer() {
         ? `\nCRITICAL CONSTRAINTS FROM PAST POST-MORTEMS (MUST FOLLOW):\n${postmortemConstraints}\n`
         : '';
 
+      const isPython = (filePath || '').toLowerCase().endsWith('.py');
+      const pythonDirectives = isPython
+        ? `
+8. PYTHON MODERN TYPING (PEP 585 & PEP 604):
+   - For Python 3.9+, strictly use built-in generic collections (list[int], dict[str, Any], tuple[...], set[T]) and PEP 604 union syntax (A | B, int | None).
+   - NEVER import or use List, Dict, Tuple, Set, Union from 'typing' (which triggers PEP 585 / Ruff UP006 & UP035 deprecations).
+   - In TypeVar definitions, do NOT use redundant 'bound=Any' (use TypeVar("T"), not TypeVar("T", bound=Any)).
+9. STRICT PRESERVATION OF AUTHORSHIP & CREDITS:
+   - Retain all existing author, creator, contributor, date, license, and copyright comments (e.g., "Author:", "@author", "Date:"). Do NOT strip open-source attribution blocks from module or function docstrings.
+10. AVOID UNNECESSARY TYPE GUARDS IN ALGORITHMIC LOOPS:
+   - In algorithmic, mathematical, or recursive functions, do NOT inject redundant 'isinstance()' checks inside recursive calls or tight loops that degrade asymptotic algorithmic speed. Rely on clean type annotations instead.
+11. SAFE TEST SUITES:
+   - In pytest/unittest test files, do NOT place raw module-level file reads or assertions that crash test discovery when assets are missing. Keep I/O inside test functions or pytest fixtures.`
+        : '';
+
       const prompt = `You are EMG Core Neural Code and Documentation Optimizer Engine.
 File Path: "${filePath || (isMarkdown ? 'README.md' : 'source.ts')}"
 Optimization Goal: ${(goal || 'comprehensive').toUpperCase()} - ${directive}
@@ -368,7 +383,7 @@ CRITICAL Requirements:
 4. ABSOLUTE PROHIBITION ON UNVERIFIABLE SELF-PRAISE: Do NOT include self-praising adjectives or marketing claims in comments, headers, or docstrings (such as "production-grade", "hardened", "leak-free", "fully optimized", "state-of-the-art"). Keep all code documentation strictly technical, neutral, and factual.
 5. ABSOLUTE PROHIBITION ON UNGROUNDED QUANTITATIVE CLAIMS: Do NOT invent fabricated-sounding statistics, percentages, benchmark scores, or cycle counts in comments or docstrings (such as "340% latency reduction", "accuracy of 0.85", "within 4 cycles") unless derived from an actual computation or data source in the diff. Mark stubs/placeholders explicitly ("not yet computed").
 6. TRUNCATION PREVENTATIVE RULE: Output complete, unbroken source code from start to end. Keep template literals concise and do not emit monolithic multi-line template strings that risk output token truncation.
-7. Output a 1-sentence summary of enhancements immediately after @@@SUMMARY:`;
+7. Output a 1-sentence summary of enhancements immediately after @@@SUMMARY:${pythonDirectives}`;
 
       const startTime = performance.now();
 
@@ -586,6 +601,28 @@ CRITICAL Requirements:
             valid: false,
             lintEvidence: `[LINT REJECT: NO_STALE_DEFECT_CLAIMS] Detected stale defect claim or test scaffolding leaked into production code: "${match[0]}". File documentation must reconcile with the actual fixed implementation.`,
             ruleName: 'NO_STALE_DEFECT_CLAIMS'
+          });
+        }
+      }
+
+      // Rule 1C: PYTHON MODERN TYPING (PEP 585) & REDUNDANT TYPEVAR BOUND
+      const isPyFile = (filePath || '').toLowerCase().endsWith('.py');
+      if (isPyFile) {
+        const legacyTypingMatch = code.match(/from\s+typing\s+import\s+[^#\n]*\b(List|Dict|Tuple|Set|Union)\b/);
+        if (legacyTypingMatch) {
+          return res.json({
+            valid: false,
+            lintEvidence: `[LINT REJECT: PEP585_LEGACY_TYPING] Detected legacy typing import '${legacyTypingMatch[1]}'. Use Python 3.9+ built-in generic collections (list, dict, tuple, set) and PEP 604 union syntax (A | B) instead.`,
+            ruleName: 'PEP585_LEGACY_TYPING'
+          });
+        }
+
+        const redundantTypeVarMatch = code.match(/TypeVar\(\s*["'][A-Za-z0-9_]+["']\s*,\s*bound\s*=\s*Any\s*\)/);
+        if (redundantTypeVarMatch) {
+          return res.json({
+            valid: false,
+            lintEvidence: `[LINT REJECT: REDUNDANT_TYPEVAR_BOUND] Detected TypeVar with 'bound=Any'. TypeVar is already unbounded by default; omit bound=Any.`,
+            ruleName: 'REDUNDANT_TYPEVAR_BOUND'
           });
         }
       }

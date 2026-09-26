@@ -252,39 +252,165 @@ async function loadVectorsFromIndexedDB(): Promise<VectorEntry[]> {
   }
 }
 
+let ragSyncQueue: Promise<any> = Promise.resolve();
+
+/**
+ * Serializes the clean entries in vector memory to markdown format matching STUDIO_ATTACHMENT_CORRECT.md
+ */
+export function formatCorrectMdFromVectors(vectors: VectorEntry[]): string {
+  const cleanEntries = vectors.filter((v) => v.metadata.provenance === 'clean');
+  if (cleanEntries.length === 0) return '';
+
+  let out = '# STUDIO_ATTACHMENT_CORRECT.md — EMG Clean Vector Knowledge Base\n\nVerified patterns surviving AST and sanitizer gates.\n\n';
+  for (const entry of cleanEntries) {
+    const hash = entry.metadata.commitHash || entry.id.replace('correct_', '');
+    const file = entry.metadata.file || 'unknown';
+    const code = entry.codeSnippet || '';
+    out += `## COMMIT: ${hash}\n- File: ${file}\n- Sanitizer: PASSED\n\`\`\`typescript\n${code.trim()}\n\`\`\`\n\n`;
+  }
+  return out.trim() + '\n';
+}
+
+/**
+ * Serializes the failure & fix entries in vector memory to markdown format matching STUDIO_ATTACHMENT_WRONG.md
+ */
+export function formatWrongMdFromVectors(vectors: VectorEntry[]): string {
+  const wrongEntries = vectors.filter((v) => v.metadata.provenance === 'failure');
+  if (wrongEntries.length === 0) return '';
+
+  let out = '# STUDIO_ATTACHMENT_WRONG.md — EMG Failure & Recovery Ledger\n\nPaired failure and recovery commits categorized by error class and preventative rules.\n\n';
+  for (const entry of wrongEntries) {
+    const failHash = entry.metadata.commitHash || entry.id.replace('wrong_', '');
+    const fixHash = entry.metadata.fixCommitHash || `fix_${failHash}`;
+    const errClass = entry.metadata.errorClass || 'LINT_GATE';
+    const file = entry.metadata.file || 'unknown';
+    const rule = entry.ruleToAvoid || 'Satisfy syntax constraints';
+    const diag = entry.diagnosis ? `\n- Diagnosis: ${entry.diagnosis}` : '';
+    const failCode = entry.codeSnippet || '';
+    const fixCode = entry.pairedFixSnippet || '';
+
+    out += `## FAILURE: ${failHash} | FIX: ${fixHash}\n- Error Class: ${errClass}\n- File: ${file}\n- Rule to Avoid: ${rule}${diag}\n`;
+    if (failCode) {
+      out += `\n### Failure Diff\n\`\`\`typescript\n${failCode.trim()}\n\`\`\`\n`;
+    }
+    if (fixCode) {
+      out += `\n### Paired Fix Diff\n\`\`\`typescript\n${fixCode.trim()}\n\`\`\`\n`;
+    }
+    out += '\n---\n\n';
+  }
+  return out.trim() + '\n';
+}
+
 /**
  * Publishes updated RAG vectors and ledgers directly back to the GitHub repository.
+ * Uses Fresh-SHA fetch with exponential backoff on HTTP 409 conflicts and formats
+ * human-readable STUDIO_ATTACHMENT_CORRECT.md and STUDIO_ATTACHMENT_WRONG.md alongside vectors.jsonl.
  */
 export async function publishRagToGithub(target?: {
   token: string;
-  owner: string;
+  owner?: string;
   repo: string;
-  branch: string;
-}): Promise<{ success: boolean; commitSha?: string; error?: string }> {
-  const activeTarget = target || getStoredGithubTarget();
-  if (!activeTarget || !activeTarget.token || !activeTarget.owner || !activeTarget.repo) {
-    return { success: false, error: 'No GitHub parameters or Personal Access Token configured' };
-  }
+  branch?: string;
+}): Promise<{ success: boolean; commitSha?: string; syncedFiles?: string[]; error?: string }> {
+  const executeSync = async (): Promise<{ success: boolean; commitSha?: string; syncedFiles?: string[]; error?: string }> => {
+    let cleanRepo = '';
+    let token = '';
+    let branch = 'main';
 
-  try {
-    const { commitToGitHubFile } = await import('../lib/github-writer');
-    
-    // Format JSONL string of all vectors
-    const jsonlContent = vectorStore.map((v) => JSON.stringify(v)).join('\n');
-    
-    // Commit vectors.jsonl
-    const res = await commitToGitHubFile(
-      activeTarget,
-      'SOVEREIGN-KERNEL/memory/vectors.jsonl',
-      jsonlContent,
-      `[EMG RAG] Auto-publish updated RAG vector database (${vectorStore.length} entries)`
-    );
+    if (target?.repo && target?.token) {
+      cleanRepo = target.repo.includes('/') ? target.repo : `${target.owner || 'craighckby-stack'}/${target.repo}`;
+      token = target.token;
+      branch = target.branch || 'main';
+    } else {
+      const stored = getStoredGithubTarget();
+      if (!stored) {
+        return { success: false, error: 'No GitHub parameters or Personal Access Token configured' };
+      }
+      cleanRepo = `${stored.owner}/${stored.repo}`;
+      token = stored.token;
+      branch = stored.branch || 'main';
+    }
 
-    return { success: true, commitSha: res.commitSha };
-  } catch (err: unknown) {
-    console.error('[EMG RAG] Failed to publish RAG vectors to GitHub repository:', err);
-    return { success: false, error: err instanceof Error ? err.message : String(err) };
-  }
+    if (!token || !cleanRepo) {
+      return { success: false, error: 'GitHub PAT Token and target repository are required to publish RAG.' };
+    }
+
+    try {
+      const { fetchFileContent, commitFileUpdate } = await import('../utils/github');
+      const syncedFiles: string[] = [];
+      let latestCommitSha = '';
+
+      // Helper to commit a file with fresh-SHA retry loop
+      const commitWithRetry = async (filePath: string, content: string, commitMsg: string): Promise<string> => {
+        let retries = 5;
+        while (retries > 0) {
+          let sha = '';
+          try {
+            const remoteFile = await fetchFileContent(cleanRepo, filePath, token, branch);
+            sha = remoteFile.sha;
+          } catch {
+            // File does not exist yet; will create new
+            sha = '';
+          }
+
+          try {
+            const res = await commitFileUpdate(cleanRepo, filePath, content, sha, token, commitMsg, branch);
+            return res.commitSha;
+          } catch (commitErr: any) {
+            const errStr = String(commitErr?.message || commitErr);
+            if (errStr.includes('409') && retries > 1) {
+              retries--;
+              await new Promise((r) => setTimeout(r, 1200 + Math.random() * 1000));
+              continue;
+            }
+            throw commitErr;
+          }
+        }
+        throw new Error(`Exceeded max retries committing ${filePath}`);
+      };
+
+      // 1. Sync vectors.jsonl
+      const jsonlContent = vectorStore.map((v) => JSON.stringify(v)).join('\n');
+      latestCommitSha = await commitWithRetry(
+        'SOVEREIGN-KERNEL/memory/vectors.jsonl',
+        jsonlContent,
+        `EMG [RAG]: Synchronized vector database (${vectorStore.length} entries)`
+      );
+      syncedFiles.push('SOVEREIGN-KERNEL/memory/vectors.jsonl');
+
+      // 2. Sync human-readable STUDIO_ATTACHMENT_CORRECT.md if clean entries exist
+      const correctMd = formatCorrectMdFromVectors(vectorStore);
+      if (correctMd) {
+        await commitWithRetry(
+          'STUDIO_ATTACHMENT_CORRECT.md',
+          correctMd,
+          `EMG [RAG]: Updated clean pattern vectors (${vectorStore.filter((v) => v.metadata.provenance === 'clean').length} entries)`
+        );
+        syncedFiles.push('STUDIO_ATTACHMENT_CORRECT.md');
+      }
+
+      // 3. Sync human-readable STUDIO_ATTACHMENT_WRONG.md if failure entries exist
+      const wrongMd = formatWrongMdFromVectors(vectorStore);
+      if (wrongMd) {
+        await commitWithRetry(
+          'STUDIO_ATTACHMENT_WRONG.md',
+          wrongMd,
+          `EMG [RAG]: Updated failure & recovery vectors (${vectorStore.filter((v) => v.metadata.provenance === 'failure').length} entries)`
+        );
+        syncedFiles.push('STUDIO_ATTACHMENT_WRONG.md');
+      }
+
+      console.log(`[EMG RAG] Successfully synchronized ${syncedFiles.length} RAG artifacts to ${cleanRepo} (${latestCommitSha.slice(0, 8)})`);
+      return { success: true, commitSha: latestCommitSha, syncedFiles };
+    } catch (err: unknown) {
+      console.warn('[EMG RAG] Failed to publish RAG vectors to GitHub repository:', err);
+      return { success: false, error: err instanceof Error ? err.message : String(err) };
+    }
+  };
+
+  const op = ragSyncQueue.then(() => executeSync()).catch(() => executeSync());
+  ragSyncQueue = op;
+  return op;
 }
 
 function getStoredGithubTarget() {
@@ -294,11 +420,12 @@ function getStoredGithubTarget() {
     if (saved) {
       const parsed = JSON.parse(saved);
       if (parsed?.githubToken && parsed?.githubRepo) {
-        const [owner, repo] = parsed.githubRepo.split('/');
+        const repoStr = parsed.githubRepo.trim().replace(/^https:\/\/github\.com\//, '').replace(/\/$/, '');
+        const [owner, repo] = repoStr.split('/');
         return {
           token: parsed.githubToken,
           owner: owner || 'craighckby-stack',
-          repo: repo || 'SOVEREIGN-KERNEL',
+          repo: repo || 'Python',
           branch: parsed.githubBranch || 'main',
         };
       }
@@ -383,10 +510,28 @@ export function queryEmgRag(currentFileAndError: string): EmgQueryResult {
   };
 }
 
+let syncDebounceTimer: any = null;
+
+function scheduleDebouncedRagSync(target?: { token: string; repo: string; branch?: string }): void {
+  if (typeof window === 'undefined') return;
+  if (syncDebounceTimer) {
+    clearTimeout(syncDebounceTimer);
+  }
+  // Debounce RAG sync by 12 seconds so rapid mutation cycles do not collide on GitHub ref heads
+  syncDebounceTimer = setTimeout(() => {
+    publishRagToGithub(target).catch(() => {});
+  }, 12000);
+}
+
 /**
  * Appends a newly confirmed clean commit to the RAG memory store and ledger.
  */
-export function appendCleanCommit(commitHash: string, filePath: string, diffSnippet: string): void {
+export function appendCleanCommit(
+  commitHash: string,
+  filePath: string,
+  diffSnippet: string,
+  target?: { token: string; repo: string; branch?: string }
+): void {
   const newEntry: VectorEntry = {
     id: `correct_${commitHash}`,
     metadata: {
@@ -403,7 +548,7 @@ export function appendCleanCommit(commitHash: string, filePath: string, diffSnip
   vectorStore = vectorStore.filter((e) => e.id !== newEntry.id);
   vectorStore.push(newEntry);
   saveVectorsToIndexedDB(vectorStore).catch(() => {});
-  publishRagToGithub().catch(() => {});
+  scheduleDebouncedRagSync(target);
 }
 
 /**
@@ -481,7 +626,8 @@ export function appendFailureAndFix(
   fixSnippet: string,
   ruleToAvoid: string,
   diagnosis?: string,
-  fingerprint?: string
+  fingerprint?: string,
+  target?: { token: string; repo: string; branch?: string }
 ): void {
   const newEntry: VectorEntry = {
     id: `wrong_${failHash}`,
@@ -506,7 +652,7 @@ export function appendFailureAndFix(
   vectorStore = vectorStore.filter((e) => e.id !== newEntry.id);
   vectorStore.push(newEntry);
   saveVectorsToIndexedDB(vectorStore).catch(() => {});
-  publishRagToGithub().catch(() => {});
+  scheduleDebouncedRagSync(target);
 }
 
 export function getAllEmgVectors(): VectorEntry[] {

@@ -5,10 +5,10 @@
 
 import React, { useState, useEffect, useCallback, JSX } from 'react';
 import { executeEmgTriLoopCycle, TriLoopCycleResult } from '../engine/tri-loop';
-import { queryEmgRag, getAllEmgVectors, VectorEntry } from '../memory/emg_rag';
+import { queryEmgRag, getAllEmgVectors, publishRagToGithub, VectorEntry } from '../memory/emg_rag';
 import { sanitizeAndGovern } from '../governance/sanitizer';
 import { playClickSound, playChirpSound } from './SoundEngine';
-import { Shield, Brain, Terminal, Activity, CheckCircle, AlertTriangle, Lock, RefreshCw, Zap } from 'lucide-react';
+import { Shield, Brain, Terminal, Activity, CheckCircle, AlertTriangle, Lock, RefreshCw, Zap, Database } from 'lucide-react';
 
 type SubTabType = 'triloop' | 'rag' | 'sanitizer' | 'vectors';
 
@@ -24,6 +24,8 @@ export default function SovereignKernelPanel(): JSX.Element {
   const [ragQueryText, setRagQueryText] = useState<string>('secret leakage');
   const [ragQueryResult, setRagQueryResult] = useState<ReturnType<typeof queryEmgRag> | null>(null);
   const [allVectors, setAllVectors] = useState<VectorEntry[]>([]);
+  const [isSyncingRag, setIsSyncingRag] = useState<boolean>(false);
+  const [syncStatusMsg, setSyncStatusMsg] = useState<string>('');
 
   useEffect(() => {
     try {
@@ -32,6 +34,25 @@ export default function SovereignKernelPanel(): JSX.Element {
       console.error('Failed to load EMG vectors:', err instanceof Error ? err.message : String(err));
     }
   }, [lastCycleResult]);
+
+  const handleSyncRagToGithub = useCallback(async (): Promise<void> => {
+    playClickSound();
+    setIsSyncingRag(true);
+    setSyncStatusMsg('Pushing vectors & ledgers to GitHub...');
+    try {
+      const res = await publishRagToGithub();
+      if (res.success) {
+        setSyncStatusMsg(`Successfully synchronized ${(res.syncedFiles || []).length} RAG ledgers!`);
+      } else {
+        setSyncStatusMsg(`Sync error: ${res.error || 'Failed to sync'}`);
+      }
+    } catch (err: any) {
+      setSyncStatusMsg(`Sync failed: ${err?.message || String(err)}`);
+    } finally {
+      setIsSyncingRag(false);
+      setTimeout(() => setSyncStatusMsg(''), 6000);
+    }
+  }, []);
 
   const handleRunTriLoop = useCallback(async (): Promise<void> => {
     playChirpSound();
@@ -325,9 +346,25 @@ export default function SovereignKernelPanel(): JSX.Element {
       {/* Sub-Tab 4: Vectors Ledger */}
       {activeSubTab === 'vectors' && (
         <div className="flex flex-col gap-4 bg-[#121A22] p-5 rounded-2xl border border-[#1B3A2F]">
-          <h3 className="text-sm font-bold text-[#00F5A0] flex items-center gap-2">
-            <Terminal className="w-4 h-4" /> Active Memory Vectors Ledger ({allVectors.length})
-          </h3>
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <h3 className="text-sm font-bold text-[#00F5A0] flex items-center gap-2">
+              <Terminal className="w-4 h-4" /> Active Memory Vectors Ledger ({allVectors.length})
+            </h3>
+            
+            <div className="flex items-center gap-3">
+              {syncStatusMsg && (
+                <span className="text-xs text-emerald-400 font-mono animate-pulse">{syncStatusMsg}</span>
+              )}
+              <button
+                onClick={handleSyncRagToGithub}
+                disabled={isSyncingRag}
+                className="px-3.5 py-1.5 rounded-xl bg-emerald-950/60 hover:bg-emerald-900 border border-emerald-500/50 text-[#00F5A0] font-bold text-xs flex items-center gap-2 transition-all cursor-pointer disabled:opacity-50"
+              >
+                <Database className={`w-3.5 h-3.5 ${isSyncingRag ? 'animate-spin' : ''}`} />
+                <span>{isSyncingRag ? 'Syncing...' : 'Sync to GitHub'}</span>
+              </button>
+            </div>
+          </div>
 
           <div className="flex flex-col gap-2 max-h-80 overflow-y-auto">
             {allVectors.map((v) => (

@@ -34,6 +34,7 @@ import {
   commitFileUpdate,
 } from './utils/github';
 import { writePostmortem, computeSHA256 } from './utils/postmortem';
+import { appendCleanCommit, publishRagToGithub } from './memory/emg_rag';
 import { decomposeFile, reassembleChunks } from './utils/fileSplitter';
 import { optimizeSourceCode } from './utils/gemini';
 import { sanitizeCode, sanitizeText } from './utils/sanitizer';
@@ -189,6 +190,7 @@ export default function App() {
   const [isWipeMemoryOpen, setIsWipeMemoryOpen] = useState(false);
   const [isOracleOpen, setIsOracleOpen] = useState(false);
   const [isCycling, setIsCycling] = useState(false);
+  const [isSyncingRag, setIsSyncingRag] = useState(false);
   const [activeTab, setActiveTab] = useState<'dashboard' | 'sovereign' | 'orchestra' | 'debate' | 'bugs' | 'paradox' | 'saturation'>('sovereign');
   const [isDosOpen, setIsDosOpen] = useState(false);
   const [soundMuted, setSoundMuted] = useState(false);
@@ -302,6 +304,42 @@ export default function App() {
     setConfig((prev) => ({ ...prev, [key]: value }));
   };
 
+  // Synchronize RAG vector database & ledgers to remote GitHub repository
+  const handleSyncRag = useCallback(async () => {
+    if (!config.ghToken) {
+      pushLog('[RAG SYNC] GitHub PAT Token required to sync vectors to repository.', 'warning');
+      return;
+    }
+    if (!config.targetRepo) {
+      pushLog('[RAG SYNC] Target repository is not configured.', 'warning');
+      return;
+    }
+
+    setIsSyncingRag(true);
+    pushLog(`[RAG SYNC] Synchronizing vector database & ledgers to ${config.targetRepo}...`, 'info');
+
+    try {
+      const res = await publishRagToGithub({
+        token: config.ghToken,
+        repo: config.targetRepo,
+        branch: config.branch || 'main',
+      });
+
+      if (res.success) {
+        pushLog(
+          `[RAG SYNC SUCCESS] Synchronized ${(res.syncedFiles || []).length} RAG artifacts to ${config.targetRepo} [${(res.commitSha || '').slice(0, 7)}]`,
+          'success'
+        );
+      } else {
+        pushLog(`[RAG SYNC FAILED] ${res.error || 'Failed to sync vectors'}`, 'error');
+      }
+    } catch (err: any) {
+      pushLog(`[RAG SYNC ERROR] ${err?.message || String(err)}`, 'error');
+    } finally {
+      setIsSyncingRag(false);
+    }
+  }, [config.ghToken, config.targetRepo, config.branch, pushLog]);
+
   // Skip List & Saturation Handlers
   const handleAddToSkipList = (path: string, resumeLoop: boolean = true, autoApproveFuture: boolean = false) => {
     const current = config.skippedFiles || [];
@@ -351,7 +389,8 @@ export default function App() {
         let candidateFiles = repoData.files;
 
         // Filter out binary, config, and non-optimizable files to protect quota and ledger
-        candidateFiles = candidateFiles.filter((f) => isOptimizableFile(f.path));
+        const isTargetingMarkdown = config.fileScope === 'markdown-only' || (config.fileScope === 'specific' && isMarkdownFile(config.specificFilePath || ''));
+        candidateFiles = candidateFiles.filter((f) => isOptimizableFile(f.path, isTargetingMarkdown));
 
         // Filter out skipped files
         const skippedSet = new Set(config.skippedFiles || []);
@@ -884,7 +923,9 @@ export default function App() {
         let candidateTree = tree.filter((item) => !skippedSet.has(item.path));
 
         // Filter out binary, config, and non-optimizable files to protect quota and ledger (PM#13)
-        candidateTree = candidateTree.filter((item) => isOptimizableFile(item.path));
+        // Strictly exclude .md, .rst, .txt and non-code docs unless fileScope is explicitly targeting markdown
+        const isTargetingMarkdown = config.fileScope === 'markdown-only' || (config.fileScope === 'specific' && isMarkdownFile(config.specificFilePath || ''));
+        candidateTree = candidateTree.filter((item) => isOptimizableFile(item.path, isTargetingMarkdown));
 
         // Apply File Scope filter
         if (config.fileScope === 'markdown-only') {
@@ -1387,6 +1428,22 @@ export default function App() {
         setMutations((prev) => [record, ...prev]);
         recordLatency(result.latencyMs);
 
+        // Record clean pattern in RAG vector store and schedule debounced sync to GitHub
+        try {
+          appendCleanCommit(
+            commitSha || `c_${Date.now()}`,
+            target.path,
+            cleanCode.slice(0, 800),
+            config.ghToken && config.targetRepo ? {
+              token: config.ghToken,
+              repo: config.targetRepo,
+              branch: config.branch || 'main'
+            } : undefined
+          );
+        } catch (ragErr) {
+          console.warn('[RAG Vector Write Warning]', ragErr);
+        }
+
         // Update metrics
         setMetrics((prev) => {
           const newEnhancements = prev.enhancements + 1;
@@ -1577,6 +1634,8 @@ export default function App() {
         onOpenOracle={() => setIsOracleOpen(true)}
         onOpenSplash={() => setIsAcknowledged(false)}
         onOpenEcosystem={() => setIsAcknowledged(false)}
+        onSyncRag={handleSyncRag}
+        isSyncingRag={isSyncingRag}
         isCycling={isCycling}
       />
 

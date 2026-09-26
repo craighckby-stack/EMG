@@ -50,7 +50,7 @@ export function isConfigOrNonCodeFile(filePath: string): boolean {
   const normalized = filePath.trim().toLowerCase();
   
   // Extension check
-  if (/\.(yaml|yml|toml|ini|xml|txt|env|example|lock|codespellrc)$/i.test(normalized)) {
+  if (/\.(yaml|yml|toml|ini|xml|txt|env|example|lock|codespellrc|rst|adoc)$/i.test(normalized)) {
     return true;
   }
   
@@ -58,7 +58,7 @@ export function isConfigOrNonCodeFile(filePath: string): boolean {
   const basename = normalized.split('/').pop()?.split('\\').pop() || '';
   if (
     /^\.(gitignore|codespellrc|npmrc|eslintignore|prettierignore|env.*)$/i.test(basename) ||
-    /^(license|readme|notice|security|changelog|authors)$/i.test(basename)
+    /^(license|readme|notice|security|changelog|authors|contributing|hacktober.*)$/i.test(basename)
   ) {
     return true;
   }
@@ -90,8 +90,16 @@ export function isBinaryFile(filePath: string): boolean {
 /**
  * Determine if a file can be optimized by the neural engine
  */
-export function isOptimizableFile(filePath: string): boolean {
+export function isOptimizableFile(filePath: string, allowMarkdown: boolean = false): boolean {
   if (!filePath || typeof filePath !== 'string') return false;
+  const normalized = filePath.trim().toLowerCase();
+
+  // Exclude documentation, project trackers, markdown, and text files unless explicitly allowed (e.g. in markdown-only mode)
+  if (!allowMarkdown) {
+    if (/\.(md|markdown|mdx|rst|txt|adoc|asciidoc|csv|tsv|log|tex|rtf|pdf|doc|docx)$/i.test(normalized)) {
+      return false;
+    }
+  }
   
   // 1. Filter out binary files
   if (isBinaryFile(filePath)) return false;
@@ -100,7 +108,6 @@ export function isOptimizableFile(filePath: string): boolean {
   if (isConfigOrNonCodeFile(filePath)) return false;
   
   // 3. Filter out Lockfiles, lock references
-  const normalized = filePath.trim().toLowerCase();
   if (/\.(lock|yaml|yml|json|toml|ini|xml)$/i.test(normalized)) {
     return false;
   }
@@ -109,7 +116,8 @@ export function isOptimizableFile(filePath: string): boolean {
   const basename = normalized.split('/').pop()?.split('\\').pop() || '';
   if (
     /^\./i.test(basename) || // All dotfiles
-    /^(package-lock|pnpm-lock|yarn|dockerfile|makefile)$/i.test(basename)
+    /^(package-lock|pnpm-lock|yarn|dockerfile|makefile)$/i.test(basename) ||
+    /^(license|notice|security|changelog|authors|contributing|roadmap|tracker)(\.[a-z0-9_-]+)?$/i.test(basename)
   ) {
     return false;
   }

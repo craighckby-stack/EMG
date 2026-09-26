@@ -4,7 +4,7 @@
  */
 
 import React from 'react';
-import { Play, Square, RefreshCw, Layers, Github, Scale, Activity, Trash2, ShieldAlert, Sparkles, Cpu, Home } from 'lucide-react';
+import { Play, Square, RefreshCw, Layers, Github, Scale, Activity, Trash2, ShieldAlert, Sparkles, Cpu, Home, Database } from 'lucide-react';
 import { EngineStatus } from '../types';
 
 interface HeaderProps {
@@ -20,6 +20,8 @@ interface HeaderProps {
   onOpenOracle?: () => void;
   onOpenSplash?: () => void;
   onOpenEcosystem?: () => void;
+  onSyncRag?: () => void;
+  isSyncingRag?: boolean;
   isCycling: boolean;
 }
 
@@ -36,6 +38,8 @@ export const Header: React.FC<HeaderProps> = ({
   onOpenOracle,
   onOpenSplash,
   onOpenEcosystem,
+  onSyncRag,
+  isSyncingRag,
   isCycling,
 }) => {
   const getStatusBadge = (st: EngineStatus) => {
@@ -177,6 +181,19 @@ export const Header: React.FC<HeaderProps> = ({
           >
             <Activity className="w-3.5 h-3.5 text-[#00F5A0]" />
             <span className="hidden sm:inline">Diagnostics</span>
+          </button>
+        )}
+
+        {onSyncRag && (
+          <button
+            id="btn-header-sync-rag"
+            onClick={onSyncRag}
+            disabled={isSyncingRag}
+            title="Synchronize RAG Vector Database to Remote GitHub (CORRECT.md & WRONG.md)"
+            className="px-3 py-2 rounded-xl bg-emerald-950/40 hover:bg-emerald-900/60 disabled:opacity-50 text-emerald-300 hover:text-emerald-100 border border-emerald-600/50 text-xs font-semibold transition-all flex items-center gap-1.5 cursor-pointer shadow-sm"
+          >
+            <Database className={`w-3.5 h-3.5 text-[#00F5A0] ${isSyncingRag ? 'animate-spin' : ''}`} />
+            <span className="hidden sm:inline">{isSyncingRag ? 'Syncing RAG...' : 'Sync RAG'}</span>
           </button>
         )}
 

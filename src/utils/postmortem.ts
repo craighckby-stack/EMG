@@ -253,6 +253,30 @@ export function deriveConstraintFromEvidence(
     };
   }
 
+  // 8b. PEP 585 Legacy Typing in Python
+  if (
+    evLower.includes('pep585_legacy_typing') ||
+    evLower.includes('legacy typing import')
+  ) {
+    return {
+      diagnosis: `Model imported deprecated legacy collections (List, Dict, Tuple, Set, Union) from typing in ${filePath} instead of modern Python 3.9+ built-in generics.`,
+      correctivePattern: `Use Python 3.9+ built-in generic collections (list[int], dict[str, Any], tuple[...], set[T]) and PEP 604 union syntax (A | B) in ${filePath}. Do NOT import List, Dict, Tuple, Set, or Union from typing.`,
+      isKnownCategory: true,
+    };
+  }
+
+  // 8c. Redundant TypeVar bound=Any
+  if (
+    evLower.includes('redundant_typevar_bound') ||
+    evLower.includes('bound=any')
+  ) {
+    return {
+      diagnosis: `Model defined TypeVar with redundant 'bound=Any' in ${filePath}.`,
+      correctivePattern: `Declare TypeVars as TypeVar('T') without bound=Any; TypeVar is unbounded by default in Python.`,
+      isKnownCategory: true,
+    };
+  }
+
   // 9. Unmatched Fallback -> Requires Dynamic LLM Extraction with RAG Cache
   const firstLine = evidence.trim().split('\n')[0] || 'Syntax verification failure';
   return {
