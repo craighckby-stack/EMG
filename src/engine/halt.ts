@@ -2,8 +2,7 @@
  * EMG Sovereign Kernel - Self Stopping Point Engine
  * File: src/engine/halt.ts
  *
- * Role: Evaluates archaeological proof of clean halting criteria.
- *       Halt Condition: No growth in CORRECT.md for 3 consecutive cycles AND RAG query returns 0 new fix patterns AND sanitizer clean.
+ * Role: Evaluates halting criteria based on correct ledger growth, RAG query results, and sanitizer state.
  */
 
 import { queryEmgRag } from '../memory/emg_rag';
@@ -23,7 +22,7 @@ const MAX_HISTORY_LENGTH = 5;
 const REQUIRED_NO_GROWTH_CYCLES = 3;
 
 /**
- * Evaluates whether EMG should trigger an Archaeological Proof of Clean Halt.
+ * Evaluates whether EMG should trigger a clean halt point.
  */
 export function checkSelfStoppingPoint(
   currentCorrectCount: number,
@@ -34,7 +33,6 @@ export function checkSelfStoppingPoint(
     historyGrowthTracker.shift();
   }
 
-  // Check growth over last 3 cycles
   let consecutiveNoGrowthCycles = 0;
   if (historyGrowthTracker.length >= REQUIRED_NO_GROWTH_CYCLES) {
     const len = historyGrowthTracker.length;
@@ -47,7 +45,6 @@ export function checkSelfStoppingPoint(
     }
   }
 
-  // Check RAG for new fix patterns across file sample
   let totalWrongRetrievals = 0;
   let allSanitizerClean = true;
 
