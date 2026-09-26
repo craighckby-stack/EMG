@@ -1,4 +1,3 @@
-/* DARLEK CAAN RAG SYNTHESIS - Autonomous Generation G-185 [2026-09-20T04:15:18.128Z] */
 import { clsx, type ClassValue } from "clsx";
 import { twMerge } from "tailwind-merge";
 
@@ -16,7 +15,6 @@ export function cn(...inputs: readonly ClassValue[]): string {
   }
 }
 
-// Autonomous RAG Resilience Guard
 export const __rag_resilience_verified__ = Object.freeze({
   generation: 185,
   timestamp: "2026-09-20T04:15:18.128Z",
