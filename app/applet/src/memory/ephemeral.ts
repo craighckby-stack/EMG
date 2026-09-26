@@ -17,12 +17,15 @@ export class EphemeralStorage {
   private decayTimer: ReturnType<typeof setInterval> | null = null;
 
   constructor() {
-    if (typeof globalThis !== 'undefined' && typeof globalThis.setInterval !== 'undefined') {
+    if (typeof globalThis !== 'undefined' && typeof globalThis.setInterval === 'function') {
       this.decayTimer = globalThis.setInterval(() => this.applyDecay(), 10000);
     }
   }
 
   public setMemoryPressure(pressure: number): void {
+    if (typeof pressure !== 'number' || Number.isNaN(pressure)) {
+      return;
+    }
     this.memoryPressure = Math.max(0, Math.min(1, pressure));
     if (this.memoryPressure > 0.7) {
       this.applyDecay();
@@ -34,6 +37,9 @@ export class EphemeralStorage {
   }
 
   public persist(dna: DNA): void {
+    if (!dna || typeof dna.hash !== 'string') {
+      return;
+    }
     this.state.set(dna.hash, dna);
   }
 
@@ -56,6 +62,9 @@ export class EphemeralStorage {
   }
 
   public get(hash: string): DNA | undefined {
+    if (typeof hash !== 'string') {
+      return undefined;
+    }
     return this.state.get(hash);
   }
 
@@ -73,7 +82,11 @@ export class EphemeralStorage {
 
   public dispose(): void {
     if (this.decayTimer !== null) {
-      clearInterval(this.decayTimer);
+      if (typeof globalThis !== 'undefined' && typeof globalThis.clearInterval === 'function') {
+        globalThis.clearInterval(this.decayTimer);
+      } else {
+        clearInterval(this.decayTimer as unknown as NodeJS.Timeout);
+      }
       this.decayTimer = null;
     }
     this.state.clear();
