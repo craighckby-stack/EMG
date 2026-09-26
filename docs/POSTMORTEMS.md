@@ -701,3 +701,27 @@ Line 248, Col 95: Unexpected keyword or identifier.
 Line 248, Col 112: Identifier expected.
 ```
 **CONSTRAINT (Model Generalization):** Never repeat code patterns that produce this compiler/linter error on src/lib/constants.ts.
+
+### ❌ [2026-09-26] src/lib/retention-policy.ts `source: mutation-cycle`
+**Symptom:** AST / TypeScript Compiler Validation Rejected
+**EVIDENCE (Machine-Copied Fact):**
+```
+Line 386, Col 16: ';' expected.
+Line 387, Col 14: ';' expected.
+Line 388, Col 15: ';' expected.
+Line 389, Col 7: Expression expected.
+Line 389, Col 8: Declaration or statement expected.
+Line 392, Col 18: ';' expected.
+Line 393, Col 16: ';' expected.
+Line 394, Col 14: ';' expected.
+Line 395, Col 15: ';' expected.
+Line 396, Col 7: Expression expected.
+Line 396, Col 8: Declaration or statement expected.
+Line 397, Col 5: Declaration or statement expected.
+Line 397, Col 6: Declaration or statement expected.
+Line 399, Col 14: ';' expected.
+Line 400, Col 3: Expression expected.
+Line 411, Col 1: Declaration or statement expected.
+Line 506, Col 1: A module cannot have multiple default export assignments.
+```
+**CONSTRAINT (Model Generalization):** Never repeat code patterns that produce this compiler/linter error on src/lib/retention-policy.ts.
