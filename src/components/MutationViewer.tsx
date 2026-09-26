@@ -7,7 +7,7 @@ import React from 'react';
 import { GitCommit, Eye, FileCode2, CheckCircle2, AlertTriangle, KeyRound, Ban } from 'lucide-react';
 import { MutationRecord } from '../types';
 
-interface MutationViewerProps {
+export interface MutationViewerProps {
   mutations: MutationRecord[];
   onSelectRecord: (record: MutationRecord) => void;
 }
