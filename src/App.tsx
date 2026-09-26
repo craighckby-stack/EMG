@@ -540,7 +540,7 @@ export default function App() {
 
         // Apply mutation to sandbox store
         if (!config.dryRun) {
-          targetFile.content = cleanCode;
+          (targetFile as { content: string }).content = cleanCode;
         }
 
         // Auto-mark file as optimized in current session so it does not cycle infinitely
