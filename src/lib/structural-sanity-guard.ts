@@ -1,11 +1,11 @@
 /* DARLEK CAAN RAG SYNTHESIS - Autonomous Generation G-182 [2026-09-20T04:14:06.309Z] */
 /**
  * ── STRUCTURAL SANITY GUARD (PROGRAMMATIC AST & CODE INTEGRITY CHECK) ──
- * This module provides deterministic, zero-LLM structural validation of code mutations.
- * It prevents "Lazy LLM" maneuvers such as:
+ * This module provides deterministic structural validation of code mutations.
+ * It prevents regressions such as:
  *   1. Scrubbing/deleting existing functions instead of fixing bugs.
  *   2. Hallucinating imports of non-existent files or modules.
- *   3. Wrapping scripts in dummy abstraction classes to dodge fixing logic.
+ *   3. Wrapping scripts in dummy abstraction classes.
  *   4. Massive code erasure.
  */
 
@@ -175,7 +175,7 @@ function getCandidateFilePaths(impPath: string, isPython: boolean): string[] {
 }
 
 /**
- * Deterministic Zero-LLM Structural Sanity Guard.
+ * Deterministic Structural Sanity Guard.
  */
 export function validateStructuralSanity(
   originalCode: string,
