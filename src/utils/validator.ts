@@ -4,6 +4,8 @@
  * Architecture: Multi-tier validator with balanced token parsing, simple type checks, and TS compiler validation.
  */
 
+import { checkUngroundedQuantitativeClaims } from '../governance/sanitizer';
+
 export interface ValidationError {
   line: number;
   column: number;
@@ -710,6 +712,18 @@ export async function validateSourceCode(
 
   const errors: ValidationError[] = [];
   const warnings: string[] = [];
+
+  // Check for ungrounded quantitative claims in prose/comments
+  const claimViolation = checkUngroundedQuantitativeClaims(code);
+  if (claimViolation) {
+    errors.push({
+      line: 1,
+      column: 1,
+      message: claimViolation,
+      code: 'NO_UNGROUNDED_QUANTITATIVE_CLAIMS',
+      severity: 'error',
+    });
+  }
 
   // 1. JSON Specific Check
   if (language === 'json') {

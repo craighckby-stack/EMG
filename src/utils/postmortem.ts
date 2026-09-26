@@ -88,6 +88,7 @@ export function isIsolationError(evidence: string): boolean {
 
 /**
  * Generalized rule matcher for known compiler/linter error shapes.
+ * Tightened to prevent over-broad matching against raw code snippets.
  */
 export function deriveConstraintFromEvidence(
   evidence: string,
@@ -140,6 +141,19 @@ export function deriveConstraintFromEvidence(
     };
   }
 
+  // 3b. Ungrounded Quantitative Claims
+  if (
+    evLower.includes('no_ungrounded_quantitative_claims') ||
+    evLower.includes('ungrounded numeric claim') ||
+    evLower.includes('untraceable computation')
+  ) {
+    return {
+      diagnosis: `Model asserted specific numeric findings (percentages, cycle counts, benchmark scores) in ${filePath} without a corresponding computation, external call, or data source in the generated diff.`,
+      correctivePattern: `When generating analysis/evaluation output in ${filePath}, do not state precise statistics unless the value is assigned from an actual computed expression, function call, or fetched result in the same output. Stub or placeholder implementations must say so explicitly (e.g. "not yet computed") rather than inventing plausible-sounding numbers.`,
+      isKnownCategory: true,
+    };
+  }
+
   // 4. Missing Type Annotation
   if (
     evLower.includes('missing property type') ||
@@ -168,12 +182,12 @@ export function deriveConstraintFromEvidence(
     };
   }
 
-  // 6. Generalized Redundant Inner Loop Bounds / Dead Conditions
+  // 6. Tightened Redundant Bounds Check (Requires explicit linter diagnostic phrases)
   if (
     evLower.includes('dead condition') ||
     evLower.includes('redundant check') ||
-    /\b\w+\s*>\s*0\b/.test(evidence) ||
-    /\b\w+\s*<\s*\w+\b/.test(evidence)
+    evLower.includes('redundant guard') ||
+    evLower.includes('inner bounds guard')
   ) {
     return {
       diagnosis: 'Redundant inner bounds guard inserted inside an already bounded loop or condition.',
@@ -182,8 +196,13 @@ export function deriveConstraintFromEvidence(
     };
   }
 
-  // 7. Unused Macro Definitions
-  if (evLower.includes('unused macro') || /\b#define\s+[A-Za-z0-9_]+\b/i.test(evidence)) {
+  // 7. Tightened Unused Macro Check (Requires explicit unreferenced macro linter phrases)
+  if (
+    evLower.includes('unused macro') ||
+    evLower.includes('unreferenced macro') ||
+    evLower.includes('macro never applied') ||
+    evLower.includes('defined but not used')
+  ) {
     return {
       diagnosis: 'Preprocessor macro defined without active invocations in the translation unit.',
       correctivePattern: 'Do NOT define helper macros without applying them in active execution paths.',
@@ -205,7 +224,7 @@ export function deriveConstraintFromEvidence(
     };
   }
 
-  // 9. Unmatched Fallback (Dynamic LLM required)
+  // 9. Unmatched Fallback -> Requires Dynamic LLM Extraction with RAG Cache
   const firstLine = evidence.trim().split('\n')[0] || 'Syntax verification failure';
   return {
     diagnosis: `Compiler/linter verification failure on ${filePath}: ${firstLine}`,
@@ -308,10 +327,73 @@ Respond strictly in JSON format:
   return { diagnosis: derived.diagnosis, correctivePattern: derived.correctivePattern };
 }
 
+/**
+ * Discrete Section-Block In-Place Replacer:
+ * Splits POSTMORTEMS.md into discrete section blocks to ensure matching entries
+ * are updated in-place without erasing surrounding or intervening postmortem records.
+ */
+function updateOrAppendPostmortemBlock(
+  pmContent: string,
+  filePath: string,
+  fp: string,
+  timestamp: string,
+  source: string,
+  symptom: string,
+  lintEvidence: string,
+  diagnosis: string,
+  rule: string
+): { updatedContent: string; occurrenceCount: number; isEscalated: boolean; status: 'active' | 'escalated' } {
+  const blocks = pmContent.split(/\n(?=### )/);
+  const fpSearchTag = `**FINGERPRINT:** \`${fp}\``;
+
+  let targetBlockIndex = -1;
+  let priorCount = 0;
+
+  for (let i = 0; i < blocks.length; i++) {
+    const block = blocks[i] || '';
+    if (block.includes(filePath) && block.includes(fpSearchTag)) {
+      targetBlockIndex = i;
+      const countMatch = block.match(/\(Occurrences: (\d+)\)/);
+      if (countMatch && countMatch[1]) {
+        priorCount = parseInt(countMatch[1], 10);
+      } else {
+        priorCount = 1;
+      }
+      break;
+    }
+  }
+
+  const occurrenceCount = priorCount + 1;
+  const isEscalated = occurrenceCount >= OCCURRENCE_ESCALATION_THRESHOLD;
+  const status: 'active' | 'escalated' = isEscalated ? 'escalated' : 'active';
+
+  const updatedBlock = `### ❌ [${timestamp}] ${filePath} \`source: ${source}\`\n` +
+    `**Symptom:** ${symptom}\n` +
+    `**EVIDENCE (Machine-Copied Fact):**\n\`\`\`\n${lintEvidence.trim()}\n\`\`\`\n` +
+    `**DIAGNOSIS:** ${diagnosis}\n` +
+    `**CONSTRAINT (Model Generalization):** ${rule}\n` +
+    `**FINGERPRINT:** \`${fp}\` (Occurrences: ${occurrenceCount})\n` +
+    `**STATUS:** ${isEscalated ? `⚠️ ESCALATED (Threshold of ${OCCURRENCE_ESCALATION_THRESHOLD} recurrences reached. Structural chunking / diff required)` : 'ACTIVE'}`;
+
+  if (targetBlockIndex >= 0) {
+    blocks[targetBlockIndex] = updatedBlock.trim();
+  } else {
+    blocks.push(updatedBlock.trim());
+  }
+
+  return {
+    updatedContent: blocks.join('\n\n').trim() + '\n',
+    occurrenceCount,
+    isEscalated,
+    status,
+  };
+}
+
 let writeQueue: Promise<any> = Promise.resolve();
 
 /**
- * Main Postmortem Ledger Writer with In-Place Deduplication and Escalation Status.
+ * Main Postmortem Ledger Writer with In-Place Discrete Block Deduplication,
+ * Fresh-Fetch 409 Retry Merge, and Escalation Tracking.
  */
 export function writePostmortem(
   repo: string,
@@ -345,76 +427,56 @@ export function writePostmortem(
       };
     }
 
-    let pmContent = '';
-    let pmSha = '';
-
-    try {
-      const fileData = await fetchFileContent(repo, pmPath, token, branch);
-      pmContent = fileData.content;
-      pmSha = fileData.sha;
-    } catch (e) {
-      pmContent = '# Neural Engine Post-Mortems\n\n## Auto-Generated Lessons & Negative Constraints\n';
-    }
-
-    // 2. Perform In-Place Search for Existing Fingerprint Entry
-    const fpEscaped = fp.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-    const existingFpRegex = new RegExp(`(### ❌ \\[[^\\]]+\\] ${filePath.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}[\\s\\S]*?\\*\\*FINGERPRINT:\\*\\* \`${fpEscaped}\` \\(Occurrences: (\\d+)\\)[\\s\\S]*?\\n(?=### |$))`, 'g');
-
-    const match = existingFpRegex.exec(pmContent);
-    let updatedContent = pmContent;
-    let occurrenceCount = 1;
-    let isEscalated = false;
-    let finalStatus: 'active' | 'escalated' | 'clean_verified' = type === 'Success' ? 'clean_verified' : 'active';
-
+    // Extract diagnosis once before retry loop
+    let extractedDiagnosis = { diagnosis: '', correctivePattern: '' };
     if (type === 'Failure') {
-      const extracted = await extractDiagnosis(filePath, lintEvidence);
-      const rule = options?.constraintRule || extracted.correctivePattern;
-
-      if (match && match[0]) {
-        // IN-PLACE UPDATE: Increment occurrence count and update status in-place
-        const priorCount = parseInt(match[2] || '1', 10);
-        occurrenceCount = priorCount + 1;
-        isEscalated = occurrenceCount >= OCCURRENCE_ESCALATION_THRESHOLD;
-        finalStatus = isEscalated ? 'escalated' : 'active';
-
-        const updatedBlock = `### ❌ [${timestamp}] ${filePath} \`source: ${source}\`\n` +
-          `**Symptom:** ${options?.symptom || 'Verification Gate / Linting Rejected'}\n` +
-          `**EVIDENCE (Machine-Copied Fact):**\n\`\`\`\n${lintEvidence.trim()}\n\`\`\`\n` +
-          `**DIAGNOSIS:** ${extracted.diagnosis}\n` +
-          `**CONSTRAINT (Model Generalization):** ${rule}\n` +
-          `**FINGERPRINT:** \`${fp}\` (Occurrences: ${occurrenceCount})\n` +
-          `**STATUS:** ${isEscalated ? `⚠️ ESCALATED (Threshold of ${OCCURRENCE_ESCALATION_THRESHOLD} recurrences reached. Structural chunking / diff required)` : 'ACTIVE'}\n`;
-
-        updatedContent = pmContent.replace(match[0], updatedBlock);
-      } else {
-        // NEW ENTRY APPEND
-        occurrenceCount = 1;
-        isEscalated = false;
-        finalStatus = 'active';
-
-        const newEntry = `\n### ❌ [${timestamp}] ${filePath} \`source: ${source}\`\n` +
-          `**Symptom:** ${options?.symptom || 'Verification Gate / Linting Rejected'}\n` +
-          `**EVIDENCE (Machine-Copied Fact):**\n\`\`\`\n${lintEvidence.trim()}\n\`\`\`\n` +
-          `**DIAGNOSIS:** ${extracted.diagnosis}\n` +
-          `**CONSTRAINT (Model Generalization):** ${rule}\n` +
-          `**FINGERPRINT:** \`${fp}\` (Occurrences: 1)\n` +
-          `**STATUS:** ACTIVE\n`;
-
-        updatedContent = pmContent + newEntry;
-      }
-    } else {
-      // SUCCESS ENTRY
-      const successEntry = `\n### ✅ [${timestamp}] ${filePath} \`source: ${source}\`\n` +
-        `**Symptom:** Successful Verification Pass\n` +
-        `**EVIDENCE:** Pattern survived compiler and heuristic gates.\n` +
-        `**CONSTRAINT:** ${options?.constraintRule || lintEvidence}\n` +
-        `**STATUS:** CLEAN_VERIFIED\n`;
-
-      updatedContent = pmContent + successEntry;
+      extractedDiagnosis = await extractDiagnosis(filePath, lintEvidence);
     }
 
     let retries = 5;
     while (retries > 0) {
+      let pmContent = '';
+      let pmSha = '';
+
+      try {
+        const fileData = await fetchFileContent(repo, pmPath, token, branch);
+        pmContent = fileData.content;
+        pmSha = fileData.sha;
+      } catch (e) {
+        pmContent = '# Neural Engine Post-Mortems\n\n## Auto-Generated Lessons & Negative Constraints\n';
+      }
+
+      // 2. Perform Block-Level In-Place Merge on FRESHLY FETCHED pmContent
+      let updatedContent = '';
+      let occurrenceCount = 1;
+      let isEscalated = false;
+      let finalStatus: 'active' | 'escalated' | 'clean_verified' = type === 'Success' ? 'clean_verified' : 'active';
+
+      if (type === 'Failure') {
+        const blockResult = updateOrAppendPostmortemBlock(
+          pmContent,
+          filePath,
+          fp,
+          timestamp,
+          source,
+          options?.symptom || 'Verification Gate / Linting Rejected',
+          lintEvidence,
+          extractedDiagnosis.diagnosis,
+          options?.constraintRule || extractedDiagnosis.correctivePattern
+        );
+        updatedContent = blockResult.updatedContent;
+        occurrenceCount = blockResult.occurrenceCount;
+        isEscalated = blockResult.isEscalated;
+        finalStatus = blockResult.status;
+      } else {
+        const successEntry = `\n### ✅ [${timestamp}] ${filePath} \`source: ${source}\`\n` +
+          `**Symptom:** Successful Verification Pass\n` +
+          `**EVIDENCE:** Pattern survived compiler and heuristic gates.\n` +
+          `**CONSTRAINT:** ${options?.constraintRule || lintEvidence}\n` +
+          `**STATUS:** CLEAN_VERIFIED\n`;
+        updatedContent = pmContent.trim() + successEntry;
+      }
+
       const hash = await computeSHA256(updatedContent);
 
       try {
@@ -438,11 +500,6 @@ export function writePostmortem(
       } catch (commitErr: any) {
         if (commitErr.message && commitErr.message.includes('409') && retries > 1) {
           retries--;
-          try {
-            const reFetch = await fetchFileContent(repo, pmPath, token, branch);
-            pmContent = reFetch.content;
-            pmSha = reFetch.sha;
-          } catch {}
           await new Promise((r) => setTimeout(r, 1000 + Math.random() * 1000));
           continue;
         }

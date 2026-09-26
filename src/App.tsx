@@ -1094,8 +1094,12 @@ export default function App() {
                     ...prev,
                     postmortemHash: pmResult.hash,
                     postmortemConstraints: pmResult.content,
+                    ...(pmResult.isEscalated ? { skippedFiles: Array.from(new Set([...(prev.skippedFiles || []), target.path])) } : {}),
                   }));
                   pushLog(`[LEARN] Auto-logged AST failure to docs/POSTMORTEMS.md. Ingested constraint.`, 'warning');
+                  if (pmResult.isEscalated) {
+                    pushLog(`[ESCALATION ENFORCED] Error on [${target.path}] reached threshold (${pmResult.occurrenceCount} occurrences). Added file to skip list to prevent infinite loop.`, 'error', undefined, target.path);
+                  }
                 }
               } catch (pmErr) {
                 console.error('Failed to write AST postmortem:', pmErr);
@@ -1280,8 +1284,12 @@ export default function App() {
                     ...prev,
                     postmortemHash: pmResult.hash,
                     postmortemConstraints: pmResult.content,
+                    ...(pmResult.isEscalated ? { skippedFiles: Array.from(new Set([...(prev.skippedFiles || []), target.path])) } : {}),
                   }));
                   pushLog(`[LEARN] Logged failure to docs/POSTMORTEMS.md. Ingested negative constraint for next cycle.`, 'warning');
+                  if (pmResult.isEscalated) {
+                    pushLog(`[ESCALATION ENFORCED] Error on [${target.path}] reached threshold (${pmResult.occurrenceCount} occurrences). Added file to skip list to prevent infinite loop.`, 'error', undefined, target.path);
+                  }
                 }
               } catch (pmErr) {
                 pushLog(`Failed to write postmortem: ${String(pmErr)}`, 'error');

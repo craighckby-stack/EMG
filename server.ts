@@ -366,8 +366,9 @@ CRITICAL Requirements:
     : 'Output raw executable source code ONLY between delimiters @@@START and @@@END. Do NOT include markdown code fences (like ```javascript) inside @@@START and @@@END. Do NOT output conversational or introductory text.'
 }
 4. ABSOLUTE PROHIBITION ON UNVERIFIABLE SELF-PRAISE: Do NOT include self-praising adjectives or marketing claims in comments, headers, or docstrings (such as "production-grade", "hardened", "leak-free", "fully optimized", "state-of-the-art"). Keep all code documentation strictly technical, neutral, and factual.
-5. TRUNCATION PREVENTATIVE RULE: Output complete, unbroken source code from start to end. Keep template literals concise and do not emit monolithic multi-line template strings that risk output token truncation.
-6. Output a 1-sentence summary of enhancements immediately after @@@SUMMARY:`;
+5. ABSOLUTE PROHIBITION ON UNGROUNDED QUANTITATIVE CLAIMS: Do NOT invent fabricated-sounding statistics, percentages, benchmark scores, or cycle counts in comments or docstrings (such as "340% latency reduction", "accuracy of 0.85", "within 4 cycles") unless derived from an actual computation or data source in the diff. Mark stubs/placeholders explicitly ("not yet computed").
+6. TRUNCATION PREVENTATIVE RULE: Output complete, unbroken source code from start to end. Keep template literals concise and do not emit monolithic multi-line template strings that risk output token truncation.
+7. Output a 1-sentence summary of enhancements immediately after @@@SUMMARY:`;
 
       const startTime = performance.now();
 
