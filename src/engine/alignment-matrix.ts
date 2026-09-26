@@ -38,69 +38,73 @@ export class AlignmentMatrixEngine {
     }
 
     const personaResults: Record<string, PersonaAnalysis> = {};
-    const tradeoffMap: Record<string, string[]> = {};
+    const tradeoffMap: Record<string, readonly string[]> = {};
     let totalConfidence = 0;
 
     // Mechanist Evaluation (Structure & Type Safety)
     const hasUnsafeAny = proposedCode.includes(': any');
     const mechanistConfidence = hasUnsafeAny ? 0.6 : 0.95;
+    const mechanistTradeoffs = Object.freeze(["Type strictness vs implementation speed"]);
     personaResults["Mechanist"] = {
       personaName: "Mechanist",
       analysis: hasUnsafeAny 
         ? "Mechanist detected explicit 'any' types violating strict type mechanics." 
         : "Mechanist confirmed structural and type-level safety integrity.",
       confidence: mechanistConfidence,
-      keyFindings: [hasUnsafeAny ? "Contains loose 'any' type casts" : "Strict type definitions verified"],
-      warnings: hasUnsafeAny ? ["Loose types lower refactoring safety"] : [],
-      tradeoffs: ["Type strictness vs implementation speed"],
+      keyFindings: Object.freeze([hasUnsafeAny ? "Contains loose 'any' type casts" : "Strict type definitions verified"]),
+      warnings: Object.freeze(hasUnsafeAny ? ["Loose types lower refactoring safety"] : []),
+      tradeoffs: mechanistTradeoffs,
     };
-    tradeoffMap["Mechanist"] = [...personaResults["Mechanist"].tradeoffs];
+    tradeoffMap["Mechanist"] = mechanistTradeoffs;
     totalConfidence += mechanistConfidence;
 
     // Adversary Evaluation (Exploit Vectors & Edge Cases)
     const hasEvalOrFunction = proposedCode.includes('eval(') || proposedCode.includes('new Function(');
     const adversaryConfidence = hasEvalOrFunction ? 0.2 : 0.9;
+    const adversaryTradeoffs = Object.freeze(["Dynamic evaluation vs security boundaries"]);
     personaResults["Adversary"] = {
       personaName: "Adversary",
       analysis: hasEvalOrFunction 
         ? "CRITICAL: Arbitrary code execution primitive (eval/new Function) detected!" 
         : "Adversary scan revealed no obvious code execution primitives.",
       confidence: adversaryConfidence,
-      keyFindings: [hasEvalOrFunction ? "Arbitrary code execution risk" : "Zero code injection primitives found"],
-      warnings: hasEvalOrFunction ? ["HIGH RISK: Remote Code Execution vector"] : [],
-      tradeoffs: ["Dynamic evaluation vs security boundaries"],
+      keyFindings: Object.freeze([hasEvalOrFunction ? "Arbitrary code execution risk" : "Zero code injection primitives found"]),
+      warnings: Object.freeze(hasEvalOrFunction ? ["HIGH RISK: Remote Code Execution vector"] : []),
+      tradeoffs: adversaryTradeoffs,
     };
-    tradeoffMap["Adversary"] = [...personaResults["Adversary"].tradeoffs];
+    tradeoffMap["Adversary"] = adversaryTradeoffs;
     totalConfidence += adversaryConfidence;
 
     // Scalability Killer Evaluation (Memory & CPU Complexity)
     const hasNestedLoops = /(for|while).*\{[\s\S]*?(for|while)/.test(proposedCode);
     const scalabilityConfidence = hasNestedLoops ? 0.65 : 0.92;
+    const scalabilityTradeoffs = Object.freeze(["Algorithm simplicity vs execution throughput"]);
     personaResults["Scalability_Killer"] = {
       personaName: "Scalability_Killer",
       analysis: hasNestedLoops 
         ? "Nested loop structure detected; quadratic complexity under large inputs." 
         : "Linear or constant time algorithmic complexity verified.",
       confidence: scalabilityConfidence,
-      keyFindings: [hasNestedLoops ? "O(N^2) complexity risk" : "Optimal algorithmic efficiency"],
-      warnings: hasNestedLoops ? ["Potential CPU spike on large collections"] : [],
-      tradeoffs: ["Algorithm simplicity vs execution throughput"],
+      keyFindings: Object.freeze([hasNestedLoops ? "O(N^2) complexity risk" : "Optimal algorithmic efficiency"]),
+      warnings: Object.freeze(hasNestedLoops ? ["Potential CPU spike on large collections"] : []),
+      tradeoffs: scalabilityTradeoffs,
     };
-    tradeoffMap["Scalability_Killer"] = [...personaResults["Scalability_Killer"].tradeoffs];
+    tradeoffMap["Scalability_Killer"] = scalabilityTradeoffs;
     totalConfidence += scalabilityConfidence;
 
     // Alignment Auditor
     const isClean = !hasUnsafeAny && !hasEvalOrFunction;
     const auditorConfidence = isClean ? 0.95 : 0.5;
+    const auditorTradeoffs = Object.freeze(["Feature velocity vs governance alignment"]);
     personaResults["Alignment_Auditor"] = {
       personaName: "Alignment_Auditor",
       analysis: isClean ? "Mutation aligns with sovereign safety invariants." : "Mutation breaches core safety guardrails.",
       confidence: auditorConfidence,
-      keyFindings: [isClean ? "Governance compliant" : "Requires sanitizer intervention"],
-      warnings: isClean ? [] : ["Non-compliant with Sovereign Kernel policy"],
-      tradeoffs: ["Feature velocity vs governance alignment"],
+      keyFindings: Object.freeze([isClean ? "Governance compliant" : "Requires sanitizer intervention"]),
+      warnings: Object.freeze(isClean ? [] : ["Non-compliant with Sovereign Kernel policy"]),
+      tradeoffs: auditorTradeoffs,
     };
-    tradeoffMap["Alignment_Auditor"] = [...personaResults["Alignment_Auditor"].tradeoffs];
+    tradeoffMap["Alignment_Auditor"] = auditorTradeoffs;
     totalConfidence += auditorConfidence;
 
     const personaCount = 4;
@@ -110,7 +114,7 @@ export class AlignmentMatrixEngine {
     return {
       query: `Alignment evaluation for ${filePath}`,
       personaResults,
-      overallConfidence: parseFloat(avgConfidence.toFixed(2)),
+      overallConfidence: Number(avgConfidence.toFixed(2)),
       tradeoffMap,
       alignmentPassed,
     };
