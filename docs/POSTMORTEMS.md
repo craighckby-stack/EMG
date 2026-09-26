@@ -4,6 +4,7 @@
 
 
 
+
 ### ❌ [2026-09-26] app/applet/src/engine/siphon-stamping.ts `source: mutation-cycle`
 **Symptom:** AST / TypeScript Compiler Validation Rejected
 **EVIDENCE (Machine-Copied Fact):**
@@ -16,6 +17,7 @@ Line 110, Col 4: Expression expected.
 **STATUS:** ACTIVE
 
 
+
 ### ❌ [2026-09-26] patch-server-diff.cjs `source: mutation-cycle`
 **Symptom:** AST / TypeScript Compiler Validation Rejected
 **EVIDENCE (Machine-Copied Fact):**
@@ -26,4 +28,17 @@ Line 21, Col 26: Type annotations can only be used in TypeScript files.
 **DIAGNOSIS:** Inadvertent inclusion of conversational prompt instructions, compiler evidence, and system role definitions within a code optimization target file processed as CommonJS source.
 **CONSTRAINT (Model Generalization):** Ensure target source files contain strictly executable JavaScript code without embedded prompt instructions, compiler evidence blocks, or diagnostic metadata.
 **FINGERPRINT:** `patch-server-diff.cjs::Line _, Col _: Type annotations can only be used in TypeScript files. Line _, Col _: Type annotations can only be used in TypeScript files.` (Occurrences: 1)
+**STATUS:** ACTIVE
+
+
+### ❌ [2026-09-26] patch-server.cjs `source: mutation-cycle`
+**Symptom:** AST / TypeScript Compiler Validation Rejected
+**EVIDENCE (Machine-Copied Fact):**
+```
+Line 32, Col 54: Unterminated template literal.
+[OUTPUT_LIKELY_TRUNCATED] The output is < 80% of original length and syntactically invalid. The model likely hit its output token limit.
+```
+**DIAGNOSIS:** Model generation exceeded maximum output token threshold for patch-server.cjs, terminating mid-string/delimiter before EOF.
+**CONSTRAINT (Model Generalization):** File patch-server.cjs requires chunked diff generation or modular decomposition. Do NOT regenerate full file in a single completion pass.
+**FINGERPRINT:** `patch-server.cjs::EOF_TRUNCATION` (Occurrences: 1)
 **STATUS:** ACTIVE
