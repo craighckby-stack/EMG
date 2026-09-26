@@ -129,7 +129,7 @@ export async function runSystemDiagnostics(): Promise<DiagnosticReport> {
         memoryUsage,
       },
     };
-  } catch (error: unknown) {
+  } catch (_error: unknown) {
     return {
       status: 'ERROR',
       timestamp: new Date().toISOString(),
