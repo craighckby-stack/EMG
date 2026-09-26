@@ -1,7 +1,7 @@
 /**
  * DARLEK CANN ARCHITECTURAL HEADER
  * File: src/components/BugInspector.tsx
- * Role: Bug Inspector component that detects 'bugs' in text inputs, prompts for bug reports, and integrates with GitHub Issues and autonomous repository repair.
+ * Role: Component that detects defects in text inputs, prompts for reports, and integrates with GitHub Issues and repository repair.
  * Architecture: Type-safe modular unit with resilient state interfaces and direct GitHub API synchronization.
  */
 
@@ -52,7 +52,7 @@ interface GitHubIssueItem {
 
 const SEVERITY_LEVELS = [
   { id: 'CRITICAL', label: 'Critical / Invariant Failure', color: '#ff0033' },
-  { id: 'HIGH', label: 'High Priority Bug', color: '#ff6600' },
+  { id: 'HIGH', label: 'High Priority Issue', color: '#ff6600' },
   { id: 'MEDIUM', label: 'Medium / Performance Issue', color: '#ffcc00' },
   { id: 'LOW', label: 'Low / Cosmetic Enhancement', color: '#00ccff' },
 ] as const;
@@ -60,15 +60,15 @@ const SEVERITY_LEVELS = [
 const BUG_TEMPLATES = [
   {
     name: 'Module Import / Broken Path Bug',
-    content: `# Bug Report: Stale or Broken Module Import\n\n## Symptoms\n- Cannot find module or path resolution failure during build.\n- Check api-routes.ts and unused route references.\n\n## Expected Behavior\nAll module imports must resolve cleanly to existing files in the workspace.\n\n## Reproduction\nRun production build: vite build && esbuild server.ts\n`,
+    content: `# Defect Report: Stale or Broken Module Import\n\n## Symptoms\n- Cannot find module or path resolution failure during build.\n- Check api-routes.ts and unused route references.\n\n## Expected Behavior\nAll module imports must resolve cleanly to existing files in the workspace.\n\n## Reproduction\nRun production build: vite build && esbuild server.ts\n`,
   },
   {
     name: 'TypeScript & Type Invariant Defect',
-    content: `# Bug Report: Type Incompatibility / Unknown Errors\n\n## Symptoms\n- Catch blocks or API handlers throwing unchecked type errors.\n- Unsafe 'any' casts causing runtime crashes.\n\n## Expected Behavior\nAll error handling must be type-safe (catch (err: unknown)) with safe string extraction.\n`,
+    content: `# Defect Report: Type Incompatibility / Unknown Errors\n\n## Symptoms\n- Catch blocks or API handlers throwing unchecked type errors.\n- Unsafe 'any' casts causing runtime crashes.\n\n## Expected Behavior\nAll error handling must be type-safe (catch (err: unknown)) with safe string extraction.\n`,
   },
   {
     name: 'Async Promise / State Race Condition',
-    content: `# Bug Report: Unhandled Promise Rejection\n\n## Symptoms\n- Async network requests without try/catch or fallback handling.\n- Null pointer on empty array or undefined API response.\n\n## Expected Behavior\nAll async operations must gracefully catch rejections and update UI status.\n`,
+    content: `# Defect Report: Unhandled Promise Rejection\n\n## Symptoms\n- Async network requests without try/catch or fallback handling.\n- Null pointer on empty array or undefined API response.\n\n## Expected Behavior\nAll async operations must gracefully catch rejections and update UI status.\n`,
   },
 ];
 
@@ -121,7 +121,7 @@ export default function BugInspector({
       setBugFileName(initialAttachedFile.name);
       setBugFileContent(initialAttachedFile.content);
       if (!issueTitle) {
-        setIssueTitle(`[Bug]: ${initialAttachedFile.name.replace(/\.[^/.]+$/, '')}`);
+        setIssueTitle(`[Issue]: ${initialAttachedFile.name.replace(/\.[^/.]+$/, '')}`);
       }
     }
   }, [initialAttachedFile, issueTitle]);
@@ -177,7 +177,7 @@ export default function BugInspector({
   const readFile = (file: File) => {
     setBugFileName(file.name);
     if (!issueTitle) {
-      setIssueTitle(`[Bug]: ${file.name.replace(/\.[^/.]+$/, '')}`);
+      setIssueTitle(`[Issue]: ${file.name.replace(/\.[^/.]+$/, '')}`);
     }
     const reader = new FileReader();
     reader.onload = (event) => {
@@ -190,7 +190,7 @@ export default function BugInspector({
   // Submit Bug Inspection Pipeline
   const handleExecuteBugPipeline = async () => {
     if (!bugFileContent.trim()) {
-      alert('Please upload or enter a bug report before initiating inspection.');
+      alert('Please upload or enter a defect report before initiating inspection.');
       return;
     }
 
@@ -212,7 +212,7 @@ export default function BugInspector({
             token,
             owner,
             repo,
-            title: issueTitle || `[Bug]: Automated Issue from ${bugFileName || 'Bug Report'}`,
+            title: issueTitle || `[Issue]: Automated Issue from ${bugFileName || 'Defect Report'}`,
             severity,
             bugReportFileName: bugFileName || 'bug_report.txt',
             bugReportContent: bugFileContent,
@@ -239,7 +239,7 @@ export default function BugInspector({
             branch,
             bugSpecName: bugFileName || 'bug_report',
             bugSpecContent: bugFileContent,
-            prompt: issueTitle || 'Diagnose and fix all reported bugs in repository.',
+            prompt: issueTitle || 'Diagnose and resolve all reported issues in repository.',
             apiKeys: systemState.apiKeys,
           }),
         });
@@ -280,17 +280,17 @@ export default function BugInspector({
           onApplyFixesToState?.(fixData.issuesResolved || 0, fixData.commitSha);
           onAddSystemLog?.('MUTATION', `Bug Inspector resolved ${fixData.issuesResolved || 0} issues in ${owner}/${repo}`);
           onAddCaanMessage?.(
-            `🐞 **DALEK CAAN BUG INSPECTOR RESOLUTION:**\n\n` +
+            `🐞 **INSPECTOR RESOLUTION SUMMARY:**\n\n` +
             `${fixData.summary}\n\n` +
             (createdIssue?.number ? `• **GitHub Issue:** [#${createdIssue.number}](${createdIssue.html_url}) (Resolved & Closed)\n` : '') +
             `• **Repository Commit:** [\`${fixData.commitSha}\`](${fixData.commitUrl})\n` +
             `• **Resolved Defect Count:** ${fixData.issuesResolved || 0}\n` +
-            `System memory updated with bug resolution postmortems.`
+            `System memory updated with resolution postmortems.`
           );
         } else {
           setResultData({
             success: false,
-            summary: fixData.error || 'Failed to complete autonomous bug resolution.',
+            summary: fixData.error || 'Failed to complete autonomous resolution.',
           });
         }
       } else {
@@ -329,7 +329,7 @@ export default function BugInspector({
           branch,
           bugSpecName: `Issue #${issue.number}`,
           bugSpecContent: `${issue.title}\n\n${issue.body || ''}`,
-          prompt: `Fix bug from GitHub Issue #${issue.number}: ${issue.title}`,
+          prompt: `Resolve issue from GitHub #${issue.number}: ${issue.title}`,
           apiKeys: systemState.apiKeys,
         }),
       });
@@ -440,7 +440,7 @@ export default function BugInspector({
                 <div className="space-y-1">
                   <span className="font-bold text-red-200">Autonomous System-Wide Bug Resolution Engine</span>
                   <p className="text-stone-400 leading-relaxed">
-                    Upload or paste your bug report, error logs, or specification below. DARLEK CAAN will inspect all repository files, formulate type-safe zero-error patches, commit to GitHub, and sync the learning postmortem.
+                    Upload or paste your defect report, error logs, or specification below. The system will inspect all repository files, formulate type-safe zero-error patches, commit to GitHub, and sync the learning postmortem.
                   </p>
                 </div>
               </div>
@@ -450,7 +450,7 @@ export default function BugInspector({
                 <div className="flex items-center justify-between">
                   <label className="text-xs font-semibold text-stone-300 flex items-center gap-1.5">
                     <FileText size={14} className="text-red-400" />
-                    BUG REPORT FILE / SPECIFICATION
+                    DEFECT REPORT FILE / SPECIFICATION
                   </label>
                   {bugFileName && (
                     <span className="text-[11px] text-green-400 font-mono flex items-center gap-1">
@@ -479,7 +479,7 @@ export default function BugInspector({
                   </div>
                   <div>
                     <span className="text-sm font-semibold text-red-200">
-                      Click to browse or Drag & Drop Bug Report file here
+                      Click to browse or Drag & Drop Report file here
                     </span>
                     <p className="text-[11px] text-stone-400 mt-0.5">
                       Supports .txt, .md, .json, .log, .ts, .tsx (Max 5MB)
@@ -496,7 +496,7 @@ export default function BugInspector({
                       onClick={() => {
                         setBugFileName(`template_${tpl.name.toLowerCase().replace(/[^a-z0-9]/g, '_')}.md`);
                         setBugFileContent(tpl.content);
-                        setIssueTitle(`[Bug]: ${tpl.name}`);
+                        setIssueTitle(`[Issue]: ${tpl.name}`);
                       }}
                       className="px-2.5 py-1 text-[11px] rounded bg-[#220d0d] hover:bg-[#331414] border border-stone-800 hover:border-red-600 text-stone-300 transition-colors"
                     >
@@ -524,7 +524,7 @@ export default function BugInspector({
                   <textarea
                     value={bugFileContent}
                     onChange={(e) => setBugFileContent(e.target.value)}
-                    placeholder="Enter or paste error logs, stack traces, invariant specifications, or reproduction steps here..."
+                    placeholder="Enter or paste diagnostic logs, invariant specifications, or reproduction steps here..."
                     rows={6}
                     className="w-full px-3 py-2.5 bg-[#0e0606] border border-stone-800 focus:border-red-500 rounded-lg text-xs font-mono text-stone-200 resize-y focus:outline-none focus:ring-1 focus:ring-red-500"
                   />
@@ -541,7 +541,7 @@ export default function BugInspector({
                     type="text"
                     value={issueTitle}
                     onChange={(e) => setIssueTitle(e.target.value)}
-                    placeholder="e.g. [Bug]: Module path resolution failure in api-routes"
+                    placeholder="e.g. [Issue]: Module path resolution failure in api-routes"
                     className="w-full px-3 py-2 bg-[#0a0404] border border-stone-800 focus:border-red-500 rounded text-xs font-mono text-stone-200 focus:outline-none"
                   />
                 </div>
