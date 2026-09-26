@@ -726,10 +726,10 @@ Line 506, Col 1: A module cannot have multiple default export assignments.
 ```
 **CONSTRAINT (Model Generalization):** Never repeat code patterns that produce this compiler/linter error on src/lib/retention-policy.ts.
 
-### ❌ [2026-09-26] seed_orchestrator.c `source: mutation-cycle`
+### ⚠️ [STRUCK: NOT_VERIFIABLE, 2026-09-26] [2026-09-26] seed_orchestrator.c `source: mutation-cycle`
 **Symptom:** Active Linter / Compiler Gate Rejection on LLM Output (Option B)
 **EVIDENCE (Machine-Copied Fact):**
 ```
 [LINT REJECT: NO_UNUSED_MACROS] Macro 'SEED_VERSION_MAJOR' was defined in [seed_orchestrator.c] but never referenced in any function or type signature across the repository tree.
 ```
-**CONSTRAINT (Model Generalization):** Never repeat code patterns that produce this compiler/linter error on seed_orchestrator.c.
+**CONSTRAINT (Model Generalization):** [STRUCK] Original constraint invalidated. Artifact of isolated compilation missing project context.
