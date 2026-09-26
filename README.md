@@ -1,6 +1,8 @@
-# EMG
+# EMG (EPHEMERAL MIND GEM)
 
-**EMG** is an autonomous, verification-gated code refactoring engine and security governance platform. It orchestrates self-stopping tri-loop evolution cycles across local sandbox environments and remote GitHub repositories, enforcing strict AST compiler verification, Shannon entropy secret sanitization, dual-agent ethical debate, WeakMap zero-leak execution sandboxing, and high-capacity IndexedDB vector memory.
+> **Autonomous C-Dialect Neural Verification & Refactoring Engine**
+
+**EMG** (Ephemeral Mind Gem) is an autonomous, verification-gated code refactoring engine and security governance platform. It orchestrates self-stopping tri-loop evolution cycles across local sandbox environments and remote GitHub repositories, enforcing strict AST compiler verification, Shannon entropy secret sanitization, dual-agent ethical debate, WeakMap zero-leak execution sandboxing, and high-capacity IndexedDB vector memory.
 
 ---
 
