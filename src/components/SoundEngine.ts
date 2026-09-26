@@ -6,9 +6,6 @@
  * Architecture: Type-safe modular unit with resilient state interfaces.
  */
 
-// Web Audio API Synthesizer & Speech Synthesis Engine for Dalek Caan Neural System
-// Optimized for modern idiomatic clarity, descriptive modularization, and robust architectural layout.
-
 let audioContextInstance: AudioContext | null = null;
 
 const BRACKET_REGEX: RegExp = /\[.*?\]/g;
