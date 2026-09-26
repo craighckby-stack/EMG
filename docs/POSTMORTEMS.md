@@ -733,3 +733,20 @@ Line 506, Col 1: A module cannot have multiple default export assignments.
 [LINT REJECT: NO_UNUSED_MACROS] Macro 'SEED_VERSION_MAJOR' was defined in [seed_orchestrator.c] but never referenced in any function or type signature across the repository tree.
 ```
 **CONSTRAINT (Model Generalization):** [STRUCK] Original constraint invalidated. Artifact of isolated compilation missing project context.
+
+### ❌ [2026-09-26] server.ts.backup `source: mutation-cycle`
+**Symptom:** AST / TypeScript Compiler Validation Rejected
+**EVIDENCE (Machine-Copied Fact):**
+```
+Line 32, Col 71: Unclosed single-quote string literal.
+Line 34, Col 1: Mismatched closing delimiter: expected matching ')' but found '}' (opened on Line 32).
+Line 380, Col 22: Unclosed template literal string (`).
+Line 396, Col 4: Unclosed opening delimiter '{'.
+Line 319, Col 9: Unclosed opening delimiter '{'.
+Line 318, Col 68: Unclosed opening delimiter '{'.
+Line 318, Col 11: Unclosed opening delimiter '('.
+Line 88, Col 45: Unclosed opening delimiter '{'.
+Line 21, Col 52: Unclosed opening delimiter '{'.
+[OUTPUT_LIKELY_TRUNCATED] The output is < 80% of original length and syntactically invalid. The model likely hit its output token limit.
+```
+**CONSTRAINT (Model Generalization):** Never repeat code patterns that produce this compiler/linter error on server.ts.backup.
