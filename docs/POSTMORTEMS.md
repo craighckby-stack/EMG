@@ -785,3 +785,11 @@ Line 356, Col 4: '}' expected.
 Line 699, Col 1: ',' expected.
 ```
 **CONSTRAINT (Model Generalization):** Never repeat code patterns that produce this compiler/linter error on src/lib/dalek-brain.ts.
+
+### ❌ [2026-09-26] src/lib/llm-provider.ts `source: mutation-cycle`
+**Symptom:** Active Linter / Compiler Gate Rejection on LLM Output (Option B)
+**EVIDENCE (Machine-Copied Fact):**
+```
+[LINT REJECT: NO_UNVERIFIABLE_SELF_PRAISE] Detected unsubstantiated self-description in commentary: "fully optimized". Output must adhere to neutral, factual documentation without marketing adjectives.
+```
+**CONSTRAINT (Model Generalization):** Never repeat code patterns that produce this compiler/linter error on src/lib/llm-provider.ts.
