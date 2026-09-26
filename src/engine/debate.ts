@@ -15,7 +15,7 @@ export interface DebateStatement {
   readonly avatar: string;
   readonly argument: string;
   readonly score: number;
-  readonly matchedEntries: VectorEntry[];
+  readonly matchedEntries: readonly VectorEntry[];
 }
 
 export interface DebateVerdict {
@@ -31,6 +31,13 @@ export interface DebateVerdict {
 }
 
 export function executeRAGDebate(filePath: string, proposedMutation: string): DebateVerdict {
+  if (!filePath || typeof filePath !== 'string') {
+    throw new Error('executeRAGDebate requires a valid non-empty filePath string.');
+  }
+  if (!proposedMutation || typeof proposedMutation !== 'string') {
+    throw new Error('executeRAGDebate requires a valid non-empty proposedMutation string.');
+  }
+
   // 1. Edge Governance Sanitizer Gate
   const sanitizerResult = sanitizeAndGovern(filePath, proposedMutation);
 
@@ -38,7 +45,7 @@ export function executeRAGDebate(filePath: string, proposedMutation: string): De
   const ragQuery = queryEmgRag(`${filePath} ${proposedMutation}`);
 
   // 3. Prosecutor (Caan) Statement & Risk Score calculation
-  const topFailures = ragQuery.topFailures;
+  const topFailures = ragQuery.topFailures ?? [];
   let riskScore = 0;
   if (!sanitizerResult.clean) {
     riskScore += 5; // Direct sanitizer violation adds heavy risk penalty
@@ -61,7 +68,7 @@ export function executeRAGDebate(filePath: string, proposedMutation: string): De
   };
 
   // 4. Defender (Jesus) Statement & Benefit Score calculation
-  const topClean = ragQuery.topCleanPatterns;
+  const topClean = ragQuery.topCleanPatterns ?? [];
   let benefitScore = 5; // Baseline trust
   if (sanitizerResult.clean) {
     benefitScore += 2;
@@ -84,7 +91,7 @@ export function executeRAGDebate(filePath: string, proposedMutation: string): De
   };
 
   // 5. Judge (Sovereign Synthesis) Evaluation
-  const topSynthesis = ragQuery.topSynthesis;
+  const topSynthesis = ragQuery.topSynthesis ?? [];
   const approved = benefitScore > riskScore && sanitizerResult.clean;
 
   const verdictSummary = approved
