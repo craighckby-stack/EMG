@@ -1,31 +1,39 @@
 /**
- * EMG Sovereign Kernel Control & Intelligence Dashboard
+ * EMG Kernel Control & Intelligence Dashboard
  * File: src/components/SovereignKernelPanel.tsx
  */
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback, JSX } from 'react';
 import { executeEmgTriLoopCycle, TriLoopCycleResult } from '../engine/tri-loop';
 import { queryEmgRag, getAllEmgVectors, VectorEntry } from '../memory/emg_rag';
 import { sanitizeAndGovern } from '../governance/sanitizer';
 import { playClickSound, playChirpSound } from './SoundEngine';
-import { Shield, Brain, Terminal, Activity, CheckCircle, AlertTriangle, Scale, Lock, RefreshCw, Zap } from 'lucide-react';
+import { Shield, Brain, Terminal, Activity, CheckCircle, AlertTriangle, Lock, RefreshCw, Zap } from 'lucide-react';
 
-export default function SovereignKernelPanel() {
-  const [activeSubTab, setActiveSubTab] = useState<'triloop' | 'rag' | 'sanitizer' | 'vectors'>('triloop');
-  const [testFilePath, setTestFilePath] = useState('src/engine/sample.ts');
-  const [testCode, setTestCode] = useState(`export function calculateScore(a: number, b: number) {\n  const apiKey = "AIzaSyDUMMYKEY1234567890123456789012345";\n  return a + b;\n}`);
-  const [isProcessing, setIsProcessing] = useState(false);
+type SubTabType = 'triloop' | 'rag' | 'sanitizer' | 'vectors';
+
+export default function SovereignKernelPanel(): JSX.Element {
+  const [activeSubTab, setActiveSubTab] = useState<SubTabType>('triloop');
+  const [testFilePath, setTestFilePath] = useState<string>('src/engine/sample.ts');
+  const [testCode, setTestCode] = useState<string>(
+    `export function calculateScore(a: number, b: number) {\n  const apiKey = "[REDACTED_GEMINI_KEY]";\n  return a + b;\n}`
+  );
+  const [isProcessing, setIsProcessing] = useState<boolean>(false);
   const [lastCycleResult, setLastCycleResult] = useState<TriLoopCycleResult | null>(null);
 
-  const [ragQueryText, setRagQueryText] = useState('secret leakage');
+  const [ragQueryText, setRagQueryText] = useState<string>('secret leakage');
   const [ragQueryResult, setRagQueryResult] = useState<ReturnType<typeof queryEmgRag> | null>(null);
   const [allVectors, setAllVectors] = useState<VectorEntry[]>([]);
 
   useEffect(() => {
-    setAllVectors(getAllEmgVectors());
+    try {
+      setAllVectors(getAllEmgVectors());
+    } catch (err) {
+      console.error('Failed to load EMG vectors:', err);
+    }
   }, [lastCycleResult]);
 
-  const handleRunTriLoop = async () => {
+  const handleRunTriLoop = useCallback(async (): Promise<void> => {
     playChirpSound();
     setIsProcessing(true);
     try {
@@ -36,13 +44,26 @@ export default function SovereignKernelPanel() {
     } finally {
       setIsProcessing(false);
     }
-  };
+  }, [testFilePath, testCode]);
 
-  const handleRunRagQuery = () => {
+  const handleRunRagQuery = useCallback((): void => {
     playClickSound();
-    const res = queryEmgRag(ragQueryText);
-    setRagQueryResult(res);
-  };
+    try {
+      const res = queryEmgRag(ragQueryText);
+      setRagQueryResult(res);
+    } catch (err) {
+      console.error('Error executing RAG query:', err);
+    }
+  }, [ragQueryText]);
+
+  const handleSanitizerCheck = useCallback((): void => {
+    try {
+      const res = sanitizeAndGovern('test.ts', testCode);
+      alert(`Sanitizer Result:\nClean: ${res.clean}\nViolations: ${res.violations.join(', ') || 'None'}`);
+    } catch (err) {
+      console.error('Error running sanitizer check:', err);
+    }
+  }, [testCode]);
 
   return (
     <div className="w-full flex flex-col gap-6 p-6 bg-[#0B0F14] border border-[#1B3A2F] rounded-3xl text-zinc-100 shadow-2xl">
@@ -293,10 +314,7 @@ export default function SovereignKernelPanel() {
           <p className="text-xs text-zinc-400">Blocks HARDCODED_CRED, SECRET_LEAKAGE, PII, and AST_PARSE balance errors.</p>
 
           <button
-            onClick={() => {
-              const res = sanitizeAndGovern('test.ts', testCode);
-              alert(`Sanitizer Result:\nClean: ${res.clean}\nViolations: ${res.violations.join(', ') || 'None'}`);
-            }}
+            onClick={handleSanitizerCheck}
             className="w-fit px-4 py-2 bg-[#00F5A0] text-black font-extrabold text-xs rounded-xl cursor-pointer hover:bg-[#00D088]"
           >
             Run Instant Sanitizer Check
