@@ -94,6 +94,85 @@ const DEFAULT_SYSTEM_STATE = {
   sessionStart: new Date(),
 };
 
+async function processChunkedFileOptimization(
+  fullContent: string,
+  filePath: string,
+  geminiKey: string,
+  goal: any,
+  model: any,
+  isSandboxMode: boolean,
+  postmortemConstraints?: string,
+  previousError?: string,
+  pushLog?: (msg: string, type?: LogType, latencyMs?: number, path?: string) => void
+): Promise<{
+  optimizedCode: string;
+  summary: string;
+  latencyMs: number;
+  tokensEstimate: number;
+  modelUsed?: string;
+  redactedSecretsCount?: number;
+}> {
+  const lines = fullContent.split('\n');
+  const chunkSize = 350;
+  const totalChunks = Math.ceil(lines.length / chunkSize);
+
+  pushLog?.(
+    `[CHUNKED PATCHING] File ${filePath} (${lines.length} lines) exceeds token budget limit (>1000 lines). Splitting into ${totalChunks} module chunks to prevent truncation...`,
+    'warning',
+    undefined,
+    filePath
+  );
+
+  let totalLatency = 0;
+  let totalTokens = 0;
+  let redactedSecretsCount = 0;
+  const optimizedChunks: string[] = [];
+  const summaries: string[] = [];
+
+  for (let i = 0; i < totalChunks; i++) {
+    const chunkStart = i * chunkSize;
+    const chunkLines = lines.slice(chunkStart, chunkStart + chunkSize);
+    const chunkContent = chunkLines.join('\n');
+    const chunkLabel = `${filePath} (Chunk ${i + 1}/${totalChunks})`;
+
+    pushLog?.(
+      `[CHUNK ${i + 1}/${totalChunks}] Optimizing module chunk (${chunkLines.length} lines)...`,
+      'neural',
+      undefined,
+      filePath
+    );
+
+    const chunkResult = await optimizeSourceCode(
+      chunkContent,
+      chunkLabel,
+      geminiKey,
+      goal,
+      model,
+      isSandboxMode,
+      postmortemConstraints,
+      previousError
+    );
+
+    optimizedChunks.push(chunkResult.optimizedCode || chunkContent);
+    totalLatency += chunkResult.latencyMs || 0;
+    totalTokens += chunkResult.tokensEstimate || 0;
+    redactedSecretsCount += chunkResult.redactedSecretsCount || 0;
+    if (chunkResult.summary) {
+      summaries.push(`[Module ${i + 1}]: ${chunkResult.summary}`);
+    }
+  }
+
+  const reassembledCode = optimizedChunks.join('\n');
+  return {
+    optimizedCode: reassembledCode,
+    summary: summaries.length > 0 ? summaries.join(' | ') : `Chunked patching completed across ${totalChunks} module chunks.`,
+    latencyMs: totalLatency,
+    tokensEstimate: totalTokens,
+    modelUsed: model,
+    redactedSecretsCount,
+  };
+}
+
 export default function App() {
   const [isAcknowledged, setIsAcknowledged] = useState(false);
   const [isLive, setIsLive] = useState(false);
@@ -344,16 +423,34 @@ export default function App() {
         setStatus('OPTIMIZING');
         pushLog(`Synthesizing neural mutations for [${targetFile.path}]...`, 'neural', undefined, targetFile.path);
 
-        const result = await optimizeSourceCode(
-          targetFile.content,
-          targetFile.path,
-          config.geminiKey,
-          config.goal,
-          config.model,
-          config.isSandboxMode,
-          config.postmortemConstraints,
-          lastErrorRef.current[targetFile.path]
-        );
+        const targetLineCount = targetFile.content.split('\n').length;
+        let result: any;
+
+        if (targetLineCount > 1000) {
+          pushLog(`[TOKEN BUDGET] [${targetFile.path}] is ${targetLineCount} lines (>1000 line ceiling). Switching to chunked-patching pass...`, 'warning', undefined, targetFile.path);
+          result = await processChunkedFileOptimization(
+            targetFile.content,
+            targetFile.path,
+            config.geminiKey,
+            config.goal,
+            config.model,
+            config.isSandboxMode,
+            config.postmortemConstraints,
+            lastErrorRef.current[targetFile.path],
+            pushLog
+          );
+        } else {
+          result = await optimizeSourceCode(
+            targetFile.content,
+            targetFile.path,
+            config.geminiKey,
+            config.goal,
+            config.model,
+            config.isSandboxMode,
+            config.postmortemConstraints,
+            lastErrorRef.current[targetFile.path]
+          );
+        }
 
         let cleanCode = result.optimizedCode;
         let scrubbedCount = result.redactedSecretsCount || 0;
@@ -872,31 +969,39 @@ export default function App() {
         pushLog(`Fetching source blob: ${target.path}...`, 'info');
         const fileData = await fetchFileContent(config.targetRepo, target.path, config.ghToken, branch);
 
-        // --- FILE SIZE CEILING (Prevent LLM output truncation on huge files) ---
+        // --- FILE SIZE BUDGET CHECK & CHUNKED PATCHING ---
         const lineCount = fileData.content.split('\n').length;
+        let result: any;
+
         if (lineCount > 1000) {
-           pushLog(`[NOT VERIFIABLE] ${target.path} — ${lineCount} lines exceeds mutation capacity (max 1000). Added to skip list.`, 'warning', undefined, target.path);
-           setConfig(prev => ({
-             ...prev,
-             skippedFiles: [...(prev.skippedFiles || []), target.path]
-           }));
-           setStatus('IDLE');
-           return;
+          setStatus('OPTIMIZING');
+          pushLog(`[TOKEN BUDGET] [${target.path}] is ${lineCount} lines (>1000 line ceiling). Switching to chunked-patching pass...`, 'warning', undefined, target.path);
+          result = await processChunkedFileOptimization(
+            fileData.content,
+            target.path,
+            config.geminiKey,
+            config.goal,
+            config.model,
+            config.isSandboxMode,
+            config.postmortemConstraints,
+            lastErrorRef.current[target.path],
+            pushLog
+          );
+        } else {
+          setStatus('OPTIMIZING');
+          pushLog(`Neural AST optimization in progress for [${target.path}]...`, 'neural', undefined, target.path);
+
+          result = await optimizeSourceCode(
+            fileData.content,
+            target.path,
+            config.geminiKey,
+            config.goal,
+            config.model,
+            config.isSandboxMode,
+            config.postmortemConstraints,
+            lastErrorRef.current[target.path]
+          );
         }
-
-        setStatus('OPTIMIZING');
-        pushLog(`Neural AST optimization in progress for [${target.path}]...`, 'neural', undefined, target.path);
-
-        const result = await optimizeSourceCode(
-          fileData.content,
-          target.path,
-          config.geminiKey,
-          config.goal,
-          config.model,
-          config.isSandboxMode,
-          config.postmortemConstraints,
-          lastErrorRef.current[target.path]
-        );
 
         let cleanCode = result.optimizedCode;
         let scrubbedCount = result.redactedSecretsCount || 0;

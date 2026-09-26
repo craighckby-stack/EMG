@@ -16,6 +16,7 @@ export interface VectorMetadata {
   readonly file?: string;
   readonly errorClass?: string;
   readonly description?: string;
+  readonly fingerprint?: string;
 }
 
 export interface VectorEntry {
@@ -25,6 +26,7 @@ export interface VectorEntry {
   readonly codeSnippet?: string;
   readonly pairedFixSnippet?: string;
   readonly ruleToAvoid?: string;
+  readonly diagnosis?: string;
   readonly vector: number[];
 }
 
@@ -405,6 +407,69 @@ export function appendCleanCommit(commitHash: string, filePath: string, diffSnip
 }
 
 /**
+ * Searches RAG vector memory for an existing cached diagnosis and corrective rule.
+ * Bypasses redundant LLM API calls when an identical error fingerprint or high-similarity
+ * failure pattern is already stored in vector memory.
+ */
+export function findCachedDiagnosisInRag(
+  filePath: string,
+  fingerprint: string
+): { diagnosis: string; correctivePattern: string } | null {
+  if (vectorStore.length === 0) {
+    const cachedStr = safeGetLocalStorage('emg_rag_vectors');
+    if (cachedStr) {
+      try {
+        const cached = JSON.parse(cachedStr) as VectorEntry[];
+        if (cached && cached.length > 0) {
+          vectorStore = cached;
+          isInitialized = true;
+        }
+      } catch {}
+    }
+  }
+
+  // 1. Exact Fingerprint Lookup
+  const exactMatch = vectorStore.find(
+    (v) =>
+      v.metadata.provenance === 'failure' &&
+      v.metadata.fingerprint === fingerprint &&
+      v.ruleToAvoid &&
+      v.diagnosis
+  );
+
+  if (exactMatch && exactMatch.diagnosis && exactMatch.ruleToAvoid) {
+    return {
+      diagnosis: exactMatch.diagnosis,
+      correctivePattern: exactMatch.ruleToAvoid,
+    };
+  }
+
+  // 2. Cosine Similarity Vector Lookup (threshold > 0.82)
+  const queryVec = textToVector(`${filePath} ${fingerprint}`);
+  let bestMatch: VectorEntry | null = null;
+  let highestScore = 0;
+
+  for (const entry of vectorStore) {
+    if (entry.metadata.provenance === 'failure' && entry.ruleToAvoid && (entry.diagnosis || entry.metadata.description)) {
+      const score = cosineSimilarity(queryVec, entry.vector);
+      if (score > highestScore && score > 0.82) {
+        highestScore = score;
+        bestMatch = entry;
+      }
+    }
+  }
+
+  if (bestMatch && bestMatch.ruleToAvoid) {
+    return {
+      diagnosis: bestMatch.diagnosis || bestMatch.metadata.description || `Cached failure pattern for ${filePath}`,
+      correctivePattern: bestMatch.ruleToAvoid,
+    };
+  }
+
+  return null;
+}
+
+/**
  * Appends a newly identified failure and paired fix to the RAG memory store and ledger.
  */
 export function appendFailureAndFix(
@@ -414,7 +479,9 @@ export function appendFailureAndFix(
   filePath: string,
   failSnippet: string,
   fixSnippet: string,
-  ruleToAvoid: string
+  ruleToAvoid: string,
+  diagnosis?: string,
+  fingerprint?: string
 ): void {
   const newEntry: VectorEntry = {
     id: `wrong_${failHash}`,
@@ -425,12 +492,15 @@ export function appendFailureAndFix(
       trust: 'high',
       errorClass,
       file: filePath,
+      description: diagnosis,
+      fingerprint,
     },
-    content: `## FAILURE: ${failHash} | FIX: ${fixHash}\n- Error Class: ${errorClass}\n- File: ${filePath}\n- Rule to Avoid: ${ruleToAvoid}`,
+    content: `## FAILURE: ${failHash} | FIX: ${fixHash}\n- Error Class: ${errorClass}\n- File: ${filePath}\n- Rule to Avoid: ${ruleToAvoid}${diagnosis ? `\n- Diagnosis: ${diagnosis}` : ''}`,
     codeSnippet: failSnippet,
     pairedFixSnippet: fixSnippet,
     ruleToAvoid,
-    vector: textToVector(`${failHash} ${errorClass} ${filePath} ${ruleToAvoid} ${failSnippet} ${fixSnippet}`),
+    diagnosis,
+    vector: textToVector(`${failHash} ${errorClass} ${filePath} ${ruleToAvoid} ${diagnosis || ''} ${fingerprint || ''} ${failSnippet} ${fixSnippet}`),
   };
 
   vectorStore = vectorStore.filter((e) => e.id !== newEntry.id);

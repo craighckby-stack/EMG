@@ -452,8 +452,14 @@ CRITICAL Requirements:
         }
       }
 
-      if (rawText.includes('@@@START') && rawText.includes('@@@END')) {
-        optimized = rawText.split('@@@START')[1].split('@@@END')[0].trim();
+      if (rawText.includes('@@@START')) {
+        let snippet = rawText.split('@@@START')[1] || '';
+        if (snippet.includes('@@@END')) {
+          snippet = snippet.split('@@@END')[0] || '';
+        } else if (snippet.includes('@@@SUMMARY:')) {
+          snippet = snippet.split('@@@SUMMARY:')[0] || '';
+        }
+        optimized = snippet.trim();
       } else {
         let cleaned = rawText;
         if (cleaned.includes('@@@SUMMARY:')) {
@@ -463,28 +469,34 @@ CRITICAL Requirements:
 
         // Extract from markdown code fence if present
         if (!isMarkdown) {
-          const fenceMatch = cleaned.match(/```(?:[a-zA-Z0-9_-]+)?\s*\n([\s\S]*?)\n```/);
+          const fenceMatch = cleaned.match(/```(?:[a-zA-Z0-9_-]+)?\s*\n([\s\S]*?)(?:\n```|$)/);
           if (fenceMatch && fenceMatch[1]) {
             cleaned = fenceMatch[1].trim();
-          } else if (cleaned.startsWith('```') && cleaned.endsWith('```')) {
+          } else if (cleaned.startsWith('```')) {
             cleaned = cleaned.replace(/^```[a-z0-9_-]*\n?/i, '').replace(/\n?```$/i, '').trim();
           }
         }
         optimized = cleaned;
       }
 
-      // If summary is accidentally inside optimized code, clean it
+      // Strip residual delimiters or outer markdown fences
       if (optimized.includes('@@@SUMMARY:')) {
         optimized = optimized.split('@@@SUMMARY:')[0].trim();
       }
-
-      // Strip outer markdown fences on non-markdown files
-      if (!isMarkdown && optimized.startsWith('```') && optimized.endsWith('```')) {
+      if (optimized.includes('@@@END')) {
+        optimized = optimized.split('@@@END')[0].trim();
+      }
+      if (!isMarkdown && optimized.startsWith('```')) {
         optimized = optimized.replace(/^```[a-z0-9_-]*\n?/i, '').replace(/\n?```$/i, '').trim();
       }
 
       if (!optimized || optimized.length < 5) {
-        throw new Error('AI Model returned an empty code block.');
+        if (code && code.trim().length >= 5) {
+          optimized = code.trim();
+          summary = 'Preserved baseline source code (AI model output was unparsed or empty).';
+        } else {
+          throw new Error('AI Model returned an empty code block and no baseline input code was provided.');
+        }
       }
 
       const latencyMs = Math.round(performance.now() - startTime);
