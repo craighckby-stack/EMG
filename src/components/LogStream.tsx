@@ -140,9 +140,9 @@ export const LogStream: React.FC<LogStreamProps> = ({ logs, onClearLogs }) => {
             <span>Awaiting telemetry broadcast signals...</span>
           </div>
         ) : (
-          filteredLogs.map((log) => (
+          filteredLogs.map((log, idx) => (
             <div
-              key={log.id}
+              key={log.id || `log-${idx}-${log.timestamp}`}
               className="flex items-start gap-2.5 text-[11px] leading-relaxed pb-2 border-b border-emerald-950/40 last:border-0"
             >
               <span className="text-zinc-500 shrink-0 select-none">

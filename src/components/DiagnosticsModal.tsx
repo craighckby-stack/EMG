@@ -210,8 +210,8 @@ export const DiagnosticsModal: React.FC<DiagnosticsModalProps> = ({ isOpen, onCl
                 <div className="p-3.5 rounded-xl bg-[#040805] border border-amber-500/30">
                   <p className="text-amber-300 text-xs mb-2 font-bold">Uninjected Variables:</p>
                   <div className="space-y-1">
-                    {data.missing.map((key) => (
-                      <div key={key} className="flex items-center justify-between text-amber-300 bg-amber-950/30 px-2.5 py-1 rounded-lg border border-amber-500/20 text-xs">
+                    {data.missing.map((key, i) => (
+                      <div key={`missing-${key}-${i}`} className="flex items-center justify-between text-amber-300 bg-amber-950/30 px-2.5 py-1 rounded-lg border border-amber-500/20 text-xs">
                         <span>{key}</span>
                         <span className="text-[10px] text-zinc-400 font-mono">Required for full cloud features</span>
                       </div>

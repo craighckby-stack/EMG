@@ -172,9 +172,9 @@ export const OracleModal: React.FC<OracleModalProps> = ({
           <div>
             <label className="text-zinc-200 block mb-2 font-semibold">Select Poison Specimen Preset:</label>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-              {PRESET_SPECIMENS.map((spec) => (
+              {PRESET_SPECIMENS.map((spec, idx) => (
                 <button
-                  key={spec.name}
+                  key={`spec-${spec.filePath}-${idx}`}
                   onClick={() => handleSelectPreset(spec)}
                   className={`p-2.5 rounded-xl text-left border transition-all cursor-pointer ${
                     selectedSpecimen.name === spec.name

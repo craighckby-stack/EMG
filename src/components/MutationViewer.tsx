@@ -43,14 +43,14 @@ export const MutationViewer: React.FC<MutationViewerProps> = ({
         </div>
       ) : (
         <div className="space-y-2.5 max-h-72 overflow-y-auto pr-1">
-          {mutations.map((mut) => {
+          {mutations.map((mut, idx) => {
             const isFailed = mut.status === 'failed';
             const isNoop = mut.status === 'noop';
             const isApplied = mut.status === 'applied';
 
             return (
               <div
-                key={mut.id}
+                key={mut.id || `mut-${mut.path}-${idx}`}
                 onClick={() => onSelectRecord(mut)}
                 className={`p-3.5 rounded-xl bg-[#09120b] hover:bg-[#0d1a10] border transition-all cursor-pointer flex items-center justify-between gap-3 group cyber-card-hover ${
                   isFailed

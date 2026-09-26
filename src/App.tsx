@@ -38,6 +38,15 @@ import { optimizeSourceCode } from './utils/gemini';
 import { sanitizeCode, sanitizeText } from './utils/sanitizer';
 import { validateSourceCode, isMarkdownFile, lintSourceCode, isOptimizableFile, isBinaryFile } from './utils/validator';
 import { SaturationAlert } from './types';
+import AgentOrchestra from './components/AgentOrchestra';
+import DebateChamber from './components/DebateChamber';
+import BugInspector from './components/BugInspector';
+import TemporalParadoxLog from './components/TemporalParadoxLog';
+import DosConsoleModal from './components/DosConsoleModal';
+import SaturationMetrics from './components/SaturationMetrics';
+import SovereignKernelPanel from './components/SovereignKernelPanel';
+import { initAudioEngine, playClickSound, playChirpSound } from './components/SoundEngine';
+import { Cpu, Users, MessageSquareCode, Bug, History, Gauge, Terminal, Volume2, VolumeX, ShieldCheck } from 'lucide-react';
 
 const INITIAL_CONFIG: EngineConfig = {
   targetRepo: 'craighckby/sovereign-kernel',
@@ -69,6 +78,22 @@ const INITIAL_METRICS: EngineMetrics = {
   syntaxErrorsPrevented: 0,
 };
 
+const DEFAULT_SYSTEM_STATE = {
+  setupComplete: true,
+  currentStep: 1,
+  connectionStatus: { connected: true, latencyMs: 42 },
+  apiKeys: { gemini: '', github: '' },
+  repoConfig: { owner: 'craighckby', repo: 'sovereign-kernel', branch: 'main' },
+  evolutionCycle: 1,
+  saturation: {
+    structuralChange: 12,
+    semanticShift: 8,
+    typeCoherence: 98,
+    cognitiveLoad: 15,
+  },
+  sessionStart: new Date(),
+};
+
 export default function App() {
   const [isAcknowledged, setIsAcknowledged] = useState(false);
   const [isLive, setIsLive] = useState(false);
@@ -87,11 +112,15 @@ export default function App() {
   const [isWipeMemoryOpen, setIsWipeMemoryOpen] = useState(false);
   const [isOracleOpen, setIsOracleOpen] = useState(false);
   const [isCycling, setIsCycling] = useState(false);
+  const [activeTab, setActiveTab] = useState<'dashboard' | 'sovereign' | 'orchestra' | 'debate' | 'bugs' | 'paradox' | 'saturation'>('sovereign');
+  const [isDosOpen, setIsDosOpen] = useState(false);
+  const [soundMuted, setSoundMuted] = useState(false);
 
   const isCyclingRef = useRef(false);
   const loopTimerRef = useRef<NodeJS.Timeout | null>(null);
   const fileIndexRef = useRef(0);
   const consecutiveFailuresRef = useRef<Record<string, number>>({});
+  const lastErrorRef = useRef<Record<string, string>>({});
   const engineFaultsRef = useRef<Record<string, number>>({});
   const globalFailuresRef = useRef<number[]>([]);
   const cooldownUntilRef = useRef<number>(0);
@@ -128,6 +157,7 @@ export default function App() {
       isCyclingRef.current = false;
       fileIndexRef.current = 0;
       consecutiveFailuresRef.current = {};
+      lastErrorRef.current = {};
       cooldownUntilRef.current = 0;
       setIsLive(false);
       setStatus('IDLE');
@@ -145,6 +175,7 @@ export default function App() {
       setSelectedRecord(null);
       setSaturationAlert(null);
       consecutiveFailuresRef.current = {};
+      lastErrorRef.current = {};
       engineFaultsRef.current = {};
       fileIndexRef.current = 0;
 
@@ -320,7 +351,8 @@ export default function App() {
           config.goal,
           config.model,
           config.isSandboxMode,
-          config.postmortemConstraints
+          config.postmortemConstraints,
+          lastErrorRef.current[targetFile.path]
         );
 
         let cleanCode = result.optimizedCode;
@@ -352,6 +384,7 @@ export default function App() {
 
           if (!val.valid) {
             validationDiagnostics = val.errors.map((e) => `Line ${e.line}, Col ${e.column}: ${e.message}`);
+            lastErrorRef.current[targetFile.path] = `Strict Type Verification Error: ${validationDiagnostics.join(' | ')}`;
             pushLog(
               `[TYPE/SYNTAX REJECTED] Commit aborted for [${targetFile.path}] due to ${val.errors.length} defect(s): ${validationDiagnostics.slice(0, 2).join(' | ')}`,
               'error',
@@ -406,6 +439,7 @@ export default function App() {
             return;
           } else {
             consecutiveFailuresRef.current[targetFile.path] = 0;
+            lastErrorRef.current[targetFile.path] = '';
             pushLog(`[TYPE-SAFE] AST syntax & type contracts verified for [${targetFile.path}].`, 'info', undefined, targetFile.path);
           }
         }
@@ -439,7 +473,7 @@ export default function App() {
             if (!currentSkipList.includes(targetFile.path)) {
               setConfig((prev) => ({
                 ...prev,
-                skippedFiles: [...(prev.skippedFiles || []), targetFile.path],
+                skippedFiles: Array.from(new Set([...(prev.skippedFiles || []), targetFile.path])),
               }));
             }
             pushLog(
@@ -481,6 +515,7 @@ export default function App() {
         const extVal = await lintSourceCode(cleanCode, targetFile.path, sandboxProjectFiles);
         
         if (!extVal.valid) {
+          lastErrorRef.current[targetFile.path] = `Heuristic Linting/Compilation Error: ${extVal.lintEvidence}`;
           pushLog(`[HEURISTIC LINT REJECTED] Linting failed. Writing post-mortem lesson...`, 'error', undefined, targetFile.path);
           const prevFail = consecutiveFailuresRef.current[targetFile.path] || 0;
           const newFailCount = prevFail + 1;
@@ -494,12 +529,13 @@ export default function App() {
             );
             setConfig((prev) => ({
               ...prev,
-              skippedFiles: [...(prev.skippedFiles || []), targetFile.path],
+              skippedFiles: Array.from(new Set([...(prev.skippedFiles || []), targetFile.path])),
             }));
           }
           setStatus('IDLE');
           return;
         }
+        lastErrorRef.current[targetFile.path] = '';
         pushLog(`[HEURISTIC LINT PASSED] Linting passed.`, 'success', undefined, targetFile.path);
 
         // Apply mutation to sandbox store
@@ -513,7 +549,7 @@ export default function App() {
           if (!currentSandboxSkip.includes(targetFile.path)) {
             setConfig((prev) => ({
               ...prev,
-              skippedFiles: [...(prev.skippedFiles || []), targetFile.path],
+              skippedFiles: Array.from(new Set([...(prev.skippedFiles || []), targetFile.path])),
             }));
           }
         }
@@ -858,7 +894,8 @@ export default function App() {
           config.goal,
           config.model,
           config.isSandboxMode,
-          config.postmortemConstraints
+          config.postmortemConstraints,
+          lastErrorRef.current[target.path]
         );
 
         let cleanCode = result.optimizedCode;
@@ -890,6 +927,7 @@ export default function App() {
 
           if (!val.valid) {
             validationDiagnostics = val.errors.map((e) => `Line ${e.line}, Col ${e.column}: ${e.message}`);
+            lastErrorRef.current[target.path] = `Strict Type Verification Error: ${validationDiagnostics.join(' | ')}`;
             
             // TRUNCATION DIAGNOSTIC HINT
             if (cleanCode.length < fileData.content.length * 0.8) {
@@ -980,6 +1018,7 @@ export default function App() {
             return;
           } else {
             consecutiveFailuresRef.current[target.path] = 0;
+            lastErrorRef.current[target.path] = '';
             pushLog(`[TYPE-SAFE] AST syntax & type contracts verified for [${target.path}].`, 'info', undefined, target.path);
           }
         }
@@ -1101,12 +1140,13 @@ export default function App() {
             
             setConfig((prev) => ({
               ...prev,
-              skippedFiles: [...(prev.skippedFiles || []), target.path],
+              skippedFiles: Array.from(new Set([...(prev.skippedFiles || []), target.path])),
             }));
             
             setStatus('IDLE');
             return;
           } else {
+            lastErrorRef.current[target.path] = `Heuristic Linting/Compilation Error: ${extVal.lintEvidence}`;
             pushLog(`[HEURISTIC LINT REJECTED] Gate fired on [${target.path}]: ${extVal.lintEvidence}`, 'error', undefined, target.path);
             
             // Push to rolling window for circuit breaker
@@ -1154,7 +1194,7 @@ export default function App() {
               );
               setConfig((prev) => ({
                 ...prev,
-                skippedFiles: [...(prev.skippedFiles || []), target.path],
+                skippedFiles: Array.from(new Set([...(prev.skippedFiles || []), target.path])),
               }));
             }
             
@@ -1168,6 +1208,7 @@ export default function App() {
             return;
           }
         } else {
+          lastErrorRef.current[target.path] = '';
           pushLog(`[HEURISTIC LINT PASSED] Linting passed.`, 'success', undefined, target.path);
           consecutiveFailuresRef.current[target.path] = 0;
         }
@@ -1210,7 +1251,7 @@ export default function App() {
           if (!currentLiveSkip.includes(target.path)) {
             setConfig((prev) => ({
               ...prev,
-              skippedFiles: [...(prev.skippedFiles || []), target.path],
+              skippedFiles: Array.from(new Set([...(prev.skippedFiles || []), target.path])),
             }));
           }
         }
@@ -1324,7 +1365,7 @@ export default function App() {
           );
           setConfig((prev) => ({
             ...prev,
-            skippedFiles: [...(prev.skippedFiles || []), activePath],
+            skippedFiles: Array.from(new Set([...(prev.skippedFiles || []), activePath])),
           }));
         }
       }
@@ -1436,37 +1477,187 @@ export default function App() {
         onOpenDiagnostics={() => setIsDiagnosticsOpen(true)}
       />
 
-      {/* Main Content Workspace Grid */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 flex-1 items-start">
-        {/* Left Column: Configuration */}
-        <div className="lg:col-span-4 w-full">
-          <ConfigPanel
-            config={config}
-            onChange={handleConfigChange}
-            disabled={isLive}
-            onOpenWipeMemory={() => setIsWipeMemoryOpen(true)}
-          />
+      {/* Navigation Sub-Deck / Feature Tabs */}
+      <div className="flex flex-wrap items-center justify-between gap-3 bg-[#0B0F14]/90 border border-[#1B3A2F] p-2.5 rounded-2xl shadow-md">
+        <div className="flex items-center gap-2 flex-wrap">
+          <button
+            onClick={() => { setActiveTab('dashboard'); playClickSound(); }}
+            className={`px-3.5 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-2 cursor-pointer ${
+              activeTab === 'dashboard'
+                ? 'bg-[#00F5A0] text-black shadow-[0_0_12px_rgba(0,245,160,0.4)] font-extrabold'
+                : 'bg-[#1B3A2F]/30 text-zinc-300 hover:bg-[#1B3A2F]/70 hover:text-white border border-[#1B3A2F]'
+            }`}
+          >
+            <Cpu className="w-4 h-4" />
+            <span>EMG Deck</span>
+          </button>
+
+          <button
+            onClick={() => { setActiveTab('sovereign'); playClickSound(); }}
+            className={`px-3.5 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-2 cursor-pointer ${
+              activeTab === 'sovereign'
+                ? 'bg-[#00F5A0] text-black shadow-[0_0_12px_rgba(0,245,160,0.4)] font-extrabold'
+                : 'bg-[#1B3A2F]/30 text-zinc-300 hover:bg-[#1B3A2F]/70 hover:text-white border border-[#1B3A2F]'
+            }`}
+          >
+            <ShieldCheck className="w-4 h-4 text-[#00F5A0]" />
+            <span>Sovereign Kernel</span>
+          </button>
+
+          <button
+            onClick={() => { setActiveTab('orchestra'); playClickSound(); }}
+            className={`px-3.5 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-2 cursor-pointer ${
+              activeTab === 'orchestra'
+                ? 'bg-[#00F5A0] text-black shadow-[0_0_12px_rgba(0,245,160,0.4)] font-extrabold'
+                : 'bg-[#1B3A2F]/30 text-zinc-300 hover:bg-[#1B3A2F]/70 hover:text-white border border-[#1B3A2F]'
+            }`}
+          >
+            <Users className="w-4 h-4" />
+            <span>Agent Orchestra</span>
+          </button>
+
+          <button
+            onClick={() => { setActiveTab('debate'); playClickSound(); }}
+            className={`px-3.5 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-2 cursor-pointer ${
+              activeTab === 'debate'
+                ? 'bg-[#00F5A0] text-black shadow-[0_0_12px_rgba(0,245,160,0.4)] font-extrabold'
+                : 'bg-[#1B3A2F]/30 text-zinc-300 hover:bg-[#1B3A2F]/70 hover:text-white border border-[#1B3A2F]'
+            }`}
+          >
+            <MessageSquareCode className="w-4 h-4" />
+            <span>Debate Chamber</span>
+          </button>
+
+          <button
+            onClick={() => { setActiveTab('bugs'); playClickSound(); }}
+            className={`px-3.5 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-2 cursor-pointer ${
+              activeTab === 'bugs'
+                ? 'bg-[#00F5A0] text-black shadow-[0_0_12px_rgba(0,245,160,0.4)] font-extrabold'
+                : 'bg-[#1B3A2F]/30 text-zinc-300 hover:bg-[#1B3A2F]/70 hover:text-white border border-[#1B3A2F]'
+            }`}
+          >
+            <Bug className="w-4 h-4" />
+            <span>Bug Inspector</span>
+          </button>
+
+          <button
+            onClick={() => { setActiveTab('paradox'); playClickSound(); }}
+            className={`px-3.5 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-2 cursor-pointer ${
+              activeTab === 'paradox'
+                ? 'bg-[#00F5A0] text-black shadow-[0_0_12px_rgba(0,245,160,0.4)] font-extrabold'
+                : 'bg-[#1B3A2F]/30 text-zinc-300 hover:bg-[#1B3A2F]/70 hover:text-white border border-[#1B3A2F]'
+            }`}
+          >
+            <History className="w-4 h-4" />
+            <span>Temporal Paradox</span>
+          </button>
+
+          <button
+            onClick={() => { setActiveTab('saturation'); playClickSound(); }}
+            className={`px-3.5 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-2 cursor-pointer ${
+              activeTab === 'saturation'
+                ? 'bg-[#00F5A0] text-black shadow-[0_0_12px_rgba(0,245,160,0.4)] font-extrabold'
+                : 'bg-[#1B3A2F]/30 text-zinc-300 hover:bg-[#1B3A2F]/70 hover:text-white border border-[#1B3A2F]'
+            }`}
+          >
+            <Gauge className="w-4 h-4" />
+            <span>Saturation Metrics</span>
+          </button>
         </div>
 
-        {/* Right Column: Neural Pulse Chart, Mutation History & Log Stream */}
-        <div className="lg:col-span-8 flex flex-col gap-6 w-full">
-          {/* Real-Time Neural Latency Chart */}
-          <NeuralChart
-            activePath={activePath}
-            latencyHistory={latencyHistory}
-            latestLatency={latestLatency}
-          />
+        {/* Quick Shell & Sound Controls */}
+        <div className="flex items-center gap-2">
+          <button
+            onClick={() => { setIsDosOpen(true); playChirpSound(); }}
+            className="px-3.5 py-2 rounded-xl bg-emerald-950/80 hover:bg-emerald-900 text-emerald-400 border border-emerald-700/60 text-xs font-mono font-bold transition-all flex items-center gap-1.5 cursor-pointer shadow-sm"
+            title="Launch Retro DOS CLI Shell Console"
+          >
+            <Terminal className="w-3.5 h-3.5 text-emerald-400" />
+            <span>DOS Shell</span>
+          </button>
 
-          {/* Mutation History & Diff Trigger */}
-          <MutationViewer
-            mutations={mutations}
-            onSelectRecord={(rec) => setSelectedRecord(rec)}
-          />
-
-          {/* Real-time Telemetry Event Stream */}
-          <LogStream logs={logs} onClearLogs={handleClearLogs} />
+          <button
+            onClick={() => {
+              setSoundMuted(!soundMuted);
+              if (soundMuted) playChirpSound();
+            }}
+            className="p-2 rounded-xl bg-[#1B3A2F]/50 hover:bg-[#1B3A2F] text-zinc-300 hover:text-white border border-[#1B3A2F] text-xs transition-all cursor-pointer"
+            title={soundMuted ? 'Unmute Web Audio Synthesizer' : 'Mute Web Audio Synthesizer'}
+          >
+            {soundMuted ? <VolumeX className="w-4 h-4 text-zinc-500" /> : <Volume2 className="w-4 h-4 text-[#00F5A0]" />}
+          </button>
         </div>
       </div>
+
+      {/* Dynamic Tab Views */}
+      {activeTab === 'dashboard' && (
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 flex-1 items-start">
+          {/* Left Column: Configuration */}
+          <div className="lg:col-span-4 w-full">
+            <ConfigPanel
+              config={config}
+              onChange={handleConfigChange}
+              disabled={isLive}
+              onOpenWipeMemory={() => setIsWipeMemoryOpen(true)}
+            />
+          </div>
+
+          {/* Right Column: Neural Pulse Chart, Mutation History & Log Stream */}
+          <div className="lg:col-span-8 flex flex-col gap-6 w-full">
+            {/* Real-Time Neural Latency Chart */}
+            <NeuralChart
+              activePath={activePath}
+              latencyHistory={latencyHistory}
+              latestLatency={latestLatency}
+            />
+
+            {/* Mutation History & Diff Trigger */}
+            <MutationViewer
+              mutations={mutations}
+              onSelectRecord={(rec) => setSelectedRecord(rec)}
+            />
+
+            {/* Real-time Telemetry Event Stream */}
+            <LogStream logs={logs} onClearLogs={handleClearLogs} />
+          </div>
+        </div>
+      )}
+
+      {activeTab === 'sovereign' && (
+        <div className="flex-1 w-full">
+          <SovereignKernelPanel />
+        </div>
+      )}
+
+      {activeTab === 'orchestra' && (
+        <div className="flex-1 w-full">
+          <AgentOrchestra apiKeys={{ gemini: config.geminiKey, github: config.ghToken }} onClose={() => setActiveTab('dashboard')} />
+        </div>
+      )}
+
+      {activeTab === 'debate' && (
+        <div className="flex-1 w-full">
+          <DebateChamber agents={[]} currentTopic={config.goal} isActive={isLive} />
+        </div>
+      )}
+
+      {activeTab === 'bugs' && (
+        <div className="flex-1 w-full">
+          <BugInspector isOpen={true} onClose={() => setActiveTab('dashboard')} systemState={DEFAULT_SYSTEM_STATE as any} />
+        </div>
+      )}
+
+      {activeTab === 'paradox' && (
+        <div className="flex-1 w-full">
+          <TemporalParadoxLog />
+        </div>
+      )}
+
+      {activeTab === 'saturation' && (
+        <div className="flex-1 w-full">
+          <SaturationMetrics metrics={DEFAULT_SYSTEM_STATE.saturation as any} />
+        </div>
+      )}
 
       {/* Diff Inspector Modal */}
       {selectedRecord && (
@@ -1512,6 +1703,13 @@ export default function App() {
         onAddToSkipList={handleAddToSkipList}
         onKeepInRotation={handleKeepInRotation}
         autoApproveSaturated={config.autoApproveSaturated}
+      />
+
+      {/* Retro DOS Shell Console Modal */}
+      <DosConsoleModal
+        isOpen={isDosOpen}
+        onClose={() => setIsDosOpen(false)}
+        systemState={DEFAULT_SYSTEM_STATE as any}
       />
 
       {/* Wipe Memory & System State Reset Modal */}

@@ -139,7 +139,7 @@ export const DiffModal: React.FC<DiffModalProps> = ({ record, onClose }) => {
             </div>
             <ul className="list-disc list-inside space-y-0.5 text-[11px] text-red-200 break-all">
               {record.validationErrors.map((err, i) => (
-                <li key={i}>{err}</li>
+                <li key={`val-err-${i}-${err.slice(0, 15)}`}>{err}</li>
               ))}
             </ul>
           </div>

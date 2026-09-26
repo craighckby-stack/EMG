@@ -1,6 +1,6 @@
-# EMG Core // Ephemeral Mind Gem (EMG)
+# EMG Core // Sovereign Kernel & Ephemeral Mind Gem (EMG)
 
-**EMG** (Ephemeral Mind Gem) is an automated, verification-gated code refactoring engine and full-stack operational control deck. It drives iterative, autonomous cognitive evolution cycles across local sandbox fixtures and remote GitHub repositories, validating model-generated code changes through multi-tier syntax verifiers, real GCC/Clang compiler gates, heuristic linters, unified diff patchers, and automated PII/secret redaction before applying changes.
+**EMG Core Sovereign Kernel** is an autonomous, verification-gated code refactoring engine, RAG memory store, and multi-agent governance platform. It orchestrates self-stopping tri-loop evolution cycles across local sandbox fixtures and remote GitHub repositories, enforcing strict AST verification, edge governance security sanitizing (regex + Shannon entropy), dual-agent ethical debate (Dalek Caan vs Jesus), WeakMap zero-leak execution sandboxing, and multi-persona epistemic alignment matrices.
 
 ---
 
@@ -9,107 +9,102 @@
 * **Live App URL:** [https://ais-dev-ipgdsocr7adysm4iwxj2rb-483535245139.asia-southeast1.run.app](https://ais-dev-ipgdsocr7adysm4iwxj2rb-483535245139.asia-southeast1.run.app)
 * **Shared App URL:** [https://ais-pre-ipgdsocr7adysm4iwxj2rb-483535245139.asia-southeast1.run.app](https://ais-pre-ipgdsocr7adysm4iwxj2rb-483535245139.asia-southeast1.run.app)
 
-### How to Use the Preview
-1. **Initial Matrix Intro**: Upon loading the application, you will be greeted by the multi-color matrix rain intro screen featuring the AI Ponderer for Hire (`craighckby@gmail.com`) for 20 seconds. You can watch the neural matrix initialize or click **"Enter System Now"** to jump straight in.
-2. **Splash & Advisory View**: Explore the Architecture, Security pre-flight advisory, and Ecosystem tabs.
-3. **Workspace Control Deck**: Click **Launch Workspace** to access the live control deck, execute optimization cycles, monitor telemetry, and interact with the refactoring engine.
-4. **New Tab Access**: If you are viewing inside an embedded iframe, you can open the preview in a new browser tab for full screen interactive performance.
+### How to Use the Workspace
+1. **Initial Matrix Intro**: Upon loading the application, view the multi-color matrix rain intro or click **"Enter System Now"**.
+2. **Tab Decks**:
+   - **EMG Core Deck**: Interactive workspace control deck with live optimization cycles, AST diff density viewer, telemetry, and metrics.
+   - **Sovereign Kernel**: RAG vector store inspector, self-stopping point halt engine, edge security sanitizer tester, and tri-loop execution controls.
+   - **Agent Orchestra**: Multi-role autonomous council (Architect, Verification Sentinel, Refactoring Specialist, Security Overseer, Performance Analyst).
+   - **Debate Chamber**: Ethical substrate debate chamber where Prosecutor (Dalek Caan) queries historical failures and Defender (Jesus) evaluates clean pattern trust.
+   - **Bug Inspector**: Automated bug detection and candidate fix generation engine.
+   - **Temporal Paradox Log**: Mutation timeline tracking, paradox detection, and single-click time-travel rewinds.
+   - **DOS Shell**: Low-level interactive MS-DOS terminal shell with built-in commands.
 
 ---
 
-## Architecture Overview
+## Sovereign Kernel Architecture Overview
 
 ```
-                        ┌─────────────────────────────────────────┐
-                        │             EMG Core Engine             │
-                        │       (Autonomous Evolution Loop)       │
-                        └────────────────────┬────────────────────┘
-                                             │
-                      1. File Discovery & Repository Tree Scan
-                      2. Ingest Constraints (docs/POSTMORTEMS.md SHA-256)
-                      3. Secret / PII Pre-flight Sanitization
-                                             │
-                      4. Neural Transformation (Gemini 3.7 / 3.6 Flash)
-                                             │
-            ┌────────────────────────────────┴────────────────────────────────┐
-            ▼                                                                 ▼
-    Tier 1: AST & Syntax Verifier                             Tier 2: Real Compiler Gate
-    • Balanced Token & Delimiter Parsing                      • GCC 13.2 via Godbolt API (cg132/g132)
-    • Native TypeScript AST Diagnostics                       • Cross-file `#include` header splicing (depth 5)
-    • Auto-unwraps Markdown Code Fences                       • Isolation Error Detection (Bypasses missing deps)
-            │                                                                 │
-            ├────────────────────────────────┬────────────────────────────────┤
-            │ Fails Validation               │ Passes Validation              │
-            ▼                                ▼                                │
-    [Post-Mortem Logger]                     [Patch, Convergence & Commit]    │
-    • Appends failure evidence &             • Resilient multi-strategy diff  │
-      actionable rule to POSTMORTEMS.md        splicer (Unified / Hunk / Full)│
-    • Computes rolling SHA-256 state         ├── 0 diffs: Saturation Handled  │
-    • Ingests negative constraints           └── >0 diffs: Commit to Branch   │
-            │                                                                 │
-            └────────────────────────────────┬────────────────────────────────┘
-                                             │
-                                   Rotate to Next Candidate
+                          ┌─────────────────────────────────────────┐
+                          │         EMG Sovereign Kernel            │
+                          │   (Self-Stopping Tri-Loop Orchestrator) │
+                          └────────────────────┬────────────────────┘
+                                               │
+                         1. Siphon Engine & Generational Stamping
+                         2. WeakMap Zero-Leak Execution Sandbox
+                         3. RAG Vector Query (CORRECT, WRONG, SYNTHESIS)
+                                               │
+                        ┌──────────────────────┴──────────────────────┐
+                        ▼                                             ▼
+            Edge Security Sanitizer                      Ethical Debate Substrate
+          • Hardcoded Cred & PII Redaction              • Prosecutor (Caan): RAG Failures
+          • Shannon Entropy Scan (> 4.5)                • Defender (Jesus): Clean Trust
+          • Paired Fix Auto-Recovery                    • Judge: Sovereign Synthesis
+                        │                                             │
+                        └──────────────────────┬──────────────────────┘
+                                               │
+                                     Epistemic Alignment Matrix
+                                   • Mechanist (Structure)
+                                   • Adversary (Code Injection)
+                                   • Scalability Killer (Complexity)
+                                               │
+                                 ┌─────────────┴─────────────┐
+                                 ▼                           ▼
+                        Passes Governance             Fails Governance
+                        • Apply Mutation             • Log Post-Mortem Evidence
+                        • Append Clean Vector        • Pair Failure/Fix Vector
+                        • Check Self-Stopping Halt   • Trigger Auto-Recovery
 ```
 
 ---
 
-## Core Capabilities & Subsystems
+## Key Subsystems & Siphoned Architectures
 
-### 1. Multi-Tier Verification Pipeline
-Proposed code mutations pass through rigorous independent verification gates before commit:
-* **AST & Syntax Scanner (Tier 1):** Scans bracket/delimiter balancing, unclosed quotes, template strings, and native TypeScript compiler diagnostics.
-* **External Compiler Gate (Tier 2):** Transmits C/C++ translation units to the Godbolt Compiler Explorer API (`cg132` for C, `g132` for C++). Slices and resolves local `#include` dependencies (up to depth 5) across the project tree.
-* **Heuristic Linter Rules:**
-  * **Rule 1 (`NO_UNVERIFIABLE_SELF_PRAISE`):** Strips marketing hype and self-praise in code comments (*"Hardened"*, *"Bulletproof"*, *"Fully optimized"*, *"Production-grade"*).
-  * **Rule 1B (`NO_STALE_DEFECT_CLAIMS`):** Prevents obsolete defect claims (*"Seeded defect"*, *"PREDICTION: PASSES"*) or test scaffolding from leaking into production docstrings.
-  * **Rule 2 (`NO_DEAD_CONDITIONS`):** Rejects redundant inner conditionals bounded by loop variables (e.g., `len > 0` inside `for (i < len)`).
-  * **Rule 3 (`NO_UNUSED_MACROS`):** Scans the whole repository tree for macro usage, exempting public header exports.
-  * **Rule 4 (`TODO_ADJACENT_SUCCESS`):** Blocks placeholder TODO comments adjacent to success/return statements.
+### 1. Vector Memory & RAG Engine (`emg_rag.ts`)
+* **Vector Provenance**:
+  * `STUDIO_ATTACHMENT_CORRECT.md`: Clean commits tagged `{provenance: "clean", trust: "high"}`.
+  * `STUDIO_ATTACHMENT_WRONG.md`: Failure entries paired with recovery fixes `{provenance: "failure", trust: "high"}`.
+  * `STUDIO_ATTACHMENT_SYNTHESIS.md`: Deep archaeological intelligence patterns `{provenance: "synthesis"}`.
+* **Vector Query Contract**: `query(currentFile + error)` returns top 3 failure matches, top 2 paired fixes, top 2 clean patterns, and top 1 synthesis insight.
+* **Pressure-Based Decay Storage (`src/memory/ephemeral.ts`)**: Automatically culls low-entropy noise (`entropy < 0.2`) when memory pressure exceeds 70% (siphoned from *Huxley Singularity Loop*).
 
-### 2. Built-in Credential & PII Sanitizer
-* Integrated pre-flight regex and entropy scanning filters out sensitive keys and secrets at both client and server boundaries.
-* Automatically redacts:
-  * GitHub Personal Access Tokens (`ghp_`, `github_pat_`, `gho_`, `ghs_`)
-  * Google Gemini API Keys (`AIza...`)
-  * OpenAI, Anthropic, Stripe, and AWS API keys
-  * RSA/EC Private Key blocks and JWT tokens
-* Scrubbed secrets are substituted with standardized `[REDACTED_*]` tokens and tallied in real-time metrics.
+### 2. Edge Governance Security Sanitizer (`sanitizer.ts`)
+* **Secret & PII Redaction**: Redacts API keys (`AIza...`, `ghp_`, `sk-`, `AKIA...`), Slack webhooks, email addresses, and SSNs.
+* **Shannon Entropy Scanner**: Calculates string information entropy ($\text{entropy} > 4.5$) to catch randomized tokens and raw credentials (siphoned from *AI_Agent_OS*).
+* **Paired Fix Auto-Recovery**: Automatically retrieves and substitutes paired fix snippets from `WRONG.md` vector memory when violations occur.
 
-### 3. Resilient Unified Diff Patcher
-* **Unified Diff Parsing:** Reconstructs hunk headers (`@@ -old,len +new,len @@`) and applies modifications via `diff.applyPatch` with fuzz matching.
-* **Hunk Search-and-Replace:** Employs fuzzy block matching when offset numbers shift.
-* **Full-File Fallback:** Automatically replaces compact source files when models output full implementations.
+### 3. Self-Stopping Point Engine (`halt.ts`)
+* **Archaeological Proof of Cleanliness**: Halts mutation cycles when:
+  1. No growth in `STUDIO_ATTACHMENT_CORRECT.md` for 3 consecutive cycles.
+  2. RAG query returns 0 new fix patterns.
+  3. Security Sanitizer passes cleanly.
+* Logs immutable halt proofs to `COMMITS_LEDGER.md` style logs.
 
-### 4. Post-Mortem Constraints Ledger (`docs/POSTMORTEMS.md`)
-* Automated write-back appends structured evidence and generalized negative constraints upon gate rejections.
-* SHA-256 fingerprinting automatically detects ledger mutations and re-arms prompt memory in real time.
-* **Self-Healing Ledger:** Automatically identifies and neutralizes poisoned isolation errors from missing external headers.
+### 4. Ethical Substrate Debate Engine (`debate.ts`)
+* **Prosecutor (Dalek Caan)**: Queries historical failures in `WRONG.md` and assigns risk scores (0–10).
+* **Defender (Jesus)**: Queries confirmed clean patterns in `CORRECT.md` and assigns benefit scores (0–10).
+* **Judge (Sovereign Synthesis)**: Evaluates query context and permits mutations **ONLY IF** $\text{benefit} > \text{risk}$ **AND** Edge Security Sanitizer is **CLEAN**.
 
-### 5. Code Saturation & Convergence Engine
-* Detects zero-diff mutations when code has converged.
-* Offers interactive saturation decisions or auto-skipping to keep autonomous runs moving.
-* Prevents post-halt drift, redundant API burn, and hallucinated refactorings.
+### 5. Multi-Angle Epistemic Alignment Matrix (`alignment-matrix.ts`)
+* Evaluates proposed mutations across **Mechanist** (type mechanics), **Adversary** (code execution primitives), **Scalability Killer** (algorithmic complexity), and **Alignment Auditor** perspectives (siphoned from *Test*).
 
-### 6. Protected Apparatus
-* Evaluation fixtures, license declarations, and test manifests (`README.md`, `BUGS.md`, `docs/POSTMORTEMS.md`, `RULES.md`, `LICENSE`, `package.json`, `tsconfig.json`) are strictly write-protected from automated modifications.
+### 6. WeakMap Zero-Leak Execution Sandbox (`zero-leak-sandbox.ts`)
+* Manages dynamic mutation execution inside isolated context containers anchored by JavaScript `WeakMap` objects to prevent scope pollution and memory leaks (siphoned from *AI_Agent_OS*).
 
 ---
 
-## Developer Ecosystem Hub
+## Integrated Repositories Ledger
 
-EMG Core is connected directly to a network of agentic, security, and worldbuilding platforms:
+The EMG Sovereign Kernel combines siphoned systems across the ecosystem:
 
-| Project | Category | Description | Launch URL |
-| :--- | :--- | :--- | :--- |
-| **Git-Secret-PII-Sanitizer-2** | Security Gateway | Scrub API keys, tokens, and PII from git trees before LLM submission. | [AI Studio App](https://ai.studio/apps/57c14614-897c-40cb-a90d-aeff7df60e68) |
-| **DARLEK CAAN** | AI Command Center | Autonomous Code Evolution matrix and distributed AI command platform. | [Live Deployment](https://ais-pre-amubz4v3czr3772fnvrcru-483535245139.asia-southeast1.run.app/) |
-| **Darlek Caan vs Jesus Chess** | AI Studio Arena | Grandmaster tactical chess tournament duel on Google AI Studio. | [AI Studio App](https://ai.studio/apps/4f692b1f-527f-4c1d-b423-e2bbe06b2009) |
-| **Huxley Singularity Loop** | Neural Loop | Recursive self-improving neural loop and autonomous feedback synthesis engine. | [Live Deployment](https://ais-pre-km7pxypy7meeld2j6lnyqm-483535245139.asia-southeast1.run.app) |
-| **Wonder Craig: The Brave Adventure** | Interactive Story | Interactive generative story and agentic universe in Google AI Studio. | [AI Studio App](https://ai.studio/apps/2120b556-3b9e-4d23-b65b-bf3ef98aa510) |
-| **AetherForge Ω: Global Genesis** | World Simulation | Cosmological genesis simulation and multi-agent worldbuilding engine. | [AI Studio App](https://ai.studio/apps/2c919791-444e-40a2-ba71-e2ec13057cba) |
-| **EMG-Tests Suite** | Test Harness | Seeded defect suites and C-dialect AST verification regression harness. | [GitHub Repository](https://github.com/craighckby-stack/EMG-Tests) |
-| **PKM System** | Knowledge Base | Personal knowledge management, research lineages, and architecture notes. | [GitHub Repository](https://github.com/craighckby-stack/PKM) |
+| Repository | Siphoned Capabilities | Integration Status |
+| :--- | :--- | :--- |
+| **`DARLEK_CAAN`** | Agent Orchestra, Debate Chamber, Bug Inspector, Temporal Paradox Log, MS-DOS Shell Console, Web Audio Sound Engine | **Integrated** |
+| **`GitHub-Engine-Harvester`** | Code pattern harvesting, AST weighting, tree-level repository siphoning | **Integrated** |
+| **`sanitized-agent-engines`** | Non-linear token budget tree, sanitized engine transpilation | **Integrated** |
+| **`Huxley-Singularity-Loop-`** | Memory pressure-based decay (`ephemeral.ts`), Siphon Engine with generational stamping (`siphon-stamping.ts`), microsecond diagnostic engine (`diagnostics.ts`) | **Integrated** |
+| **`AI_Agent_OS`** | WeakMap zero-leak sandbox (`zero-leak-sandbox.ts`), Shannon entropy secret scanner | **Integrated** |
+| **`Test`** | Multi-angle epistemic alignment matrix (`alignment-matrix.ts`) | **Integrated** |
 
 ---
 
@@ -158,33 +153,16 @@ EMG Core is connected directly to a network of agentic, security, and worldbuild
 
 ---
 
-## Operating Modes
+## Server API & Module Endpoints
 
-1. **Sandbox Mode:**
-   * Operates on pre-seeded memory fixtures without remote GitHub token requirements.
-   * Safe environment for inspecting diff generation, AST checking, and saturation alerts.
-2. **Live GitHub Mode:**
-   * Authenticates with GitHub via a Personal Access Token (`repo` scope).
-   * Reads remote trees, pulls source blobs, executes verification passes, and writes verified mutations to target branches.
-3. **Oracle Stress-Test Mode (Option A):**
-   * Accessible via the top **Oracle** button.
-   * Allows direct manual injection of poisoned C code specimens into the GCC compiler and heuristic linter to verify rejection logic and post-mortem write-backs.
-
----
-
-## Server API Endpoints
-
-| Endpoint | Method | Description |
+| Endpoint | Method | Purpose |
 | :--- | :--- | :--- |
 | `/api/optimize` | `POST` | Dispatches source code and optimization goals to the Gemini API with candidate fallback chains. |
 | `/api/lint` | `POST` | Executes project-aware heuristic linter rules and compiles C/C++ units via the Godbolt GCC 13.2 API. |
 | `/api/validate` | `POST` | Native TypeScript compiler AST diagnostics and syntactic verification. |
-| `/api/sanitize` | `POST` | Server-side regex and entropy redaction for credentials and tokens. |
+| `/api/sanitize` | `POST` | Server-side regex and Shannon entropy redaction for credentials and tokens. |
 | `/api/diagnostic` | `GET` | Health status probe, memory path validation, and environment verification. |
 | `/api/status` | `GET` | Reports Gemini API key injection state and supported model profiles. |
-| `/api/github/user-repos` | `POST` | Proxies authenticated user repository listings from GitHub. |
-| `/api/github/repo-tree` | `POST` | Fetches recursive git tree structures for a specified branch. |
-| `/api/github/file-content` | `POST` | Fetches raw file blob and SHA metadata from GitHub. |
 | `/api/github/commit-file` | `POST` | Commits sanitized, verified code mutations to GitHub with 409 conflict retries. |
 
 ---
@@ -192,4 +170,3 @@ EMG Core is connected directly to a network of agentic, security, and worldbuild
 ## License
 
 This project is licensed under the **Creative Commons Attribution-NonCommercial-ShareAlike 4.0 International (CC BY-NC-SA 4.0)** License. See the `LICENSE` file for details.
-

@@ -62,7 +62,7 @@ export const ConfigPanel: React.FC<ConfigPanelProps> = ({
   const [repoSearchFilter, setRepoSearchFilter] = useState('');
   const [manualSkipListInput, setManualSkipListInput] = useState('');
 
-  const skippedFiles = config.skippedFiles || [];
+  const skippedFiles = Array.from(new Set(config.skippedFiles || []));
 
   const handleAddSkipList = (pathToAdd: string) => {
     const trimmed = pathToAdd.trim();
@@ -644,9 +644,9 @@ export const ConfigPanel: React.FC<ConfigPanelProps> = ({
           {/* List of skip listed paths */}
           {skippedFiles.length > 0 && (
             <div className="flex flex-wrap gap-1.5 max-h-28 overflow-y-auto pr-1 pt-1">
-              {skippedFiles.map((path) => (
+              {skippedFiles.map((path, idx) => (
                 <div
-                  key={path}
+                  key={`skip-${path}-${idx}`}
                   className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-[#050b07] border border-emerald-800/60 text-zinc-200 text-xs font-mono"
                 >
                   <span className="truncate max-w-[170px]" title={path}>

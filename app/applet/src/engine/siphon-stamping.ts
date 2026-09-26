@@ -1,0 +1,89 @@
+/**
+ * SIPHONED FROM HUXLEY SINGULARITY LOOP (V3.2_CORE)
+ * Siphon Engine with Generational Stamping & AST Weighting
+ * Pattern: Functional Result-Type Error Handling
+ * Mutation: Deterministic DNA Extraction with Generational Stamping
+ */
+
+export type DNAFragment = {
+  title: string;
+  mutation: string;
+  ancestry: string; // Generational Stamping
+  weight: number;   // Deterministic AST Weighting
+};
+
+export type SiphonResult<T> = 
+  | { success: true; data: T }
+  | { success: false; error: string; entropyLevel: number };
+
+export class SiphonEngine {
+  private currentGeneration: string = "EMG_SOVEREIGN_V3.2";
+
+  /**
+   * Siphons logic-DNA from raw source code buffers.
+   */
+  public siphon(payload: string): SiphonResult<DNAFragment[]> {
+    try {
+      if (!payload || payload.length === 0) {
+        return { success: false, error: "EMPTY_SOURCE_PAYLOAD", entropyLevel: 0.99 };
+      }
+
+      const fragments: DNAFragment[] = this.parseDNA(payload);
+
+      if (fragments.length === 0) {
+        return { success: false, error: "NO_SURVIVABLE_TRAITS_FOUND", entropyLevel: 0.85 };
+      }
+
+      // Inject Generational Stamping to prevent regressive cannibalization
+      const stampedFragments = fragments.map(f => ({
+        ...f,
+        ancestry: `${this.currentGeneration}::${Date.now()}`,
+        weight: this.calculateInitialWeight(f)
+      }));
+
+      return { success: true, data: stampedFragments };
+    } catch (criticalFailure: any) {
+      return { 
+        success: false, 
+        error: `CRITICAL_PIPELINE_COLLAPSE: ${criticalFailure.message || String(criticalFailure)}`, 
+        entropyLevel: 1.0 
+      };
+    }
+  }
+
+  private parseDNA(raw: string): DNAFragment[] {
+    const patternRegex = /\[PATTERN:\s*(.*?),?\s*STRATEGY:\s*(.*?)\]/g;
+    const matches = [...raw.matchAll(patternRegex)];
+
+    if (matches.length > 0) {
+      return matches.map(m => ({
+        title: m[1] || 'Pattern',
+        mutation: m[2] || 'Strategy',
+        ancestry: "pending",
+        weight: 0
+      }));
+    }
+
+    // Fallback block parser for raw functions / exports
+    const exportMatches = [...raw.matchAll(/export\s+(?:function|const|class)\s+([a-zA-Z0-9_]+)/g)];
+    if (exportMatches.length > 0) {
+      return exportMatches.map(m => ({
+        title: `Exported Symbol: ${m[1]}`,
+        mutation: `Refactor ${m[1]} with Sovereign Governance`,
+        ancestry: "pending",
+        weight: 0.7
+      }));
+    }
+
+    return [];
+  }
+
+  private calculateInitialWeight(fragment: DNAFragment): number {
+    if (fragment.mutation.includes("CRITICAL") || fragment.mutation.includes("SOVEREIGN")) {
+      return 1.0;
+    }
+    return 0.5;
+  }
+}
+
+export const siphonEngine = new SiphonEngine();

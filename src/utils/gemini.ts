@@ -109,7 +109,8 @@ export async function optimizeSourceCode(
   goal: OptimizationGoal = 'comprehensive',
   model: GeminiModelId = 'gemini-3.7-flash',
   isSandboxMode: boolean = false,
-  postmortemConstraints?: string
+  postmortemConstraints?: string,
+  previousError?: string
 ): Promise<OptimizationResult> {
   const startTime = performance.now();
 
@@ -125,6 +126,7 @@ export async function optimizeSourceCode(
         goal,
         model,
         postmortemConstraints,
+        previousError,
       }),
     });
 

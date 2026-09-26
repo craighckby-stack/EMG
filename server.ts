@@ -427,7 +427,7 @@ async function startServer() {
   // Optimize endpoint using @google/genai
   app.post('/api/optimize', async (req, res) => {
     try {
-      const { code, filePath, customApiKey, goal, model, postmortemConstraints } = req.body;
+      const { code, filePath, customApiKey, goal, model, postmortemConstraints, previousError } = req.body;
 
       if (!code || typeof code !== 'string') {
         return res.status(400).json({ error: 'Missing source code to optimize.' });
@@ -485,10 +485,14 @@ async function startServer() {
         ? `\nCRITICAL CONSTRAINTS FROM PAST POST-MORTEMS (MUST FOLLOW):\n${postmortemConstraints}\n`
         : '';
 
+      const previousErrorBlock = (previousError && previousError.trim())
+        ? `\nCRITICAL ERROR FEEDBACK (FIX THIS DEFECT):\nYour previous attempt to optimize/modify this file failed compilation or validation with the following error:\n------------------\n${previousError}\n------------------\nCarefully analyze the above error and modify the code to address and fix this precise issue. Do NOT repeat the same mistake. Ensure all referenced symbols are declared, all files are included, and all syntax boundaries are correct.\n`
+        : '';
+
       const prompt = `You are EMG Core Neural Code and Documentation Optimizer Engine.
 File Path: "${filePath || (isMarkdown ? 'README.md' : 'source.ts')}"
 Optimization Goal: ${(goal || 'comprehensive').toUpperCase()} - ${directive}
-${postmortemBlock}
+${postmortemBlock}${previousErrorBlock}
 Original ${isMarkdown ? 'Markdown Document' : 'Source Code'}:
 \`\`\`
 ${code}
@@ -883,23 +887,30 @@ CRITICAL Requirements:
       const parseDiagnostics: readonly ts.Diagnostic[] = (sourceFile as any).parseDiagnostics || [];
 
       // Compiler options for emission diagnostics (JSX only for JSX files)
+      // Note: Do NOT set noEmit: true here, as ts.transpileModule internally expects output generation and throws "Debug Failure. Output generation failed" if noEmit is true.
       const compilerOptions: ts.CompilerOptions = {
         target: ts.ScriptTarget.ES2022,
         module: ts.ModuleKind.ESNext,
-        noEmit: true,
+        isolatedModules: true,
       };
 
       if (isJsx) {
         compilerOptions.jsx = ts.JsxEmit.ReactJSX;
       }
 
-      const transpileResult = ts.transpileModule(code, {
-        compilerOptions,
-        reportDiagnostics: true,
-        fileName,
-      });
+      let transpileDiagnostics: readonly ts.Diagnostic[] = [];
+      try {
+        const transpileResult = ts.transpileModule(code, {
+          compilerOptions,
+          reportDiagnostics: true,
+          fileName,
+        });
+        transpileDiagnostics = transpileResult.diagnostics || [];
+      } catch (transpileErr: any) {
+        console.warn('TypeScript transpileModule warning:', transpileErr?.message || transpileErr);
+      }
 
-      const allDiagnostics = [...parseDiagnostics, ...(transpileResult.diagnostics || [])];
+      const allDiagnostics = [...parseDiagnostics, ...transpileDiagnostics];
       const uniqueDiags = new Map<string, any>();
       const lines = code.split('\n');
 
