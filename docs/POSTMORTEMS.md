@@ -683,3 +683,21 @@ Line 18, Col 52: Unclosed opening delimiter '{'.
 Line 55, Col 8: Property declaration is missing its type annotation.
 ```
 **CONSTRAINT (Model Generalization):** Never repeat code patterns that produce this compiler/linter error on src/components/Header.tsx.
+
+### ❌ [2026-09-26] src/lib/constants.ts `source: mutation-cycle`
+**Symptom:** AST / TypeScript Compiler Validation Rejected
+**EVIDENCE (Machine-Copied Fact):**
+```
+Line 248, Col 10: Expression expected.
+Line 248, Col 12: Unexpected keyword or identifier.
+Line 248, Col 33: '=' expected.
+Line 248, Col 38: ';' expected.
+Line 248, Col 56: ';' expected.
+Line 248, Col 63: Unknown keyword or identifier. Did you mean 'function'?
+Line 248, Col 73: Unexpected keyword or identifier.
+Line 248, Col 77: Unexpected keyword or identifier.
+Line 248, Col 87: Unexpected keyword or identifier.
+Line 248, Col 95: Unexpected keyword or identifier.
+Line 248, Col 112: Identifier expected.
+```
+**CONSTRAINT (Model Generalization):** Never repeat code patterns that produce this compiler/linter error on src/lib/constants.ts.
