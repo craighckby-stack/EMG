@@ -5,7 +5,7 @@
 
 import { queryEmgRag } from '../memory/emg_rag';
 
-export type ErrorClass = 'HARDCODED_CRED' | 'SECRET_LEAKAGE' | 'PII' | 'AST_PARSE' | 'UNGROUNDED_CLAIMS' | 'CLEAN';
+export type ErrorClass = 'HARDCODED_CRED' | 'SECRET_LEAKAGE' | 'PII' | 'AST_PARSE' | 'UNGROUNDED_CLAIMS' | 'UNIMPLEMENTED_STUB' | 'CLEAN';
 
 export interface SecuritySanitizerResult {
   readonly clean: boolean;
@@ -18,7 +18,7 @@ export interface SecuritySanitizerResult {
 export interface QuantitativeClaim {
   match: string;
   index: number;
-  kind: "percentage" | "cycle_count" | "benchmark_score" | "multiplier" | "generic_precise_stat";
+  kind: "percentage" | "cycle_count" | "benchmark_score" | "multiplier" | "generic_precise_stat" | "floating_confidence";
 }
 
 const SECRET_PATTERNS: readonly RegExp[] = [
@@ -43,6 +43,8 @@ const CLAIM_PATTERNS: Array<{ regex: RegExp; kind: QuantitativeClaim["kind"] }> 
   { regex: /\b\d+(\.\d+)?x\s+(faster|slower|improvement|reduction|increase)\b/gi, kind: "multiplier" },
   { regex: /\b(score[d]?|accuracy|latency|throughput)\s+(of\s+)?\d+(\.\d+)?\b/gi, kind: "benchmark_score" },
   { regex: /\bexactly\s+\d+(\.\d+)?\b/gi, kind: "generic_precise_stat" },
+  { regex: /\b(confidence(?:_score)?|accuracy_score)\s*[:=]\s*0\.\d{2,4}\b/gi, kind: "floating_confidence" },
+  { regex: /\b\*\*Confidence(?:\s+Score)?:\*\*\s*0\.\d{2,4}\b/gi, kind: "floating_confidence" },
 ];
 
 function extractProseRegions(text: string): Array<{ text: string; offset: number }> {
@@ -52,6 +54,7 @@ function extractProseRegions(text: string): Array<{ text: string; offset: number
     /\/\*\*[\s\S]*?\*\//g,       // JSDoc/TSDoc blocks
     /\/\/.*$/gm,                 // line comments
     /#.*$/gm,                    // Python comments
+    /\b(?:confidence|confidence_score)\s*[:=]\s*0\.\d{2,4}\b/gi, // Hardcoded confidence score fields
   ];
   for (const p of patterns) {
     let m: RegExpExecArray | null;
@@ -102,7 +105,25 @@ export function checkUngroundedQuantitativeClaims(generatedText: string): string
   if (ungrounded.length === 0) return null;
 
   const examples = ungrounded.slice(0, 3).map((c) => `"${c.match}" (${c.kind})`).join(", ");
-  return `[LINT REJECT: NO_UNGROUNDED_QUANTITATIVE_CLAIMS] Detected ${ungrounded.length} specific numeric claim(s) with no traceable computation, call, or fetched value nearby: ${examples}. Output must not assert precise statistics (percentages, cycle counts, benchmark scores) unless derived from an actual computation or data source in the same diff.`;
+  return `[LINT REJECT: NO_UNGROUNDED_QUANTITATIVE_CLAIMS] Detected ${ungrounded.length} specific numeric claim(s) with no traceable computation, call, or fetched value nearby: ${examples}. Output must not assert precise statistics (percentages, cycle counts, benchmark scores, confidence scores) unless derived from an actual computation or data source in the same diff.`;
+}
+
+/**
+ * Companion Sanitizer Rule: NO_UNIMPLEMENTED_STUB_MASQUERADING_AS_ANALYSIS
+ */
+export function checkUnimplementedStubAnalysis(code: string): string | null {
+  const stubPatterns = [
+    /def\s+(?:evaluate|analyze|audit|synthesize|estimate)\s*\([^)]*\)\s*:\s*(?:\n\s*|\n\s*"""[\s\S]*?"""\s*\n\s*)return\s+(?:EvidenceEntry|dict|\{|\w+\()\s*(?:persona=[^,]+,\s*)?(?:confidence_score|confidence|score)\s*=\s*(?:0\.\d+|0|None|\[\]|"\w+")\s*\)?/g,
+    /async?\s+(?:evaluate|analyze|audit|synthesize|estimate)\s*\([^)]*\)\s*(?::\s*[^{]+)?\{\s*return\s*\{\s*(?:persona|confidence|score)\s*:\s*(?:0\.\d+|0|None|null|"\w+")\s*\}\s*;?\s*\}/g,
+  ];
+
+  for (const pattern of stubPatterns) {
+    if (pattern.test(code)) {
+      return `[LINT REJECT: NO_UNIMPLEMENTED_STUB_MASQUERADING_AS_ANALYSIS] Detected analysis/evaluation method whose implementation is a single hardcoded stub return statement. Methods claiming to evaluate or analyze must contain verifiable computation, data inspection, or dynamic evaluation logic.`;
+    }
+  }
+
+  return null;
 }
 
 /**
@@ -240,7 +261,14 @@ export function sanitizeAndGovern(filePath: string, proposedCode: string): Secur
     if (!primaryErrorClass) primaryErrorClass = 'UNGROUNDED_CLAIMS';
   }
 
-  // 5. Paired Fix Auto-Recovery Check from RAG
+  // 5. Check Unimplemented Stub Analysis
+  const stubAnalysisViolation = checkUnimplementedStubAnalysis(proposedCode);
+  if (stubAnalysisViolation) {
+    violations.push(stubAnalysisViolation);
+    if (!primaryErrorClass) primaryErrorClass = 'UNIMPLEMENTED_STUB';
+  }
+
+  // 6. Paired Fix Auto-Recovery Check from RAG
   let autoAppliedFix: string | undefined = undefined;
   if (violations.length > 0 || primaryErrorClass) {
     try {

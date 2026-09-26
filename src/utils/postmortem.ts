@@ -53,14 +53,30 @@ export interface PostmortemResult {
  * hex addresses, and file paths to create a stable error signature for deduplication.
  */
 export function fingerprintError(file: string, evidence: string): string {
-  const normalized = evidence
+  let normalized = evidence
     .replace(/Line \d+, Col \d+/gi, "Line _, Col _")
     .replace(/:\d+:\d+/g, ":_:_")
     .replace(/line \d+/gi, "line _")
     .replace(/0x[0-9a-fA-F]+/g, "0x_")
-    .replace(/\/[^:\s]+\.(ts|tsx|js|jsx|c|h|cpp)/gi, "<file>")
+    .replace(/\/[^:\s]+\.(ts|tsx|js|jsx|c|h|cpp|py)/gi, "<file>")
     .replace(/\s+/g, " ")
     .trim();
+
+  // If evidence is dominated by truncation syntax cascades (unclosed delimiters/EOF errors),
+  // collapse into a unified error category signature to prevent counter fragmentation.
+  const evLower = evidence.toLowerCase();
+  if (
+    evLower.includes('unclosed opening delimiter') ||
+    evLower.includes('unterminated string') ||
+    evLower.includes('unterminated template') ||
+    evLower.includes('unexpected eof') ||
+    evLower.includes('unexpected end of input') ||
+    evLower.includes('syntax_unclosed') ||
+    (evLower.includes('expected') && evLower.includes('delimiter'))
+  ) {
+    normalized = "SYNTAX_TRUNCATION_UNCLOSED_DELIMITERS";
+  }
+
   return `${file}::${normalized}`;
 }
 
@@ -150,6 +166,18 @@ export function deriveConstraintFromEvidence(
     return {
       diagnosis: `Model asserted specific numeric findings (percentages, cycle counts, benchmark scores) in ${filePath} without a corresponding computation, external call, or data source in the generated diff.`,
       correctivePattern: `When generating analysis/evaluation output in ${filePath}, do not state precise statistics unless the value is assigned from an actual computed expression, function call, or fetched result in the same output. Stub or placeholder implementations must say so explicitly (e.g. "not yet computed") rather than inventing plausible-sounding numbers.`,
+      isKnownCategory: true,
+    };
+  }
+
+  // 3c. Unimplemented Stub Masquerading As Analysis
+  if (
+    evLower.includes('no_unimplemented_stub_masquerading_as_analysis') ||
+    evLower.includes('single hardcoded stub return')
+  ) {
+    return {
+      diagnosis: `Model implemented an analysis/evaluation method (${filePath}) as a single-line hardcoded return stub without actual data inspection or branching computation.`,
+      correctivePattern: `When implementing methods named evaluate(), analyze(), or audit() in ${filePath}, include actual conditional evaluation, variable computation, or evidence inspection logic. Stub methods must explicitly throw NotImplementedError or mark status as unverified rather than returning fake evaluation payloads.`,
       isKnownCategory: true,
     };
   }
@@ -453,13 +481,17 @@ export function writePostmortem(
       let finalStatus: 'active' | 'escalated' | 'clean_verified' = type === 'Success' ? 'clean_verified' : 'active';
 
       if (type === 'Failure') {
+        const defaultSymptom = lintEvidence.includes('LINT REJECT') || lintEvidence.includes('SECRET_LEAKAGE') || lintEvidence.includes('UNGROUNDED') || lintEvidence.includes('STUB')
+          ? 'Sanitizer Gate / Semantic Lint Rejected'
+          : 'Verification Gate / AST Validation Rejected';
+
         const blockResult = updateOrAppendPostmortemBlock(
           pmContent,
           filePath,
           fp,
           timestamp,
           source,
-          options?.symptom || 'Verification Gate / Linting Rejected',
+          options?.symptom || defaultSymptom,
           lintEvidence,
           extractedDiagnosis.diagnosis,
           options?.constraintRule || extractedDiagnosis.correctivePattern
