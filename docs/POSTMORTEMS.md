@@ -646,3 +646,15 @@ Line 58, Col 8: Property declaration is missing its type annotation.
 Line 75, Col 8: Property declaration is missing its type annotation.
 ```
 **CONSTRAINT (Model Generalization):** [HISTORY: struck 2026-09-10 by over-broad heal; re-instated as VERIFIED GATE CATCH]
+
+### ❌ [2026-09-26] patch-server-diff.cjs `source: mutation-cycle`
+**Symptom:** AST / TypeScript Compiler Validation Rejected
+**EVIDENCE (Machine-Copied Fact):**
+```
+Line 7, Col 30: Type annotations can only be used in TypeScript files.
+Line 8, Col 21: Type annotations can only be used in TypeScript files.
+Line 9, Col 16: Type annotations can only be used in TypeScript files.
+Line 13, Col 17: Type annotations can only be used in TypeScript files.
+Line 65, Col 17: Type annotations can only be used in TypeScript files.
+```
+**CONSTRAINT (Model Generalization):** Never repeat code patterns that produce this compiler/linter error on patch-server-diff.cjs.
