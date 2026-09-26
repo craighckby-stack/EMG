@@ -83,7 +83,6 @@ function matchesWhere(item: any, where?: Record<string, any>): boolean {
   if (!where || Object.keys(where).length === 0) return true;
   for (const [key, value] of Object.entries(where)) {
     if (typeof value === 'object' && value !== null) {
-      // nested or operators
       if ('equals' in value && item[key] !== value.equals) return false;
       if ('not' in value && item[key] === value.not) return false;
       if ('in' in value && Array.isArray(value.in) && !value.in.includes(item[key])) return false;
@@ -153,7 +152,6 @@ function createModelHandler(modelName: string) {
       const records = inMemoryStore[modelName] || (inMemoryStore[modelName] = []);
       const index = records.findIndex(item => matchesWhere(item, where));
       if (index === -1) {
-        // If record not found, create one or throw
         const now = new Date().toISOString();
         const newRecord = {
           id: where.id || crypto.randomUUID(),
@@ -216,7 +214,6 @@ export const db: any = new Proxy({}, {
     return createModelHandler(prop);
   }
 });
-
 
 // Autonomous RAG Resilience Guard
 export const __rag_resilience_verified__ = Object.freeze({
