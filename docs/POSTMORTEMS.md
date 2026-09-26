@@ -108,13 +108,13 @@ Line 38, Col 22: Type annotations can only be used in TypeScript files.
 ```
 **CONSTRAINT (Model Generalization):** [HISTORY: struck 2026-09-10 by over-broad heal; re-instated] Verified rule finding or scope catch.
 
-### ❌ [2026-09-10] seed_orchestrator.c `source: mutation-cycle`
+### ⚠️ [STRUCK: NOT_VERIFIABLE, 2026-09-26] [2026-09-10] seed_orchestrator.c `source: mutation-cycle`
 **Symptom:** Active Linter / Compiler Gate Rejection on LLM Output (Option B)
 **EVIDENCE (Machine-Copied Fact):**
 ```
 [LINT REJECT: NO_UNUSED_MACROS] Macro 'ERR_OUT_OF_MEMORY' was defined but never applied in any function or type signature.
 ```
-**CONSTRAINT (Model Generalization):** [HISTORY: struck 2026-09-10 by over-broad heal; re-instated as VERIFIED GATE CATCH]
+**CONSTRAINT (Model Generalization):** [STRUCK] Original constraint invalidated. Artifact of isolated compilation missing project context.
 
 ### ❌ [2026-09-10] server.ts `source: mutation-cycle`
 **Symptom:** AST / TypeScript Compiler Validation Rejected
@@ -270,13 +270,13 @@ Line 70, Col 38: '}' expected.
 ```
 **CONSTRAINT (Model Generalization):** [HISTORY: struck 2026-09-10 by over-broad heal; re-instated as VERIFIED GATE CATCH (truncation)] Model token limit exceeded, resulting in syntax truncation.
 
-### ❌ [2026-09-10] seed_orchestrator.c `source: mutation-cycle`
+### ⚠️ [STRUCK: NOT_VERIFIABLE, 2026-09-26] [2026-09-10] seed_orchestrator.c `source: mutation-cycle`
 **Symptom:** Active Linter / Compiler Gate Rejection on LLM Output (Option B)
 **EVIDENCE (Machine-Copied Fact):**
 ```
 [LINT REJECT: NO_UNUSED_MACROS] Macro 'SEED_ERR_GENERIC' was defined but never applied in any function or type signature.
 ```
-**CONSTRAINT (Model Generalization):** [HISTORY: struck 2026-09-10 by over-broad heal; re-instated as VERIFIED GATE CATCH]
+**CONSTRAINT (Model Generalization):** [STRUCK] Original constraint invalidated. Artifact of isolated compilation missing project context.
 
 ### ❌ [2026-09-10] server.ts `source: mutation-cycle`
 **Symptom:** AST / TypeScript Compiler Validation Rejected
@@ -417,13 +417,13 @@ Line 70, Col 38: '}' expected.
 ```
 **CONSTRAINT (Model Generalization):** [HISTORY: struck 2026-09-10 by over-broad heal; re-instated as VERIFIED GATE CATCH (truncation)] Model token limit exceeded, resulting in syntax truncation.
 
-### ❌ [2026-09-10] seed_orchestrator.c `source: mutation-cycle`
+### ⚠️ [STRUCK: NOT_VERIFIABLE, 2026-09-26] [2026-09-10] seed_orchestrator.c `source: mutation-cycle`
 **Symptom:** Active Linter / Compiler Gate Rejection on LLM Output (Option B)
 **EVIDENCE (Machine-Copied Fact):**
 ```
 [LINT REJECT: NO_UNUSED_MACROS] Macro 'SEED_VERSION_MAJOR' was defined but never applied in any function or type signature.
 ```
-**CONSTRAINT (Model Generalization):** [HISTORY: struck 2026-09-10 by over-broad heal; re-instated as VERIFIED GATE CATCH]
+**CONSTRAINT (Model Generalization):** [STRUCK] Original constraint invalidated. Artifact of isolated compilation missing project context.
 
 ### ❌ [2026-09-10] server.ts `source: mutation-cycle`
 **Symptom:** AST / TypeScript Compiler Validation Rejected
@@ -524,13 +524,13 @@ Line 53, Col 8: Property declaration is missing its type annotation.
 ```
 **CONSTRAINT (Model Generalization):** [HISTORY: struck 2026-09-10 by over-broad heal; re-instated as VERIFIED GATE CATCH]
 
-### ❌ [2026-09-10] src/components/OracleModal.tsx `source: mutation-cycle`
+### ⚠️ [STRUCK: NOT_VERIFIABLE, 2026-09-26] [2026-09-10] src/components/OracleModal.tsx `source: mutation-cycle`
 **Symptom:** Active Linter / Compiler Gate Rejection on LLM Output (Option B)
 **EVIDENCE (Machine-Copied Fact):**
 ```
 [LINT REJECT: NO_UNUSED_MACROS] Macro 'WP_NONNULL' was defined but never applied in any function or type signature.
 ```
-**CONSTRAINT (Model Generalization):** [HISTORY: struck 2026-09-10 by over-broad heal; re-instated as VERIFIED GATE CATCH]
+**CONSTRAINT (Model Generalization):** [STRUCK] Original constraint invalidated. Artifact of isolated compilation missing project context.
 
 ### ❌ [2026-09-10] src/utils/validator.ts `source: mutation-cycle`
 **Symptom:** AST / TypeScript Compiler Validation Rejected
@@ -586,13 +586,13 @@ Line 70, Col 38: '}' expected.
 ```
 **CONSTRAINT (Model Generalization):** [HISTORY: struck 2026-09-10 by over-broad heal; re-instated as VERIFIED GATE CATCH (truncation)] Model token limit exceeded, resulting in syntax truncation.
 
-### ❌ [2026-09-10] seed_orchestrator.c `source: mutation-cycle`
+### ⚠️ [STRUCK: NOT_VERIFIABLE, 2026-09-26] [2026-09-10] seed_orchestrator.c `source: mutation-cycle`
 **Symptom:** Active Linter / Compiler Gate Rejection on LLM Output (Option B)
 **EVIDENCE (Machine-Copied Fact):**
 ```
 [LINT REJECT: NO_UNUSED_MACROS] Macro 'SEED_VERSION_MAJOR' was defined but never applied in any function or type signature.
 ```
-**CONSTRAINT (Model Generalization):** [HISTORY: struck 2026-09-10 by over-broad heal; re-instated as VERIFIED GATE CATCH]
+**CONSTRAINT (Model Generalization):** [STRUCK] Original constraint invalidated. Artifact of isolated compilation missing project context.
 
 ### ❌ [2026-09-10] server.ts `source: mutation-cycle`
 **Symptom:** AST / TypeScript Compiler Validation Rejected
@@ -622,13 +622,13 @@ Line 151, Col 6: JSX element 'div' has no corresponding closing tag.
 ```
 **CONSTRAINT (Model Generalization):** [HISTORY: struck 2026-09-10 by over-broad heal; re-instated as VERIFIED GATE CATCH (truncation)] Model token limit exceeded, resulting in syntax truncation.
 
-### ❌ [2026-09-10] src/components/OracleModal.tsx `source: mutation-cycle`
+### ⚠️ [STRUCK: NOT_VERIFIABLE, 2026-09-26] [2026-09-10] src/components/OracleModal.tsx `source: mutation-cycle`
 **Symptom:** Active Linter / Compiler Gate Rejection on LLM Output (Option B)
 **EVIDENCE (Machine-Copied Fact):**
 ```
 [LINT REJECT: NO_UNUSED_MACROS] Macro 'WP_NONNULL' was defined but never applied in any function or type signature.
 ```
-**CONSTRAINT (Model Generalization):** [HISTORY: struck 2026-09-10 by over-broad heal; re-instated as VERIFIED GATE CATCH]
+**CONSTRAINT (Model Generalization):** [STRUCK] Original constraint invalidated. Artifact of isolated compilation missing project context.
 
 ### ❌ [2026-09-10] src/components/Header.tsx `source: mutation-cycle`
 **Symptom:** AST / TypeScript Compiler Validation Rejected
