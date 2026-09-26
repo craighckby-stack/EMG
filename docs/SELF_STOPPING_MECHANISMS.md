@@ -18,6 +18,7 @@ In autonomous neural refactoring engines, infinite execution loops pose a major 
 Before executing a mutation cycle against a live GitHub repository, `src/App.tsx` computes a global cryptographic fingerprint of the entire repository file tree:
 
 ```typescript
+// Compute a SHA-256 hash of the concatenated file paths and their respective SHAs
 const currentTreeFingerprint = await computeSHA256(
   tree.map((t) => `${t.path}:${t.sha}`).join('|')
 );
@@ -27,6 +28,7 @@ const currentTreeFingerprint = await computeSHA256(
 1. If all candidate files in the repository have reached saturation (no remaining diffs), `src/App.tsx` records `config.saturatedTreeHash = currentTreeFingerprint` and `config.saturatedGoal = config.goal`.
 2. On subsequent cycles, `executeCycle()` evaluates:
    ```typescript
+   // Check if the current tree state and goal match a previously saturated execution
    if (
      config.saturatedTreeHash === currentTreeFingerprint &&
      config.saturatedGoal === config.goal &&
@@ -48,6 +50,7 @@ const currentTreeFingerprint = await computeSHA256(
 When Gemini returns an optimized candidate for a file, `src/App.tsx` normalizes whitespace and compares the generated code directly against the original file content:
 
 ```typescript
+// Normalize code strings by stripping trailing whitespace and trimming outer bounds
 const normalizeCode = (c: string) => c.split('\n').map((l) => l.trimEnd()).join('\n').trim();
 const isIdentical = normalizeCode(cleanCode) === normalizeCode(originalContent);
 ```
@@ -72,12 +75,14 @@ const isIdentical = normalizeCode(cleanCode) === normalizeCode(originalContent);
 To prevent the engine from repeatedly attempting broken mutations on files that consistently fail AST compiler validation or heuristic linting, `src/App.tsx` maintains an in-memory reference counter:
 
 ```typescript
+// Maintain a mapping of file paths to consecutive failure counts in memory
 const consecutiveFailuresRef = useRef<Record<string, number>>({});
 ```
 
 ### Execution Flow
 1. **Failure Escalation**: When strict type validation or heuristic linter rules reject a candidate mutation, the counter increments for that file:
    ```typescript
+   // Increment failure count for the target file
    const prevFail = consecutiveFailuresRef.current[targetFile.path] || 0;
    const newFailCount = prevFail + 1;
    consecutiveFailuresRef.current[targetFile.path] = newFailCount;
@@ -88,6 +93,7 @@ const consecutiveFailuresRef = useRef<Record<string, number>>({});
    - The file is added to `config.skippedFiles`, removing it from the active candidate rotation.
 3. **Global Failure Circuit Breaker**: If *all* healthy candidate files in the repository reach the 3-failure ceiling:
    ```typescript
+   // Halt execution if all candidates exceed the failure threshold
    pushLog(`[AUTONOMOUS LOOP] All candidate files have reached max failure threshold. Pausing loop to prevent infinite cycling.`, 'warning');
    setIsLive(false);
    setStatus('IDLE');
