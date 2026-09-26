@@ -759,10 +759,10 @@ Line 55, Col 8: Property declaration is missing its type annotation.
 ```
 **CONSTRAINT (Model Generalization):** Never repeat code patterns that produce this compiler/linter error on src/components/Header.tsx.
 
-### ❌ [2026-09-26] src/components/OracleModal.tsx `source: mutation-cycle`
+### ⚠️ [STRUCK: NOT_VERIFIABLE, 2026-09-26] [2026-09-26] src/components/OracleModal.tsx `source: mutation-cycle`
 **Symptom:** Active Linter / Compiler Gate Rejection on LLM Output (Option B)
 **EVIDENCE (Machine-Copied Fact):**
 ```
 [LINT REJECT: NO_UNUSED_MACROS] Macro 'WP_NONNULL' was defined in [src/components/OracleModal.tsx] but never referenced in any function or type signature across the repository tree.
 ```
-**CONSTRAINT (Model Generalization):** Do NOT define helper macros without applying them in the code.
+**CONSTRAINT (Model Generalization):** [STRUCK] Original constraint invalidated. Artifact of isolated compilation missing project context.
