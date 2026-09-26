@@ -89,7 +89,7 @@ export function parseCorrectMd(content: string): VectorEntry[] {
     const commitHash = lines[0]?.trim() || 'c_' + Math.random().toString(36).substring(2, 8);
     const fileMatch = block.match(/- File:\s*(.+)/);
     const file = fileMatch ? fileMatch[1]?.trim() : '';
-    const diffMatch = block.match(/```(?:typescript|tsx|javascript)?\n([\s\scoped]*?)```/s) || block.match(/```([\s\S]*?)```/s);
+    const diffMatch = block.match(/```(?:typescript|tsx|javascript)?\n([\s\S]*?)```/s) || block.match(/```([\s\S]*?)```/s);
     const snippet = diffMatch ? diffMatch[1]?.trim() : '';
 
     entries.push({
@@ -191,11 +191,17 @@ const IDB_STORE = 'vectors_store';
 
 function openIndexedDB(): Promise<IDBDatabase> {
   return new Promise((resolve, reject) => {
-    if (typeof window === 'undefined' || !window.indexedDB) {      reject(new Error('IndexedDB not supported in current runtime environment'));
+    if (typeof window === 'undefined' || !window.indexedDB) {
+      reject(new Error('IndexedDB not supported in current runtime environment'));
       return;
     }
     const request = window.indexedDB.open(IDB_NAME, 1);
-    request.onupgradeneeded = () => {      const db = request.result;      if (!db.objectStoreNames.contains(IDB_STORE)) {        db.createObjectStore(IDB_STORE, { keyPath: 'id' });      }    };
+    request.onupgradeneeded = () => {
+      const db = request.result;
+      if (!db.objectStoreNames.contains(IDB_STORE)) {
+        db.createObjectStore(IDB_STORE, { keyPath: 'id' });
+      }
+    };
     request.onsuccess = () => resolve(request.result);
     request.onerror = () => reject(request.error);
   });
@@ -207,12 +213,15 @@ async function saveVectorsToIndexedDB(vectors: VectorEntry[]): Promise<void> {
     const tx = db.transaction(IDB_STORE, 'readwrite');
     const store = tx.objectStore(IDB_STORE);
     store.clear();
-    for (const v of vectors) {      store.put(v);
+    for (const v of vectors) {
+      store.put(v);
     }
-    await new Promise((res, rej) => {      tx.oncomplete = res;      tx.onerror = rej;    });
+    await new Promise((res, rej) => {
+      tx.oncomplete = res;
+      tx.onerror = rej;
+    });
   } catch (err) {
     console.warn('[EMG RAG] IndexedDB save failed, falling back to local memory:', err);
-    // Fallback to safeStorage for small capacity environments
     try {
       safeSetLocalStorage('emg_rag_vectors', JSON.stringify(vectors.slice(0, 100)));
     } catch {}
@@ -225,7 +234,10 @@ async function loadVectorsFromIndexedDB(): Promise<VectorEntry[]> {
     const tx = db.transaction(IDB_STORE, 'readonly');
     const store = tx.objectStore(IDB_STORE);
     const request = store.getAll();
-    return new Promise((resolve, reject) => {      request.onsuccess = () => resolve(request.result as VectorEntry[]);      request.onerror = () => reject(request.error);    });
+    return new Promise((resolve, reject) => {
+      request.onsuccess = () => resolve(request.result as VectorEntry[]);
+      request.onerror = () => reject(request.error);
+    });
   } catch (err) {
     console.warn('[EMG RAG] IndexedDB load failed, trying fallback:', err);
     const cachedStr = safeGetLocalStorage('emg_rag_vectors');
@@ -248,7 +260,8 @@ export async function publishRagToGithub(target?: {
   branch: string;
 }): Promise<{ success: boolean; commitSha?: string; error?: string }> {
   const activeTarget = target || getStoredGithubTarget();
-  if (!activeTarget || !activeTarget.token || !activeTarget.owner || !activeTarget.repo) {    return { success: false, error: 'No GitHub parameters or Personal Access Token configured' };
+  if (!activeTarget || !activeTarget.token || !activeTarget.owner || !activeTarget.repo) {
+    return { success: false, error: 'No GitHub parameters or Personal Access Token configured' };
   }
 
   try {
@@ -266,7 +279,7 @@ export async function publishRagToGithub(target?: {
     );
 
     return { success: true, commitSha: res.commitSha };
-  } catch (err: any) {
+  } catch (err: unknown) {
     console.error('[EMG RAG] Failed to publish RAG vectors to GitHub repository:', err);
     return { success: false, error: err instanceof Error ? err.message : String(err) };
   }
@@ -329,7 +342,6 @@ export async function initializeEmgRag(
  */
 export function queryEmgRag(currentFileAndError: string): EmgQueryResult {
   if (!isInitialized || vectorStore.length === 0) {
-    // Attempt fallback from local storage
     const cachedStr = safeGetLocalStorage('emg_rag_vectors');
     if (cachedStr) {
       try {
