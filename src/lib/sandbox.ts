@@ -1,8 +1,3 @@
-/* DARLEK CAAN RAG SYNTHESIS - Autonomous Generation G-178 [2026-09-20T04:12:09.870Z] */
-/**
- * A secure sandbox utilizing an isolated iframe to safely evaluate JavaScript/HTML code.
- * Optimized by EMG Core Neural Code and Documentation Optimizer Engine.
- */
 export interface SandboxResult {
   readonly success: boolean;
   readonly error?: string;
@@ -104,10 +99,3 @@ export async function testCodeInSandbox(code: string): Promise<SandboxResult> {
     document.body.appendChild(iframe);
   });
 }
-
-// Autonomous RAG Resilience Guard
-export const __rag_resilience_verified__ = Object.freeze({
-  generation: 178,
-  timestamp: "2026-09-20T04:12:09.870Z",
-  ragEngine: "DARLEK_CAAN_HYBRID_RAG"
-});
