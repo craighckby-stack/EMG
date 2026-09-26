@@ -1,6 +1,6 @@
-# EMG Core // Sovereign Kernel
+# EMG
 
-**EMG Core Sovereign Kernel** is an autonomous, verification-gated code refactoring engine and security governance platform. It orchestrates self-stopping tri-loop evolution cycles across local sandbox environments and remote GitHub repositories, enforcing strict AST compiler verification, Shannon entropy secret sanitization, dual-agent ethical debate, WeakMap zero-leak execution sandboxing, and high-capacity IndexedDB vector memory.
+**EMG** is an autonomous, verification-gated code refactoring engine and security governance platform. It orchestrates self-stopping tri-loop evolution cycles across local sandbox environments and remote GitHub repositories, enforcing strict AST compiler verification, Shannon entropy secret sanitization, dual-agent ethical debate, WeakMap zero-leak execution sandboxing, and high-capacity IndexedDB vector memory.
 
 ---
 
@@ -11,11 +11,11 @@
 
 ---
 
-## Core System Architecture
+## System Architecture
 
 ```
                           ┌─────────────────────────────────────────┐
-                          │         EMG Sovereign Kernel            │
+                          │                   EMG                   │
                           │   (Self-Stopping Tri-Loop Orchestrator) │
                           └────────────────────┬────────────────────┘
                                                │
