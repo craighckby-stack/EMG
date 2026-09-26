@@ -1,18 +1,33 @@
 const fs = require('fs');
+const path = require('path');
 
-let content = fs.readFileSync('server.ts', 'utf8');
+const targetFilePath = path.resolve(process.cwd(), 'server.ts');
 
-// Add import
-if (!content.includes("import { applyPatch } from 'diff';")) {
-  content = content.replace("import { GoogleGenAI } from '@google/genai';", "import { GoogleGenAI } from '@google/genai';\nimport { applyPatch } from 'diff';");
+if (!fs.existsSync(targetFilePath)) {
+  console.error(`Target file not found: ${targetFilePath}`);
+  process.exit(1);
 }
 
-// Replace response generation logic
-const search = `      if (!optimized || optimized.length < 5) {
+try {
+  let content = fs.readFileSync(targetFilePath, 'utf8');
+
+  // Add import
+  if (!content.includes("import { applyPatch } from 'diff';")) {
+    const importTarget = "import { GoogleGenAI } from '@google/genai';";
+    if (content.includes(importTarget)) {
+      content = content.replace(
+        importTarget,
+        "import { GoogleGenAI } from '@google/genai';\nimport { applyPatch } from 'diff';"
+      );
+    }
+  }
+
+  // Replace response generation logic
+  const search = `      if (!optimized || optimized.length < 5) {
         throw new Error('AI Model returned an empty code block.');
       }`;
 
-const replace = `      if (!optimized || optimized.length < 5) {
+  const replace = `      if (!optimized || optimized.length < 5) {
         throw new Error('AI Model returned an empty code block.');
       }
 
@@ -36,6 +51,17 @@ const replace = `      if (!optimized || optimized.length < 5) {
       optimized = finalCode;
 `;
 
-content = content.replace(search, replace);
-fs.writeFileSync('server.ts', content);
-console.log('patched server.ts diff apply');
+  if (content.includes(search)) {
+    content = content.replace(search, replace);
+    fs.writeFileSync(targetFilePath, content, 'utf8');
+    console.log('patched server.ts diff apply');
+  } else if (content.includes('const patchText = optimized;')) {
+    console.log('server.ts is already patched.');
+  } else {
+    console.error('Target search block not found in server.ts.');
+    process.exit(1);
+  }
+} catch (error) {
+  console.error(`Error processing ${targetFilePath}:`, error.message);
+  process.exit(1);
+}
