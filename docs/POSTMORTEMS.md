@@ -777,3 +777,11 @@ Line 356, Col 3: ',' expected.
 Line 356, Col 4: '}' expected.
 ```
 **CONSTRAINT (Model Generalization):** Never repeat code patterns that produce this compiler/linter error on src/lib/ast-diff-gate.ts.
+
+### ❌ [2026-09-26] src/lib/dalek-brain.ts `source: mutation-cycle`
+**Symptom:** AST / TypeScript Compiler Validation Rejected
+**EVIDENCE (Machine-Copied Fact):**
+```
+Line 699, Col 1: ',' expected.
+```
+**CONSTRAINT (Model Generalization):** Never repeat code patterns that produce this compiler/linter error on src/lib/dalek-brain.ts.
