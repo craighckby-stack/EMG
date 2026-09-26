@@ -2,7 +2,7 @@
 /**
  * ── SOURCE CODE SYNTAX & AST VALIDATOR ──
  * File: src/lib/validator.ts
- * Provides resilient, high-speed syntax validation and self-healing for proposed mutations.
+ * Provides resilient syntax validation and self-healing for proposed mutations.
  */
 
 export interface ValidationError {
@@ -185,10 +185,11 @@ export async function validateSourceCode(
   if (lowerPath.endsWith('.json')) {
     try {
       JSON.parse(workingCode);
-    } catch (err: any) {
+    } catch (err: unknown) {
+      const errorMessage = err instanceof Error ? err.message : String(err);
       errors.push({
         line: 1,
-        message: `Invalid JSON: ${err?.message || String(err)}`,
+        message: `Invalid JSON: ${errorMessage}`,
       });
     }
   }
