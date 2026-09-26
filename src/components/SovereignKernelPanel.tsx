@@ -1,6 +1,6 @@
 /**
- * EMG Kernel Control & Intelligence Dashboard
- * File: src/components/SovereignKernelPanel.tsx
+ * EMG Sovereign Kernel Control and Intelligence Dashboard Component
+ * File Path: src/components/SovereignKernelPanel.tsx
  */
 
 import React, { useState, useEffect, useCallback, JSX } from 'react';
@@ -28,8 +28,8 @@ export default function SovereignKernelPanel(): JSX.Element {
   useEffect(() => {
     try {
       setAllVectors(getAllEmgVectors());
-    } catch (err) {
-      console.error('Failed to load EMG vectors:', err);
+    } catch (err: unknown) {
+      console.error('Failed to load EMG vectors:', err instanceof Error ? err.message : String(err));
     }
   }, [lastCycleResult]);
 
@@ -39,8 +39,8 @@ export default function SovereignKernelPanel(): JSX.Element {
     try {
       const res = await executeEmgTriLoopCycle(testFilePath, testCode, testCode);
       setLastCycleResult(res);
-    } catch (err) {
-      console.error('Error executing Tri-Loop cycle:', err);
+    } catch (err: unknown) {
+      console.error('Error executing Tri-Loop cycle:', err instanceof Error ? err.message : String(err));
     } finally {
       setIsProcessing(false);
     }
@@ -51,8 +51,8 @@ export default function SovereignKernelPanel(): JSX.Element {
     try {
       const res = queryEmgRag(ragQueryText);
       setRagQueryResult(res);
-    } catch (err) {
-      console.error('Error executing RAG query:', err);
+    } catch (err: unknown) {
+      console.error('Error executing RAG query:', err instanceof Error ? err.message : String(err));
     }
   }, [ragQueryText]);
 
@@ -60,8 +60,8 @@ export default function SovereignKernelPanel(): JSX.Element {
     try {
       const res = sanitizeAndGovern('test.ts', testCode);
       alert(`Sanitizer Result:\nClean: ${res.clean}\nViolations: ${res.violations.join(', ') || 'None'}`);
-    } catch (err) {
-      console.error('Error running sanitizer check:', err);
+    } catch (err: unknown) {
+      console.error('Error running sanitizer check:', err instanceof Error ? err.message : String(err));
     }
   }, [testCode]);
 
@@ -263,7 +263,7 @@ export default function SovereignKernelPanel(): JSX.Element {
 
           {ragQueryResult && (
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-2">
-              {/* Failures */}
+              {/* Top Failures */}
               <div className="p-3.5 bg-rose-950/20 border border-rose-900/40 rounded-xl">
                 <div className="text-xs font-bold text-rose-400 mb-2">Top Failures ({ragQueryResult.topFailures.length})</div>
                 <div className="flex flex-col gap-2">
@@ -276,7 +276,7 @@ export default function SovereignKernelPanel(): JSX.Element {
                 </div>
               </div>
 
-              {/* Clean Patterns */}
+              {/* Clean Pattern Entries */}
               <div className="p-3.5 bg-emerald-950/20 border border-emerald-900/40 rounded-xl">
                 <div className="text-xs font-bold text-emerald-400 mb-2">Top Clean Patterns ({ragQueryResult.topCleanPatterns.length})</div>
                 <div className="flex flex-col gap-2">
@@ -289,7 +289,7 @@ export default function SovereignKernelPanel(): JSX.Element {
                 </div>
               </div>
 
-              {/* Synthesis */}
+              {/* Synthesis Entries */}
               <div className="p-3.5 bg-blue-950/20 border border-blue-900/40 rounded-xl">
                 <div className="text-xs font-bold text-blue-400 mb-2">Top Synthesis ({ragQueryResult.topSynthesis.length})</div>
                 <div className="flex flex-col gap-2">
