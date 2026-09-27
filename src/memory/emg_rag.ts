@@ -378,26 +378,26 @@ export async function publishRagToGithub(target?: {
       );
       syncedFiles.push('SOVEREIGN-KERNEL/memory/vectors.jsonl');
 
-      // 2. Sync human-readable STUDIO_ATTACHMENT_CORRECT.md if clean entries exist
+      // 2. Sync human-readable clean patterns inside SOVEREIGN-KERNEL/ only
       const correctMd = formatCorrectMdFromVectors(vectorStore);
-      if (correctMd) {
+      if (correctMd && vectorStore.length % 10 === 0) {
         await commitWithRetry(
-          'STUDIO_ATTACHMENT_CORRECT.md',
+          'SOVEREIGN-KERNEL/memory/clean_patterns.md',
           correctMd,
           `EMG [RAG]: Updated clean pattern vectors (${vectorStore.filter((v) => v.metadata.provenance === 'clean').length} entries)`
         );
-        syncedFiles.push('STUDIO_ATTACHMENT_CORRECT.md');
+        syncedFiles.push('SOVEREIGN-KERNEL/memory/clean_patterns.md');
       }
 
-      // 3. Sync human-readable STUDIO_ATTACHMENT_WRONG.md if failure entries exist
+      // 3. Sync human-readable failure patterns inside SOVEREIGN-KERNEL/ only
       const wrongMd = formatWrongMdFromVectors(vectorStore);
-      if (wrongMd) {
+      if (wrongMd && vectorStore.length % 10 === 0) {
         await commitWithRetry(
-          'STUDIO_ATTACHMENT_WRONG.md',
+          'SOVEREIGN-KERNEL/memory/failure_patterns.md',
           wrongMd,
           `EMG [RAG]: Updated failure & recovery vectors (${vectorStore.filter((v) => v.metadata.provenance === 'failure').length} entries)`
         );
-        syncedFiles.push('STUDIO_ATTACHMENT_WRONG.md');
+        syncedFiles.push('SOVEREIGN-KERNEL/memory/failure_patterns.md');
       }
 
       console.log(`[EMG RAG] Successfully synchronized ${syncedFiles.length} RAG artifacts to ${cleanRepo} (${latestCommitSha.slice(0, 8)})`);
@@ -517,10 +517,10 @@ function scheduleDebouncedRagSync(target?: { token: string; repo: string; branch
   if (syncDebounceTimer) {
     clearTimeout(syncDebounceTimer);
   }
-  // Debounce RAG sync by 12 seconds so rapid mutation cycles do not collide on GitHub ref heads
+  // Debounce RAG sync by 60 seconds so rapid mutation cycles do not flood GitHub commits
   syncDebounceTimer = setTimeout(() => {
     publishRagToGithub(target).catch(() => {});
-  }, 12000);
+  }, 60000);
 }
 
 /**

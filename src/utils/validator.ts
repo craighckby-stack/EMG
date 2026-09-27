@@ -149,13 +149,24 @@ export function getLanguageFromFilePath(filePath: string): string {
  */
 export function unwrapMarkdownCodeFences(code: string, language: string): { unwrapped: string; wasWrapped: boolean } {
   if (language === 'markdown') return { unwrapped: code, wasWrapped: false };
-  const trimmed = code.trim();
+  let trimmed = code.trim();
+
+  // Strip trailing delimiter residues
+  if (/@+\s*$/.test(trimmed)) {
+    trimmed = trimmed.replace(/@+\s*$/, '').trim();
+  }
 
   // 1. If wrapped between delimiters @@@START and @@@END, extract that
-  if (trimmed.includes('@@@START') && trimmed.includes('@@@END')) {
+  if (trimmed.includes('@@@START')) {
     const afterStart = trimmed.split('@@@START')[1];
     if (afterStart) {
-      const extracted = (afterStart.split('@@@END')[0] || '').trim();
+      let extracted = afterStart;
+      if (extracted.includes('@@@END')) {
+        extracted = extracted.split('@@@END')[0];
+      } else if (extracted.includes('@@@SUMMARY:')) {
+        extracted = extracted.split('@@@SUMMARY:')[0];
+      }
+      extracted = extracted.replace(/@@@END/g, '').replace(/@@@START/g, '').replace(/@+\s*$/, '').trim();
       return { unwrapped: extracted, wasWrapped: true };
     }
   }
@@ -623,9 +634,9 @@ function validateMarkdown(code: string): { errors: ValidationError[]; unclosedFe
 }
 
 /**
- * Server-side native TypeScript compiler verification
+ * Server-side native compiler & AST verification (TS, JS, Python)
  */
-async function callServerTsValidator(
+async function callServerValidator(
   code: string,
   filePath: string
 ): Promise<{ reachable: boolean; diagnostics: ValidationError[] }> {
@@ -642,8 +653,8 @@ async function callServerTsValidator(
       const diagnostics = data.diagnostics.map((d: any) => ({
         line: d.line || 1,
         column: d.column || 1,
-        message: d.message || 'TypeScript Diagnostic Error',
-        code: d.code ? `TS${d.code}` : 'TS_DIAGNOSTIC',
+        message: d.message || 'Diagnostic Error',
+        code: d.code ? `${d.code}` : 'DIAGNOSTIC_ERROR',
         severity: d.severity === 'warning' ? 'warning' : 'error',
         snippet: d.snippet,
       }));
@@ -718,6 +729,13 @@ export async function validateSourceCode(
     healedCode = code;
   }
 
+  // Auto-clean any residual protocol delimiters or @ tokens from code
+  if (/@+\s*$/.test(code)) {
+    code = code.replace(/@+\s*$/, '').trimEnd() + '\n';
+    autoHealed = true;
+    healedCode = code;
+  }
+
   const errors: ValidationError[] = [];
   const warnings: string[] = [];
 
@@ -779,7 +797,7 @@ export async function validateSourceCode(
     language === 'javascript-jsx';
 
   if (isJsTs) {
-    const serverResult = await callServerTsValidator(code, filePath);
+    const serverResult = await callServerValidator(code, filePath);
 
     if (serverResult.reachable) {
       errors.push(...serverResult.diagnostics);
@@ -803,8 +821,23 @@ export async function validateSourceCode(
     }
   }
 
-  // 4. Non-JS/TS or Offline Fallback Delimiter & Token Scanner
+  // 3b. Python authoritative Server AST & Syntax Gate
   const isPython = language === 'python';
+  if (isPython) {
+    const serverResult = await callServerValidator(code, filePath);
+    if (serverResult.reachable) {
+      errors.push(...serverResult.diagnostics);
+      const valid = errors.filter((e) => e.severity === 'error').length === 0;
+      return {
+        valid,
+        language,
+        errors,
+        warnings,
+        autoHealed,
+        healedCode,
+      };
+    }
+  }
   const delimiterCheck = checkDelimitersAndStrings(code, isPython);
   errors.push(...delimiterCheck.errors);
 

@@ -11,6 +11,7 @@ import { createServer as createViteServer } from 'vite';
 import { GoogleGenAI } from '@google/genai';
 import dotenv from 'dotenv';
 import ts from 'typescript';
+import { spawnSync } from 'child_process';
 import { validateEnv } from './lib/env-validator';
 
 dotenv.config();
@@ -502,8 +503,19 @@ CRITICAL Requirements:
       if (optimized.includes('@@@END')) {
         optimized = optimized.split('@@@END')[0].trim();
       }
+      // Remove any leaked protocol delimiters or markers
+      optimized = optimized.replace(/@@@END/g, '').replace(/@@@START/g, '');
+      // Strip any trailing '@' symbols or delimiter clusters
+      optimized = optimized.replace(/@+\s*$/, '').trim();
+
       if (!isMarkdown && optimized.startsWith('```')) {
         optimized = optimized.replace(/^```[a-z0-9_-]*\n?/i, '').replace(/\n?```$/i, '').trim();
+        optimized = optimized.replace(/@+\s*$/, '').trim();
+      }
+
+      // Explicit secondary check for Python source code files
+      if (filePath && /\.py$/i.test(filePath)) {
+        optimized = optimized.replace(/@+\s*$/, '').trim();
       }
 
       if (!optimized || optimized.length < 5) {
@@ -751,6 +763,75 @@ CRITICAL Requirements:
       const fileName = filePath || 'source.tsx';
       const isTs = /\.(ts|tsx)$/i.test(fileName);
       const isJs = /\.(js|jsx|mjs|cjs)$/i.test(fileName);
+      const isPython = /\.py$/i.test(fileName);
+
+      // Authoritative Python AST Syntax & Delimiter Validation Gate
+      if (isPython) {
+        // 1. Strict delimiter leak detection: immediately fail if any rogue protocol artifacts exist
+        if (/@+\s*$/.test(code) || code.includes('@@@') || code.includes('@@@START') || code.includes('@@@END')) {
+          const lines = code.split('\n');
+          return res.json({
+            valid: false,
+            diagnostics: [{
+              line: lines.length,
+              column: 1,
+              message: 'SyntaxError: Illegal protocol delimiter artifact (@, @@@, or @@@END) detected in Python source code.',
+              code: 'PY_DELIMITER_LEAK',
+              severity: 'error',
+              snippet: code.slice(-60).trim(),
+            }],
+          });
+        }
+
+        // 2. Real Python 3 ast.parse compiler verification
+        try {
+          const pyCheck = spawnSync('/usr/bin/python3', [
+            '-c',
+            'import ast, sys\ntry:\n    ast.parse(sys.stdin.read())\n    sys.exit(0)\nexcept SyntaxError as e:\n    print(f"{e.lineno}:{e.offset}:{e.msg}", file=sys.stderr)\n    sys.exit(1)\nexcept Exception as e:\n    print(f"1:1:{str(e)}", file=sys.stderr)\n    sys.exit(1)'
+          ], {
+            input: code,
+            encoding: 'utf-8',
+            timeout: 5000,
+          });
+
+          if (pyCheck.status !== 0) {
+            const stderr = (pyCheck.stderr || '').trim();
+            const parts = stderr.split(':');
+            const errLine = parseInt(parts[0], 10) || 1;
+            const errCol = parseInt(parts[1], 10) || 1;
+            const errMsg = parts.slice(2).join(':').trim() || stderr || 'Python syntax error';
+
+            const lines = code.split('\n');
+            const snippet = lines[errLine - 1] || '';
+
+            return res.json({
+              valid: false,
+              diagnostics: [{
+                line: errLine,
+                column: errCol,
+                message: `Python SyntaxError: ${errMsg}`,
+                code: 'PY_SYNTAX_ERROR',
+                severity: 'error',
+                snippet: snippet.trim(),
+              }],
+            });
+          }
+
+          return res.json({ valid: true, diagnostics: [] });
+        } catch (pyErr: any) {
+          return res.json({
+            valid: false,
+            diagnostics: [{
+              line: 1,
+              column: 1,
+              message: `Python AST validation execution failed: ${pyErr?.message || pyErr}`,
+              code: 'PY_EXEC_ERROR',
+              severity: 'error',
+              snippet: '',
+            }],
+          });
+        }
+      }
 
       if (!isTs && !isJs) {
         return res.json({ valid: true, diagnostics: [] });

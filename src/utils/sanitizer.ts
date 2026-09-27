@@ -154,7 +154,7 @@ export function sanitizeCode(
   
   // 0. Extract from LLM transport envelope and markdown code blocks
   const startEnvelope = '@@@START';
-  const endEnvelope = '@@@';
+  const endEnvelope = '@@@END';
   
   const startIdx = code.indexOf(startEnvelope);
   if (startIdx !== -1) {
@@ -162,6 +162,8 @@ export function sanitizeCode(
     const endIdx = afterStart.indexOf(endEnvelope);
     if (endIdx !== -1) {
        code = afterStart.substring(0, endIdx).trim();
+    } else if (afterStart.includes('@@@SUMMARY:')) {
+       code = afterStart.split('@@@SUMMARY:')[0].trim();
     } else {
        code = afterStart.trim();
     }
@@ -180,6 +182,9 @@ export function sanitizeCode(
      }
      code = lines.join('\n').trim();
   }
+
+  // Strictly strip trailing @ delimiters or residual @@@ fragments
+  code = code.replace(/@@@END/g, '').replace(/@@@START/g, '').replace(/@+\s*$/, '').trim();
 
   let redactedCount = 0;
   const redactedTypesSet = new Set<string>();
