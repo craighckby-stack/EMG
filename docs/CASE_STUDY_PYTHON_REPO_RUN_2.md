@@ -173,6 +173,14 @@ Following this audit, the core pipeline was patched and verified with live autom
 
 ---
 
+### 4. Cross-Function Behavioral Parity Directive (The Diophantine Lesson)
+* **The Insight:** In `maths/diophantine.py`, `all_diophantine_solutions()` supported negative inputs via `abs()`, but sibling functions (`diophantine()`, `diophantine_all_soln()`) failed on negatives with bare asserts. EMG previously performed "conservative polish" by converting the asserts into `ValueError`, but preserved the artificial limitation.
+* **The Directive Deployed:** Injected Rule #12 into `server.ts`:
+  > *"Audit sibling functions within the same module for input domain consistency and mathematical symmetry. If one function handles a broader or generalized input domain (e.g., negative numbers via abs(), zero, or general edge cases) while a sibling function artificially restricts or crashes on valid inputs with bare asserts, unify and generalize the input handling across the module."*
+* **The Impact:** Elevates EMG from surface-level syntax cleanup to deep, holistic semantic bug fixing across multi-function modules.
+
+---
+
 ## 5. Conclusion & Next Steps
 
 Run #2 proved that EMG can autonomously traverse complex algorithm codebases, apply genuine mathematical simplifications, and persist its memory across sessions. However, it also exposed that without hard language-specific compiler gates, small prompt-extraction artifacts (`@@@`) can slip past and break code.

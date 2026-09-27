@@ -357,7 +357,11 @@ async function startServer() {
 10. AVOID UNNECESSARY TYPE GUARDS IN ALGORITHMIC LOOPS:
    - In algorithmic, mathematical, or recursive functions, do NOT inject redundant 'isinstance()' checks inside recursive calls or tight loops that degrade asymptotic algorithmic speed. Rely on clean type annotations instead.
 11. SAFE TEST SUITES:
-   - In pytest/unittest test files, do NOT place raw module-level file reads or assertions that crash test discovery when assets are missing. Keep I/O inside test functions or pytest fixtures.`
+   - In pytest/unittest test files, do NOT place raw module-level file reads or assertions that crash test discovery when assets are missing. Keep I/O inside test functions or pytest fixtures.
+12. CROSS-FUNCTION BEHAVIORAL PARITY & DOMAIN SYMMETRY:
+   - Audit sibling functions within the same module for input domain consistency and mathematical symmetry.
+   - If one function handles a broader or generalized input domain (e.g., negative numbers via abs(), zero, or general edge cases) while a sibling function artificially restricts or crashes on valid inputs with bare asserts, unify and generalize the input handling across the module.
+   - Do NOT merely wrap an artificial limitation in a prettier ValueError if the algorithm can be cleanly generalized using the symmetrical techniques already demonstrated by its sibling functions in the same file.`
         : '';
 
       const prompt = `You are EMG Core Neural Code and Documentation Optimizer Engine.
