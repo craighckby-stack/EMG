@@ -857,8 +857,10 @@ export default function App() {
             }
             
             const filteredContent = healedContent.trim() + '\n';
+            const normalizedOriginal = content.replace(/\r\n/g, '\n').trim();
+            const normalizedFiltered = filteredContent.replace(/\r\n/g, '\n').trim();
             
-            if (filteredContent !== content && !config.dryRun && config.ghToken) {
+            if (healCount > 0 && normalizedFiltered !== normalizedOriginal && !config.dryRun && config.ghToken) {
                pushLog(`[LEDGER HEAL] Found and re-tagged ${healCount} poisoned isolated-compile constraints in ${postmortemItem.path}. Self-healing repository...`, 'warning');
                let healRetries = 5;
                let currentSha = pmData.sha;

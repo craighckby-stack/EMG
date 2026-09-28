@@ -354,11 +354,18 @@ async function startServer() {
    - In TypeVar definitions, do NOT use redundant 'bound=Any' (use TypeVar("T"), not TypeVar("T", bound=Any)).
 9. STRICT PRESERVATION OF AUTHORSHIP & CREDITS:
    - Retain all existing author, creator, contributor, date, license, and copyright comments (e.g., "Author:", "@author", "Date:"). Do NOT strip open-source attribution blocks from module or function docstrings.
-10. AVOID UNNECESSARY TYPE GUARDS IN ALGORITHMIC LOOPS:
+10. PROHIBITION ON ARTIFICIAL RUNTIME TYPE GUARDS / PARAMETER RESTRICTIONS:
+   - NEVER inject artificial runtime 'isinstance()' checks or raise TypeErrors on function arguments unless they were already present in the original code.
+   - Respect Python duck typing and polymorphic inputs (e.g. str | bytes | IO[str], file streams, StringIO, path objects). Narrowing types or asserting 'if not isinstance(x, str): raise TypeError(...)' breaks valid callers and stream handling.
    - In algorithmic, mathematical, or recursive functions, do NOT inject redundant 'isinstance()' checks inside recursive calls or tight loops that degrade asymptotic algorithmic speed. Rely on clean type annotations instead.
-11. SAFE TEST SUITES:
+11. PUBLIC API TYPING & GENERATOR CONVENTIONS:
+   - For generator functions in library public APIs, annotate return type as 'Iterator[T]' (from collections.abc), NOT verbose 'Generator[T, None, None]'.
+   - NEVER add unused typing imports (e.g. importing 'Callable' or 'Any' when they are not referenced anywhere in annotations or code).
+12. PYTHON 3.12+ RAW STRING DOCSTRINGS & REGEX LITERALS:
+   - Any docstring, comment, or string containing regex patterns or backslash escapes (e.g. \\s, \\d, \\w, \\b) MUST use a raw string literal (r"""...""" or r'''...''') to prevent Python 3.12+ SyntaxWarning/SyntaxError for invalid escape sequences.
+13. SAFE TEST SUITES:
    - In pytest/unittest test files, do NOT place raw module-level file reads or assertions that crash test discovery when assets are missing. Keep I/O inside test functions or pytest fixtures.
-12. CROSS-FUNCTION BEHAVIORAL PARITY & DOMAIN SYMMETRY:
+14. CROSS-FUNCTION BEHAVIORAL PARITY & DOMAIN SYMMETRY:
    - Audit sibling functions within the same module for input domain consistency and mathematical symmetry.
    - If one function handles a broader or generalized input domain (e.g., negative numbers via abs(), zero, or general edge cases) while a sibling function artificially restricts or crashes on valid inputs with bare asserts, unify and generalize the input handling across the module.
    - Do NOT merely wrap an artificial limitation in a prettier ValueError if the algorithm can be cleanly generalized using the symmetrical techniques already demonstrated by its sibling functions in the same file.`
@@ -641,6 +648,29 @@ CRITICAL Requirements:
             ruleName: 'REDUNDANT_TYPEVAR_BOUND'
           });
         }
+
+        // Rule 1D: UNUSED TYPING & COLLECTIONS.ABC IMPORTS
+        const typingImportLines = code.match(/from\s+(?:typing|collections\.abc)\s+import\s+([^#\n]+)/g);
+        if (typingImportLines) {
+          for (const impLine of typingImportLines) {
+            const namesPart = impLine.replace(/from\s+(?:typing|collections\.abc)\s+import\s+/, '').trim();
+            const names = namesPart.split(',').map((n: string) => n.trim().split(/\s+as\s+/)[0].trim()).filter(Boolean);
+            for (const name of names) {
+              // Exclude names if they start with parenthesized multi-line
+              const cleanName = name.replace(/[()]/g, '').trim();
+              if (!cleanName || cleanName.startsWith('#')) continue;
+              const regex = new RegExp(`\\b${cleanName}\\b`, 'g');
+              const occurrences = (code.match(regex) || []).length;
+              if (occurrences === 1) {
+                return res.json({
+                  valid: false,
+                  lintEvidence: `[LINT REJECT: UNUSED_TYPING_IMPORT] Detected unused import '${cleanName}' from typing/collections.abc. Do not inject unused imports.`,
+                  ruleName: 'UNUSED_TYPING_IMPORT'
+                });
+              }
+            }
+          }
+        }
       }
 
       // Rule 2: NO DEAD CONDITIONAL CHECKS
@@ -787,11 +817,13 @@ CRITICAL Requirements:
           });
         }
 
-        // 2. Real Python 3 ast.parse compiler verification
+        // 2. Real Python 3 compile verification with -W error to enforce strict syntax and catch invalid escape sequences
         try {
           const pyCheck = spawnSync('/usr/bin/python3', [
+            '-W',
+            'error',
             '-c',
-            'import ast, sys\ntry:\n    ast.parse(sys.stdin.read())\n    sys.exit(0)\nexcept SyntaxError as e:\n    print(f"{e.lineno}:{e.offset}:{e.msg}", file=sys.stderr)\n    sys.exit(1)\nexcept Exception as e:\n    print(f"1:1:{str(e)}", file=sys.stderr)\n    sys.exit(1)'
+            'import sys\ntry:\n    compile(sys.stdin.read(), "<module>", "exec")\n    sys.exit(0)\nexcept SyntaxError as e:\n    print(f"{e.lineno}:{e.offset}:{e.msg}", file=sys.stderr)\n    sys.exit(1)\nexcept Exception as e:\n    print(f"1:1:{str(e)}", file=sys.stderr)\n    sys.exit(1)'
           ], {
             input: code,
             encoding: 'utf-8',

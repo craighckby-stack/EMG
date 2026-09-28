@@ -49,15 +49,38 @@ export function isConfigOrNonCodeFile(filePath: string): boolean {
   if (!filePath || typeof filePath !== 'string') return false;
   const normalized = filePath.trim().toLowerCase();
   
+  // Internal engine artifacts, RAG memory files, and system directories
+  if (
+    normalized.includes('sovereign-kernel') ||
+    normalized.includes('.emg') ||
+    normalized.startsWith('memory/') ||
+    normalized.includes('/memory/') ||
+    normalized.includes('vectors.jsonl') ||
+    normalized.startsWith('.github/') ||
+    normalized.includes('/.github/') ||
+    normalized.startsWith('.git/') ||
+    normalized.includes('/.git/') ||
+    normalized.startsWith('.vscode/') ||
+    normalized.includes('/.vscode/') ||
+    normalized.includes('/node_modules/') ||
+    normalized.includes('/venv/') ||
+    normalized.includes('/.venv/') ||
+    normalized.includes('/__pycache__/') ||
+    normalized.includes('/dist/') ||
+    normalized.includes('/build/')
+  ) {
+    return true;
+  }
+  
   // Extension check
-  if (/\.(yaml|yml|toml|ini|xml|txt|env|example|lock|codespellrc|rst|adoc)$/i.test(normalized)) {
+  if (/\.(yaml|yml|toml|ini|xml|txt|env|example|lock|codespellrc|rst|adoc|json|jsonl|ndjson|csv|tsv|parquet|arrow)$/i.test(normalized)) {
     return true;
   }
   
   // Basename check for dotfiles or standard text documents
   const basename = normalized.split('/').pop()?.split('\\').pop() || '';
   if (
-    /^\.(gitignore|codespellrc|npmrc|eslintignore|prettierignore|env.*)$/i.test(basename) ||
+    /^\.(gitignore|codespellrc|npmrc|eslintignore|prettierignore|env.*|gitattributes|editorconfig)$/i.test(basename) ||
     /^(license|readme|notice|security|changelog|authors|contributing|hacktober.*)$/i.test(basename)
   ) {
     return true;
@@ -104,11 +127,11 @@ export function isOptimizableFile(filePath: string, allowMarkdown: boolean = fal
   // 1. Filter out binary files
   if (isBinaryFile(filePath)) return false;
   
-  // 2. Filter out configuration/non-code/metadata files
+  // 2. Filter out configuration/non-code/metadata files and memory/system paths
   if (isConfigOrNonCodeFile(filePath)) return false;
   
-  // 3. Filter out Lockfiles, lock references
-  if (/\.(lock|yaml|yml|json|toml|ini|xml)$/i.test(normalized)) {
+  // 3. Filter out data files, Lockfiles, and structured datasets
+  if (/\.(lock|yaml|yml|json|jsonl|ndjson|toml|ini|xml|csv|tsv|parquet|arrow)$/i.test(normalized)) {
     return false;
   }
   
