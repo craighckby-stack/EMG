@@ -161,8 +161,14 @@ export function isOptimizableFile(filePath: string, allowMarkdown: boolean = fal
     return false;
   }
 
-  // 5. Strict code extension whitelist: Ensure the file is genuine source code
-  const isSourceCode = /\.(py|pyi|ts|tsx|js|jsx|mjs|cjs|rs|go|java|c|cpp|h|hpp|cs|rb|php|swift|kt|scala|m|mm)$/i.test(basename);
+  // 5. Exclude languages lacking active compiler verification in the runtime container
+  // (e.g. C#, Go, Rust, Java, Ruby, PHP, Swift, Kotlin have no local compiler gates and must not be mutated blind)
+  if (/\.(cs|go|rs|java|rb|php|swift|kt|scala|m|mm|dart|lua|pl|pm)$/i.test(normalized)) {
+    return false;
+  }
+
+  // 6. Strict code extension whitelist: Only allow languages with active compiler validation (Python, TS/JS, and C/C++)
+  const isSourceCode = /\.(py|pyi|ts|tsx|js|jsx|mjs|cjs|c|cpp|h|hpp)$/i.test(basename);
   if (!isSourceCode && !(allowMarkdown && isMarkdownFile(basename))) {
     return false;
   }
@@ -216,10 +222,17 @@ export function unwrapMarkdownCodeFences(code: string, language: string): { unwr
     }
   }
 
-  // 2. If code contains a markdown code fence block anywhere inside commentary
-  const fenceMatch = trimmed.match(/```(?:[a-zA-Z0-9_-]+)?\s*\n([\s\S]*?)\n```/);
-  if (fenceMatch && fenceMatch[1]) {
-    return { unwrapped: fenceMatch[1].trim(), wasWrapped: true };
+  // 2. If code contains markdown code fence blocks anywhere inside commentary,
+  // find all blocks and select the longest one to prevent extracting a 1-line snippet over the actual file
+  const fenceMatches = Array.from(trimmed.matchAll(/```(?:[a-zA-Z0-9_-]+)?\s*\n([\s\S]*?)\n```/g)) as RegExpMatchArray[];
+  if (fenceMatches.length > 0) {
+    const longest = fenceMatches.reduce((max: string, m: RegExpMatchArray) => {
+      const content = m[1] || '';
+      return content.length > max.length ? content : max;
+    }, '');
+    if (longest.trim().length > 0) {
+      return { unwrapped: longest.trim(), wasWrapped: true };
+    }
   }
 
   // 3. Simple root-wrapped code fence
@@ -683,13 +696,14 @@ function validateMarkdown(code: string): { errors: ValidationError[]; unclosedFe
  */
 async function callServerValidator(
   code: string,
-  filePath: string
+  filePath: string,
+  originalCode?: string
 ): Promise<{ reachable: boolean; diagnostics: ValidationError[] }> {
   try {
     const res = await fetch('/api/validate', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ code, filePath }),
+      body: JSON.stringify({ code, filePath, originalCode }),
     });
 
     if (!res.ok) return { reachable: false, diagnostics: [] };
@@ -731,7 +745,8 @@ export async function lintSourceCode(code: string, filePath: string, projectFile
 
 export async function validateSourceCode(
   rawCode: string,
-  filePath: string
+  filePath: string,
+  originalCode?: string
 ): Promise<ValidationResult> {
   if (!rawCode || !rawCode.trim()) {
     return {
@@ -796,6 +811,67 @@ export async function validateSourceCode(
     });
   }
 
+  // Destructive Truncation & Code Deletion Sanity Gate
+  if (originalCode && typeof originalCode === 'string' && originalCode.trim().length > 80) {
+    const origLines = originalCode.trim().split('\n').length;
+    const candLines = code.trim().split('\n').length;
+
+    // Reject catastrophic line count drop (>30% reduction on files >= 15 lines)
+    if (origLines >= 15 && candLines < Math.floor(origLines * 0.70)) {
+      errors.push({
+        line: candLines,
+        column: 1,
+        message: `Destructive Truncation: Candidate dropped from ${origLines} to ${candLines} lines (${Math.round((1 - candLines / origLines) * 100)}% deletion). Refactoring must preserve the full file implementation.`,
+        code: 'DESTRUCTIVE_TRUNCATION',
+        severity: 'error',
+        snippet: code.slice(-100).trim(),
+      });
+    }
+
+    // Reject test deletion in test files across Python, Go, C#, and JS/TS
+    const isTest = filePath.toLowerCase().includes('test');
+    if (isTest) {
+      const testPattern = /(?:def\s+test_|@pytest\.mark|test\s*\(|it\s*\(|func\s+Test[A-Z0-9_]|\[Fact\]|\[Test\]|\[Theory\])/g;
+      const origTests = (originalCode.match(testPattern) || []).length;
+      const candTests = (code.match(testPattern) || []).length;
+      if (origTests >= 1 && candTests < origTests) {
+        errors.push({
+          line: 1,
+          column: 1,
+          message: `Destructive Test Deletion: Original test file had ${origTests} tests, but candidate has ${candTests}. Automated refactoring must never delete test cases.`,
+          code: 'DESTRUCTIVE_TEST_DELETION',
+          severity: 'error',
+        });
+      }
+    }
+
+    // Reject module header and import stripping
+    const origImports = (originalCode.match(/^(?:import\s+|from\s+|using\s+[A-Z]|import\s*\()/gm) || []).length;
+    const candImports = (code.match(/^(?:import\s+|from\s+|using\s+[A-Z]|import\s*\()/gm) || []).length;
+    if (origImports >= 2 && candImports === 0) {
+      errors.push({
+        line: 1,
+        column: 1,
+        message: `Header Stripped: Original file contained ${origImports} import statements, but candidate contains zero imports. Module imports and file headers were wiped out.`,
+        code: 'HEADER_STRIPPED',
+        severity: 'error',
+      });
+    }
+
+    // Reject license and copyright header stripping
+    const origHasLicense = /(?:SPDX-License-Identifier:|Copyright\s+(?:\([cC]\)|©)|Licensed\s+under\s+the|Permission\s+is\s+hereby\s+granted)/i.test(originalCode.slice(0, 2000));
+    const optHasLicense = /(?:SPDX-License-Identifier:|Copyright\s+(?:\([cC]\)|©)|Licensed\s+under\s+the|Permission\s+is\s+hereby\s+granted)/i.test(code.slice(0, 2000));
+    if (origHasLicense && !optHasLicense) {
+      errors.push({
+        line: 1,
+        column: 1,
+        message: 'License Header Stripped: Original file contained a copyright or license header, but candidate removed it. License headers must be preserved.',
+        code: 'LICENSE_HEADER_STRIPPED',
+        severity: 'error',
+      });
+    }
+  }
+
   // 1. JSON Specific Check
   if (language === 'json') {
     const jsonErrors = validateJson(code);
@@ -842,7 +918,7 @@ export async function validateSourceCode(
     language === 'javascript-jsx';
 
   if (isJsTs) {
-    const serverResult = await callServerValidator(code, filePath);
+    const serverResult = await callServerValidator(code, filePath, originalCode);
 
     if (serverResult.reachable) {
       errors.push(...serverResult.diagnostics);
@@ -869,7 +945,7 @@ export async function validateSourceCode(
   // 3b. Python authoritative Server AST & Syntax Gate
   const isPython = language === 'python';
   if (isPython) {
-    const serverResult = await callServerValidator(code, filePath);
+    const serverResult = await callServerValidator(code, filePath, originalCode);
     if (serverResult.reachable) {
       errors.push(...serverResult.diagnostics);
       const valid = errors.filter((e) => e.severity === 'error').length === 0;
@@ -881,6 +957,77 @@ export async function validateSourceCode(
         autoHealed,
         healedCode,
       };
+    }
+  }
+
+  // 3c. C# and Go Server & Static Syntax Gate
+  const isCsharp = language === 'csharp';
+  const isGo = language === 'go';
+  if (isCsharp || isGo) {
+    const serverResult = await callServerValidator(code, filePath, originalCode);
+    if (serverResult.reachable) {
+      errors.push(...serverResult.diagnostics);
+      const valid = errors.filter((e) => e.severity === 'error').length === 0;
+      return {
+        valid,
+        language,
+        errors,
+        warnings,
+        autoHealed,
+        healedCode,
+      };
+    }
+
+    // Client-side fallback if server validator unreachable
+    if (isCsharp) {
+      if (/\{\s*get\.init;\s*\}|\{\s*get\.set;\s*\}/.test(code)) {
+        errors.push({
+          line: 1,
+          column: 1,
+          message: "C# Syntax Error: Invalid property accessor '{ get.init; }'. Must use semicolon syntax '{ get; init; }'.",
+          code: 'CS_SYNTAX_ERROR',
+          severity: 'error',
+        });
+      }
+      if (/System\.Threading\.Lock\b|\bLock\s+[a-zA-Z0-9_]+\s*=|new\s+Lock\(\)/.test(code)) {
+        errors.push({
+          line: 1,
+          column: 1,
+          message: "C# Incompatibility Error: 'System.Threading.Lock' requires .NET 9+. Project targets .NET 8 LTS.",
+          code: 'CS_FRAMEWORK_INCOMPATIBILITY',
+          severity: 'error',
+        });
+      }
+      if (/\bAggregationEvaluation\b/.test(code) && (!originalCode || !/\bAggregationEvaluation\b/.test(originalCode))) {
+        errors.push({
+          line: 1,
+          column: 1,
+          message: "C# Semantic Error: Undefined type 'AggregationEvaluation'.",
+          code: 'CS_UNDEFINED_TYPE',
+          severity: 'error',
+        });
+      }
+    }
+
+    if (isGo) {
+      if (!/^\s*package\s+[a-zA-Z0-9_]+/m.test(code)) {
+        errors.push({
+          line: 1,
+          column: 1,
+          message: "Go Syntax Error: Missing 'package <name>' declaration at top of file.",
+          code: 'GO_MISSING_PACKAGE',
+          severity: 'error',
+        });
+      }
+      if (/\b(?:ConflictStrategy|metrics\.Enabled|agentmesh\.Identity|agentmesh\.Client)\b/.test(code) && (!originalCode || !/\b(?:ConflictStrategy|metrics\.Enabled|agentmesh\.Identity|agentmesh\.Client)\b/.test(originalCode))) {
+        errors.push({
+          line: 1,
+          column: 1,
+          message: 'Go Semantic Error: Undefined identifier or struct member introduced in candidate.',
+          code: 'GO_UNDEFINED_IDENTIFIER',
+          severity: 'error',
+        });
+      }
     }
   }
   const delimiterCheck = checkDelimitersAndStrings(code, isPython);

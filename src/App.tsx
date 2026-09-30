@@ -510,7 +510,7 @@ export default function App() {
         // 2. STRICT TYPE & AST SYNTAX VERIFIER
         let validationDiagnostics: string[] = [];
         if (config.strictTypeCheck !== false) {
-          const val = await validateSourceCode(cleanCode, targetFile.path);
+          const val = await validateSourceCode(cleanCode, targetFile.path, targetFile.content);
           if (val.autoHealed && val.healedCode) {
             cleanCode = val.healedCode;
             pushLog(`[AUTO-HEALED] Fixed syntax/delimiter issue in [${targetFile.path}].`, 'info', undefined, targetFile.path);
@@ -1065,7 +1065,7 @@ export default function App() {
         // 2. STRICT TYPE & AST SYNTAX VERIFIER
         let validationDiagnostics: string[] = [];
         if (config.strictTypeCheck !== false) {
-          const val = await validateSourceCode(cleanCode, target.path);
+          const val = await validateSourceCode(cleanCode, target.path, fileData.content);
           if (val.autoHealed && val.healedCode) {
             cleanCode = val.healedCode;
             pushLog(`[AUTO-HEALED] Fixed syntax/delimiter issue in [${target.path}].`, 'info', undefined, target.path);
@@ -1370,6 +1370,39 @@ export default function App() {
 
         const originalLines = originalContent.split('\n').length;
         const optimizedLines = cleanCode.split('\n').length;
+
+        // Pre-commit destructive truncation, test deletion, and license stripping safety guards
+        if (!isTargetingMarkdown) {
+          if (originalLines >= 15 && optimizedLines < Math.floor(originalLines * 0.70)) {
+            pushLog(`[SAFETY ABORT] Catastrophic truncation detected (${originalLines} -> ${optimizedLines} lines). Refusing to commit to prevent code loss.`, 'error', undefined, target.path);
+            setStatus('IDLE');
+            return;
+          }
+
+          if (target.path.toLowerCase().includes('test')) {
+            const testPattern = /(?:def\s+test_|@pytest\.mark|test\s*\(|it\s*\(|func\s+Test[A-Z0-9_]|\[Fact\]|\[Test\]|\[Theory\])/g;
+            const origTests = (originalContent.match(testPattern) || []).length;
+            const candTests = (cleanCode.match(testPattern) || []).length;
+            if (origTests >= 1 && candTests < origTests) {
+              pushLog(`[SAFETY ABORT] Test suite reduction detected (${origTests} -> ${candTests} tests). Refusing to commit to protect test coverage.`, 'error', undefined, target.path);
+              setStatus('IDLE');
+              return;
+            }
+          }
+
+          const origHasLicense = /(?:SPDX-License-Identifier:|Copyright\s+(?:\([cC]\)|©)|Licensed\s+under\s+the|Permission\s+is\s+hereby\s+granted)/i.test(originalContent.slice(0, 2000));
+          const candHasLicense = /(?:SPDX-License-Identifier:|Copyright\s+(?:\([cC]\)|©)|Licensed\s+under\s+the|Permission\s+is\s+hereby\s+granted)/i.test(cleanCode.slice(0, 2000));
+          if (origHasLicense && !candHasLicense) {
+            pushLog(`[SAFETY ABORT] License or copyright header stripped. Refusing to commit.`, 'error', undefined, target.path);
+            setStatus('IDLE');
+            return;
+          }
+
+          // Enforce POSIX single trailing newline
+          if (!cleanCode.endsWith('\n')) {
+            cleanCode = cleanCode.trimEnd() + '\n';
+          }
+        }
 
         let commitSha = 'dry-run';
 

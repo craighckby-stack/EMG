@@ -224,8 +224,14 @@ export function sanitizeCode(
     }
   }
 
+  // Enforce POSIX single trailing newline
+  let finalCode = code;
+  if (finalCode.trim().length > 0) {
+    finalCode = finalCode.trimEnd() + '\n';
+  }
+
   return {
-    sanitized: code,
+    sanitized: finalCode,
     redactedCount,
     redactedTypes: Array.from(redactedTypesSet),
     findings,

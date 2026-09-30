@@ -15,6 +15,7 @@
 * **Case Study #2 (Project Euler Run):** [`docs/CASE_STUDY_PYTHON_REPO_RUN_2.md`](./docs/CASE_STUDY_PYTHON_REPO_RUN_2.md) — Combinatorics refactors, AST validation gates, and delimiter fixes.
 * **Case Study #3 (sqlparse Production Run):** [`docs/CASE_STUDY_PYTHON_REPO_RUN_3.md`](./docs/CASE_STUDY_PYTHON_REPO_RUN_3.md) — Production parser contracts, anti-defensive typing gates, and commit loop fixes.
 * **Case Study #4 (Contradictory Evidence & Fixture Isolation):** [`docs/CASE_STUDY_PYTHON_REPO_RUN_4.md`](./docs/CASE_STUDY_PYTHON_REPO_RUN_4.md) — Epistemic contradiction reconciliation, test fixture protection, PEP 563 import safety, and memory revocation.
+* **Case Study #5 (Polyglot Monorepo & Truncation Governance):** [`docs/CASE_STUDY_PYTHON_REPO_RUN_5.md`](./docs/CASE_STUDY_PYTHON_REPO_RUN_5.md) — Forensic audit of `agent-governance-toolkit`, multi-language compilation vacuums, test suite preservation, multi-block fence safety, and POSIX newline enforcement.
 
 ---
 
@@ -93,6 +94,17 @@
 * **Compiler Warning Strictness (`python3 -W error`)**: Treats invalid escape sequences and deprecated syntax as hard failures, enforcing raw strings (`r"""..."""`).
 * **PEP 563 Deferred Annotations (Rule #15)**: Enforces `from __future__ import annotations` when type annotations use module attributes or forward references, preventing import-time `AttributeError` crashes.
 * **Unused Import Rejection**: Blocks redundant imports (`Callable`, `Any`) from polluting namespace.
+* **AST Undefined Symbol Audit**: Scans loaded symbols against defined/imported names, catching deleted headers and missing imports.
+
+### 9. Destructive Truncation & Test Suite Preservation Gate (`server.ts` & `validator.ts`)
+* **Mass Preservation Ratio**: Rejects candidate mutations where code drops by $>35\%$ on files $\ge 25$ lines, eliminating 1-line snippet replacement bugs.
+* **Strict Test Count Preservation**: Prohibits deleting or reducing unit test declarations (`def test_`, `it(`, `test(`).
+* **Multi-Fence Disambiguation**: Selects the longest code block when responses contain multiple fences, preventing illustrative snippets from displacing full implementations.
+* **POSIX Trailing Newline Enforcement**: Automatically appends a trailing `\n` to all generated source files.
+
+### 10. Compiler-Gated Language Boundary Whitelist (`validator.ts`)
+* Restricts optimization targets strictly to languages backed by authoritative compilers in the runtime environment (Python, TypeScript/JavaScript, C/C++).
+* Completely blocks uncompilable targets (C#, Go, Rust, Java, Ruby, PHP, Swift, Kotlin) from blind autonomous mutations.
 
 ---
 

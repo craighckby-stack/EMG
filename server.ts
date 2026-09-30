@@ -372,7 +372,15 @@ async function startServer() {
 15. MANDATORY 'from __future__ import annotations' & IMPORT-SAFE TYPE ANNOTATIONS:
    - When adding modern type annotations in Python, ALWAYS include 'from __future__ import annotations' as the very first import statement in the module (immediately after docstrings).
    - NEVER invent or use non-existent submodules in type annotations (e.g. use 'sql.TokenList' or 'sql.Statement', NEVER 'sql.statement.TokenList').
-   - Only reference types that are directly imported or exist on the imported namespace.`
+   - Only reference types that are directly imported or exist on the imported namespace.
+16. STRICT PRESERVATION OF TEST CASES & ZERO TEST DELETION:
+   - In test files, NEVER delete, truncate, stub out, or weaken existing test methods, assertions, or test cases. Every single existing test function and test assertion must remain present and intact.
+   - NEVER replace a full test suite with an illustrative sample snippet or a 1-line reproduction.
+17. MANDATORY FULL-FILE EMISSION (NEVER OMIT IMPORTS OR HEADERS):
+   - You MUST output the ENTIRE file from the very first line (including all shebangs, license headers, module docstrings, and imports) to the very last line.
+   - NEVER start output after imports or assume imports are retained. Omitting imports causes fatal NameError crashes at runtime.
+18. ZERO HALLUCINATED SIBLING IMPORTS:
+   - NEVER import classes, functions, or submodules from sibling packages that do not exist. Always verify the imports present in the original codebase.`
         : '';
 
       const prompt = `You are EMG Core Neural Code and Documentation Optimizer Engine.
@@ -399,7 +407,15 @@ CRITICAL Requirements:
 4. ABSOLUTE PROHIBITION ON UNVERIFIABLE SELF-PRAISE: Do NOT include self-praising adjectives or marketing claims in comments, headers, or docstrings (such as "production-grade", "hardened", "leak-free", "fully optimized", "state-of-the-art"). Keep all code documentation strictly technical, neutral, and factual.
 5. ABSOLUTE PROHIBITION ON UNGROUNDED QUANTITATIVE CLAIMS: Do NOT invent fabricated-sounding statistics, percentages, benchmark scores, or cycle counts in comments or docstrings (such as "340% latency reduction", "accuracy of 0.85", "within 4 cycles") unless derived from an actual computation or data source in the diff. Mark stubs/placeholders explicitly ("not yet computed").
 6. TRUNCATION PREVENTATIVE RULE: Output complete, unbroken source code from start to end. Keep template literals concise and do not emit monolithic multi-line template strings that risk output token truncation.
-7. Output a 1-sentence summary of enhancements immediately after @@@SUMMARY:${pythonDirectives}`;
+7. COMMENT, DOCSTRING & LICENSE PRESERVATION: Do NOT delete or truncate existing comments, explanatory notes, module-level docstrings, or copyright/license headers (SPDX, MIT, Apache, BSD). Preserve them verbatim. Do NOT collapse multi-line docstrings into one line.
+8. TEST PRESERVATION INVIOLABILITY: In any test file (or code containing test functions/assertions), you must NEVER delete, omit, or comment out any test case, test function, or assertion. Every test case must remain present and executable.
+9. TARGET FRAMEWORK & MULTI-LANGUAGE SAFETY:
+   - C# (.NET): Target framework is .NET 8 LTS. Do NOT use .NET 9+ exclusive types such as System.Threading.Lock. Always use 'private readonly object _lock = new object();'. Ensure property accessor syntax is '{ get; init; }' or '{ get; set; }', never '{ get.init; }'. Never invent undefined types or mutate interface signatures in isolation.
+   - Go: Do not invent non-existent types, struct fields, or methods (e.g., ConflictStrategy, metrics.Enabled, agentmesh.Identity). Maintain standard Go package and export visibility.
+   - Python: Ensure all type annotations (Any, Optional, Union, Callable, etc.) have explicit imports from typing. Never reference pytest without importing it.
+   - JavaScript/TypeScript: Never alter test assertions to use 'process.env.* || \'\'' or empty strings that make assertions trivially true or tautological.
+10. POSIX TRAILING NEWLINE: Ensure the source code terminates with a single trailing newline.
+11. Output a 1-sentence summary of enhancements immediately after @@@SUMMARY:${pythonDirectives}`;
 
       const startTime = performance.now();
 
@@ -477,6 +493,10 @@ CRITICAL Requirements:
         ? 'Enhanced documentation structure, standard headings, and language tags.'
         : 'Applied neural performance and architecture optimizations.';
 
+      // Check if output was cut off mid-generation due to max output tokens ceiling
+      const candidateFinish = response.candidates?.[0]?.finishReason;
+      const wasTokenTruncated = candidateFinish === 'MAX_TOKENS' || candidateFinish === 'LENGTH';
+
       if (rawText.includes('@@@SUMMARY:')) {
         const summaryPart = rawText.split('@@@SUMMARY:')[1].trim().split('\n')[0];
         if (summaryPart) {
@@ -500,10 +520,17 @@ CRITICAL Requirements:
         cleaned = cleaned.trim();
 
         // Extract from markdown code fence if present
+        // If multiple code fences exist, pick the longest block so we never accidentally take a 1-line snippet
         if (!isMarkdown) {
-          const fenceMatch = cleaned.match(/```(?:[a-zA-Z0-9_-]+)?\s*\n([\s\S]*?)(?:\n```|$)/);
-          if (fenceMatch && fenceMatch[1]) {
-            cleaned = fenceMatch[1].trim();
+          const fenceMatches = Array.from(cleaned.matchAll(/```(?:[a-zA-Z0-9_-]+)?\s*\n([\s\S]*?)(?:\n```|$)/g)) as RegExpMatchArray[];
+          if (fenceMatches.length > 0) {
+            const longest = fenceMatches.reduce((max: string, m: RegExpMatchArray) => {
+              const content = m[1] || '';
+              return content.length > max.length ? content : max;
+            }, '');
+            if (longest.trim().length > 0) {
+              cleaned = longest.trim();
+            }
           } else if (cleaned.startsWith('```')) {
             cleaned = cleaned.replace(/^```[a-z0-9_-]*\n?/i, '').replace(/\n?```$/i, '').trim();
           }
@@ -533,6 +560,93 @@ CRITICAL Requirements:
         optimized = optimized.replace(/@+\s*$/, '').trim();
       }
 
+      // Reject token-limit truncated outputs and revert to baseline
+      if (wasTokenTruncated && code && code.trim().length >= 5) {
+        console.warn(`[SAFETY GATE] Model generation hit MAX_TOKENS ceiling on ${filePath || 'file'}. Preserving baseline.`);
+        optimized = code.trim();
+        summary = 'Preserved baseline source code: Model response was cut off mid-generation by output token limit.';
+      }
+
+      // Catastrophic Truncation & Destructive Deletion Guard
+      if (code && typeof code === 'string' && code.trim().length > 80 && !isMarkdown) {
+        const origLines = code.trim().split('\n');
+        const optLines = optimized.trim().split('\n');
+
+        // Check 1: Severe line count drop (>30% reduction on files >= 15 lines)
+        if (origLines.length >= 15 && optLines.length < Math.floor(origLines.length * 0.70)) {
+          console.warn(`[SAFETY GATE] Rejected catastrophic truncation: ${origLines.length} -> ${optLines.length} lines on ${filePath || 'file'}. Preserving baseline.`);
+          optimized = code.trim();
+          summary = `Preserved baseline: Candidate was rejected due to catastrophic line count reduction (${origLines.length} -> ${optLines.length} lines).`;
+        }
+
+        // Check 2: Universal test case deletion across Python, Go, C#, and JS/TS
+        const isTestFile = filePath && (filePath.toLowerCase().includes('test') || /test_|_test\./.test(filePath));
+        if (isTestFile) {
+          const testPattern = /(?:def\s+test_|@pytest\.mark|test\s*\(|it\s*\(|func\s+Test[A-Z0-9_]|\[Fact\]|\[Test\]|\[Theory\])/g;
+          const origTests = (code.match(testPattern) || []).length;
+          const optTests = (optimized.match(testPattern) || []).length;
+          if (origTests >= 1 && optTests < origTests) {
+            console.warn(`[SAFETY GATE] Rejected test deletion: ${origTests} -> ${optTests} tests on ${filePath}. Preserving baseline.`);
+            optimized = code.trim();
+            summary = `Preserved baseline: Candidate deleted test cases (${origTests} -> ${optTests}). Test suites must never lose tests.`;
+          }
+        }
+
+        // Check 3: Top-level module import and header stripping
+        const origImports = (code.match(/^(?:import\s+|from\s+|using\s+[A-Z]|import\s*\()/gm) || []).length;
+        const optImports = (optimized.match(/^(?:import\s+|from\s+|using\s+[A-Z]|import\s*\()/gm) || []).length;
+        if (origImports >= 2 && optImports === 0) {
+          console.warn(`[SAFETY GATE] Rejected import stripping: ${origImports} -> 0 imports on ${filePath}. Preserving baseline.`);
+          optimized = code.trim();
+          summary = `Preserved baseline: Candidate stripped all module imports. Top-level imports and headers must be preserved.`;
+        }
+
+        // Check 4: License and Copyright Header Stripping
+        const origHasLicense = /(?:SPDX-License-Identifier:|Copyright\s+(?:\([cC]\)|©)|Licensed\s+under\s+the|Permission\s+is\s+hereby\s+granted)/i.test(code.slice(0, 2000));
+        const optHasLicense = /(?:SPDX-License-Identifier:|Copyright\s+(?:\([cC]\)|©)|Licensed\s+under\s+the|Permission\s+is\s+hereby\s+granted)/i.test(optimized.slice(0, 2000));
+        if (origHasLicense && !optHasLicense) {
+          console.warn(`[SAFETY GATE] Rejected license/copyright header stripping on ${filePath}. Preserving baseline.`);
+          optimized = code.trim();
+          summary = `Preserved baseline: Candidate removed license or copyright header. License headers must be preserved verbatim.`;
+        }
+
+        // Check 5: C# Syntax typo & .NET 9 type incompatibilities
+        if (filePath && /\.cs$/i.test(filePath)) {
+          if (/System\.Threading\.Lock\b|\bLock\s+[a-zA-Z0-9_]+\s*=|new\s+Lock\(\)/.test(optimized)) {
+            console.warn(`[SAFETY GATE] Rejected C# .NET 9 type (Lock) on ${filePath}. Preserving baseline.`);
+            optimized = code.trim();
+            summary = `Preserved baseline: Candidate used System.Threading.Lock (.NET 9+), incompatible with .NET 8 LTS.`;
+          }
+          if (/\{\s*get\.init;\s*\}|\{\s*get\.set;\s*\}/.test(optimized)) {
+            console.warn(`[SAFETY GATE] Rejected C# syntax typo { get.init; } on ${filePath}. Preserving baseline.`);
+            optimized = code.trim();
+            summary = `Preserved baseline: Candidate contained C# syntax typo { get.init; }.`;
+          }
+          if (/\bAggregationEvaluation\b/.test(optimized) && !/\bAggregationEvaluation\b/.test(code)) {
+            console.warn(`[SAFETY GATE] Rejected hallucinated type AggregationEvaluation on ${filePath}. Preserving baseline.`);
+            optimized = code.trim();
+            summary = `Preserved baseline: Candidate introduced non-existent type AggregationEvaluation.`;
+          }
+        }
+
+        // Check 6: Go hallucinated symbols
+        if (filePath && /\.go$/i.test(filePath)) {
+          if (/\b(?:ConflictStrategy|metrics\.Enabled|agentmesh\.Identity|agentmesh\.Client)\b/.test(optimized) && !/\b(?:ConflictStrategy|metrics\.Enabled|agentmesh\.Identity|agentmesh\.Client)\b/.test(code)) {
+            console.warn(`[SAFETY GATE] Rejected hallucinated Go symbol on ${filePath}. Preserving baseline.`);
+            optimized = code.trim();
+            summary = `Preserved baseline: Candidate introduced non-existent Go symbols.`;
+          }
+        }
+
+        // Check 7: Mid-token truncation guard
+        const lastLine = optimized.trimEnd().split('\n').pop() || '';
+        if (/^[ \t]*(?:Session|def|class|func|return|import|from|with|if|while|for)[ \t]*[a-zA-Z0-9_]*$/.test(lastLine) && !/[;})\]:"]$/.test(lastLine)) {
+          console.warn(`[SAFETY GATE] Rejected incomplete trailing statement '${lastLine.trim()}' on ${filePath}. Preserving baseline.`);
+          optimized = code.trim();
+          summary = `Preserved baseline: Candidate was cut off mid-statement at the end of the file.`;
+        }
+      }
+
       if (!optimized || optimized.length < 5) {
         if (code && code.trim().length >= 5) {
           optimized = code.trim();
@@ -549,8 +663,14 @@ CRITICAL Requirements:
       const sanitizedCodeResult = sanitizeServerSecrets(optimized);
       const sanitizedSummaryResult = sanitizeServerSecrets(summary);
 
+      // Enforce POSIX standard: source code files must end with a single trailing newline
+      let finalCode = sanitizedCodeResult.text;
+      if (!isMarkdown) {
+        finalCode = finalCode.trimEnd() + '\n';
+      }
+
       return res.json({
-        optimizedCode: sanitizedCodeResult.text,
+        optimizedCode: finalCode,
         summary: sanitizedSummaryResult.text,
         latencyMs,
         tokensEstimate,
@@ -802,15 +922,161 @@ CRITICAL Requirements:
   // Native TypeScript AST & Diagnostic Validation Endpoint
   app.post('/api/validate', (req, res) => {
     try {
-      const { code, filePath } = req.body;
+      const { code, filePath, originalCode } = req.body;
       if (!code || typeof code !== 'string') {
         return res.status(400).json({ error: 'Source code is required.' });
+      }
+
+      // Universal Destructive Truncation & Deletion Sanity Gate
+      if (originalCode && typeof originalCode === 'string' && originalCode.trim().length > 80) {
+        const origLines = originalCode.trim().split('\n').length;
+        const candLines = code.trim().split('\n').length;
+
+        // Check 1: Severe line count drop (>30% reduction on files >= 15 lines)
+        if (origLines >= 15 && candLines < Math.floor(origLines * 0.70)) {
+          return res.json({
+            valid: false,
+            diagnostics: [{
+              line: candLines,
+              column: 1,
+              message: `Destructive Truncation: Candidate dropped from ${origLines} to ${candLines} lines (${Math.round((1 - candLines / origLines) * 100)}% deletion). Full file implementation must be preserved.`,
+              code: 'DESTRUCTIVE_TRUNCATION',
+              severity: 'error',
+              snippet: code.slice(-100).trim(),
+            }],
+          });
+        }
+
+        // Check 2: Universal test case deletion across Python, Go, C#, and JS/TS
+        const isTest = (filePath || '').toLowerCase().includes('test');
+        if (isTest) {
+          const testPattern = /(?:def\s+test_|@pytest\.mark|test\s*\(|it\s*\(|func\s+Test[A-Z0-9_]|\[Fact\]|\[Test\]|\[Theory\])/g;
+          const origTests = (originalCode.match(testPattern) || []).length;
+          const candTests = (code.match(testPattern) || []).length;
+          if (origTests >= 1 && candTests < origTests) {
+            return res.json({
+              valid: false,
+              diagnostics: [{
+                line: 1,
+                column: 1,
+                message: `Destructive Test Deletion: Original test file had ${origTests} tests, but candidate has ${candTests}. Automated refactoring must never delete test cases.`,
+                code: 'DESTRUCTIVE_TEST_DELETION',
+                severity: 'error',
+                snippet: '',
+              }],
+            });
+          }
+        }
+
+        // Check 3: Module header & import stripping
+        const origImports = (originalCode.match(/^(?:import\s+|from\s+|using\s+[A-Z]|import\s*\()/gm) || []).length;
+        const candImports = (code.match(/^(?:import\s+|from\s+|using\s+[A-Z]|import\s*\()/gm) || []).length;
+        if (origImports >= 2 && candImports === 0) {
+          return res.json({
+            valid: false,
+            diagnostics: [{
+              line: 1,
+              column: 1,
+              message: `Header Stripped: Original file contained ${origImports} import statements, but candidate contains zero imports. Module imports and file headers were wiped out.`,
+              code: 'HEADER_STRIPPED',
+              severity: 'error',
+              snippet: '',
+            }],
+          });
+        }
+
+        // Check 4: License and Copyright Header Stripping
+        const origHasLicense = /(?:SPDX-License-Identifier:|Copyright\s+(?:\([cC]\)|©)|Licensed\s+under\s+the|Permission\s+is\s+hereby\s+granted)/i.test(originalCode.slice(0, 2000));
+        const optHasLicense = /(?:SPDX-License-Identifier:|Copyright\s+(?:\([cC]\)|©)|Licensed\s+under\s+the|Permission\s+is\s+hereby\s+granted)/i.test(code.slice(0, 2000));
+        if (origHasLicense && !optHasLicense) {
+          return res.json({
+            valid: false,
+            diagnostics: [{
+              line: 1,
+              column: 1,
+              message: 'License Header Stripped: Original file contained a copyright or license header, but candidate removed it. License headers must be preserved.',
+              code: 'LICENSE_HEADER_STRIPPED',
+              severity: 'error',
+              snippet: '',
+            }],
+          });
+        }
       }
 
       const fileName = filePath || 'source.tsx';
       const isTs = /\.(ts|tsx)$/i.test(fileName);
       const isJs = /\.(js|jsx|mjs|cjs)$/i.test(fileName);
       const isPython = /\.py$/i.test(fileName);
+      const isCsharp = /\.cs$/i.test(fileName);
+      const isGo = /\.go$/i.test(fileName);
+
+      // C# Language Validation Gate
+      if (isCsharp) {
+        const diagnostics: any[] = [];
+        if (/\{\s*get\.init;\s*\}|\{\s*get\.set;\s*\}/.test(code)) {
+          diagnostics.push({
+            line: 1,
+            column: 1,
+            message: "C# Syntax Error: Invalid property accessor syntax '{ get.init; }'. Must use semicolon syntax '{ get; init; }'.",
+            code: 'CS_SYNTAX_ERROR',
+            severity: 'error',
+            snippet: code.slice(0, 100),
+          });
+        }
+        if (/System\.Threading\.Lock\b|\bLock\s+[a-zA-Z0-9_]+\s*=|new\s+Lock\(\)/.test(code)) {
+          diagnostics.push({
+            line: 1,
+            column: 1,
+            message: "C# Incompatibility Error: 'System.Threading.Lock' requires .NET 9+. Project targets .NET 8 LTS. Use 'private readonly object _lock = new object();'.",
+            code: 'CS_FRAMEWORK_INCOMPATIBILITY',
+            severity: 'error',
+            snippet: 'System.Threading.Lock',
+          });
+        }
+        if (/\bAggregationEvaluation\b/.test(code) && (!originalCode || !/\bAggregationEvaluation\b/.test(originalCode))) {
+          diagnostics.push({
+            line: 1,
+            column: 1,
+            message: "C# Semantic Error: Undefined type 'AggregationEvaluation'. Type is not declared in project.",
+            code: 'CS_UNDEFINED_TYPE',
+            severity: 'error',
+            snippet: 'AggregationEvaluation',
+          });
+        }
+        if (diagnostics.length > 0) {
+          return res.json({ valid: false, diagnostics });
+        }
+        return res.json({ valid: true, diagnostics: [] });
+      }
+
+      // Go Language Validation Gate
+      if (isGo) {
+        const diagnostics: any[] = [];
+        if (!/^\s*package\s+[a-zA-Z0-9_]+/m.test(code)) {
+          diagnostics.push({
+            line: 1,
+            column: 1,
+            message: "Go Syntax Error: Missing 'package <name>' declaration at top of file.",
+            code: 'GO_MISSING_PACKAGE',
+            severity: 'error',
+            snippet: code.slice(0, 80),
+          });
+        }
+        if (/\b(?:ConflictStrategy|metrics\.Enabled|agentmesh\.Identity|agentmesh\.Client)\b/.test(code) && (!originalCode || !/\b(?:ConflictStrategy|metrics\.Enabled|agentmesh\.Identity|agentmesh\.Client)\b/.test(originalCode))) {
+          diagnostics.push({
+            line: 1,
+            column: 1,
+            message: 'Go Semantic Error: Undefined identifier or struct member introduced in candidate.',
+            code: 'GO_UNDEFINED_IDENTIFIER',
+            severity: 'error',
+            snippet: 'Undefined Go symbol',
+          });
+        }
+        if (diagnostics.length > 0) {
+          return res.json({ valid: false, diagnostics });
+        }
+        return res.json({ valid: true, diagnostics: [] });
+      }
 
       // Authoritative Python AST Syntax & Delimiter Validation Gate
       if (isPython) {
@@ -830,13 +1096,63 @@ CRITICAL Requirements:
           });
         }
 
-        // 2. Real Python 3 compile verification with -W error to enforce strict syntax and catch invalid escape sequences
+        // 2. Python 3 compile verification (-W error) and AST loaded undefined symbol audit
         try {
+          const pyScript = `import sys, ast, builtins
+try:
+    code = sys.stdin.read()
+    compile(code, "<module>", "exec")
+    tree = ast.parse(code)
+    defined = set(dir(builtins))
+    defined.update([
+        "__file__", "__name__", "__doc__", "__package__", "__path__",
+        "__annotations__", "__all__", "__cached__", "__builtins__", "__spec__",
+        "self", "cls"
+    ])
+    for node in tree.body:
+        if isinstance(node, ast.Import):
+            for a in node.names:
+                defined.add(a.asname or a.name.split(".")[0])
+        elif isinstance(node, ast.ImportFrom):
+            for a in node.names:
+                defined.add(a.asname or a.name)
+        elif isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef, ast.ClassDef)):
+            defined.add(node.name)
+        elif isinstance(node, ast.Assign):
+            for t in node.targets:
+                if isinstance(t, ast.Name):
+                    defined.add(t.id)
+                elif isinstance(t, (ast.Tuple, ast.List)):
+                    for elt in t.elts:
+                        if isinstance(elt, ast.Name):
+                            defined.add(elt.id)
+        elif isinstance(node, ast.AnnAssign) and isinstance(node.target, ast.Name):
+            defined.add(node.target.id)
+
+    missing = []
+    common_missing = {"sys", "os", "json", "time", "pytest", "re", "datetime", "subprocess", "random", "argparse", "pathlib", "Path", "Any", "Callable", "Optional", "Union", "dataclass", "HTTPError", "URLError", "StringIO"}
+    for node in ast.walk(tree):
+        if isinstance(node, ast.Name) and isinstance(node.ctx, ast.Load):
+            if node.id in common_missing and node.id not in defined:
+                missing.append((node.id, node.lineno))
+    if missing:
+        sym, line = missing[0]
+        print(f"{line}:1:UndefinedSymbolError: Symbol '{sym}' is used without being imported or defined. Top-level imports were stripped.", file=sys.stderr)
+        sys.exit(2)
+    sys.exit(0)
+except SyntaxError as e:
+    print(f"{e.lineno}:{e.offset}:{e.msg}", file=sys.stderr)
+    sys.exit(1)
+except Exception as e:
+    print(f"1:1:{str(e)}", file=sys.stderr)
+    sys.exit(1)
+`;
+
           const pyCheck = spawnSync('/usr/bin/python3', [
             '-W',
             'error',
             '-c',
-            'import sys\ntry:\n    compile(sys.stdin.read(), "<module>", "exec")\n    sys.exit(0)\nexcept SyntaxError as e:\n    print(f"{e.lineno}:{e.offset}:{e.msg}", file=sys.stderr)\n    sys.exit(1)\nexcept Exception as e:\n    print(f"1:1:{str(e)}", file=sys.stderr)\n    sys.exit(1)'
+            pyScript,
           ], {
             input: code,
             encoding: 'utf-8',
@@ -858,8 +1174,8 @@ CRITICAL Requirements:
               diagnostics: [{
                 line: errLine,
                 column: errCol,
-                message: `Python SyntaxError: ${errMsg}`,
-                code: 'PY_SYNTAX_ERROR',
+                message: `Python Verification Error: ${errMsg}`,
+                code: pyCheck.status === 2 ? 'PY_UNDEFINED_SYMBOL' : 'PY_SYNTAX_ERROR',
                 severity: 'error',
                 snippet: snippet.trim(),
               }],
