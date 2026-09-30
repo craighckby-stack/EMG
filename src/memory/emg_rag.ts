@@ -11,12 +11,13 @@ import { safeGetLocalStorage, safeSetLocalStorage } from '../lib/safeStorage';
 export interface VectorMetadata {
   readonly commitHash?: string;
   readonly fixCommitHash?: string;
-  readonly provenance: 'clean' | 'failure' | 'synthesis';
-  readonly trust: 'high' | 'medium' | 'low';
+  readonly provenance: 'clean' | 'failure' | 'synthesis' | 'contradicted';
+  readonly trust: 'high' | 'medium' | 'low' | 'revoked';
   readonly file?: string;
   readonly errorClass?: string;
   readonly description?: string;
   readonly fingerprint?: string;
+  readonly invalidationReason?: string;
 }
 
 export interface VectorEntry {
@@ -258,7 +259,7 @@ let ragSyncQueue: Promise<any> = Promise.resolve();
  * Serializes the clean entries in vector memory to markdown format matching STUDIO_ATTACHMENT_CORRECT.md
  */
 export function formatCorrectMdFromVectors(vectors: VectorEntry[]): string {
-  const cleanEntries = vectors.filter((v) => v.metadata.provenance === 'clean');
+  const cleanEntries = vectors.filter((v) => v.metadata.provenance === 'clean' && v.metadata.trust !== 'revoked');
   if (cleanEntries.length === 0) return '';
 
   let out = '# STUDIO_ATTACHMENT_CORRECT.md — EMG Clean Vector Knowledge Base\n\nVerified patterns surviving AST and sanitizer gates.\n\n';
@@ -445,6 +446,7 @@ export async function initializeEmgRag(
   const cachedVectors = await loadVectorsFromIndexedDB();
   if (cachedVectors && cachedVectors.length > 0) {
     vectorStore = cachedVectors;
+    reconcileContradictoryMemories(vectorStore);
     isInitialized = true;
     return vectorStore;
   }
@@ -460,6 +462,7 @@ export async function initializeEmgRag(
   });
 
   vectorStore = Array.from(dedupMap.values());
+  reconcileContradictoryMemories(vectorStore);
   await saveVectorsToIndexedDB(vectorStore);
   isInitialized = true;
   return vectorStore;
@@ -493,12 +496,22 @@ export function queryEmgRag(currentFileAndError: string): EmgQueryResult {
   scored.sort((a, b) => b.score - a.score);
 
   const failures = scored.filter((s) => s.entry.metadata.provenance === 'failure');
-  const cleans = scored.filter((s) => s.entry.metadata.provenance === 'clean');
+  // Epistemic Guard: Never return contradicted or revoked memories as clean patterns
+  const cleans = scored.filter((s) => s.entry.metadata.provenance === 'clean' && s.entry.metadata.trust !== 'revoked');
   const syntheses = scored.filter((s) => s.entry.metadata.provenance === 'synthesis');
 
   const topFailures = failures.slice(0, 3).map((s) => s.entry);
   const topFixes = failures.filter((s) => Boolean(s.entry.pairedFixSnippet)).slice(0, 2).map((s) => s.entry);
-  const topCleanPatterns = cleans.slice(0, 2).map((s) => s.entry);
+
+  // Cross-File Contradiction Check: If any top failure originates from a file,
+  // suppress any clean patterns from that file so stale memories cannot contradict active failure evidence
+  const failingFiles = new Set(topFailures.map((f) => (f.metadata.file || '').trim().toLowerCase()).filter(Boolean));
+  const vettedCleans = cleans.filter((s) => {
+    const file = (s.entry.metadata.file || '').trim().toLowerCase();
+    return !failingFiles.has(file);
+  });
+
+  const topCleanPatterns = vettedCleans.slice(0, 2).map((s) => s.entry);
   const topSynthesis = syntheses.slice(0, 1).map((s) => s.entry);
 
   return {
@@ -615,6 +628,97 @@ export function findCachedDiagnosisInRag(
 }
 
 /**
+ * Epistemic Reconciliation: Invalidates stale "clean" vectors for a file when contradictory
+ * failure evidence is established, preventing bad mutations from being reinforced as good exemplars.
+ */
+export function invalidateCleanVectorsForFile(
+  filePath: string,
+  reason: string,
+  target?: { token: string; repo: string; branch?: string }
+): number {
+  if (!filePath) return 0;
+  const normTarget = filePath.trim().toLowerCase();
+  let invalidatedCount = 0;
+
+  vectorStore = vectorStore.map((entry) => {
+    const entryFile = (entry.metadata.file || '').trim().toLowerCase();
+    if (
+      entry.metadata.provenance === 'clean' &&
+      (entryFile === normTarget || normTarget.endsWith(entryFile) || entryFile.endsWith(normTarget))
+    ) {
+      invalidatedCount++;
+      return {
+        ...entry,
+        metadata: {
+          ...entry.metadata,
+          provenance: 'contradicted' as const,
+          trust: 'revoked' as const,
+          invalidationReason: reason,
+        },
+        content: `// [CONTRADICTED & REVOKED BY SUBSEQUENT FAILURE: ${reason}]\n` + entry.content,
+      };
+    }
+    return entry;
+  });
+
+  if (invalidatedCount > 0) {
+    saveVectorsToIndexedDB(vectorStore).catch(() => {});
+    scheduleDebouncedRagSync(target);
+  }
+
+  return invalidatedCount;
+}
+
+/**
+ * Reconciles contradictory memories across the vector store.
+ * Identifies files with active failure vectors and revokes any conflicting clean patterns.
+ */
+export function reconcileContradictoryMemories(store?: VectorEntry[]): {
+  reconciledCount: number;
+  cleanCount: number;
+  failureCount: number;
+} {
+  const current = store || vectorStore;
+  const failureFiles = new Set<string>();
+
+  for (const entry of current) {
+    if (entry.metadata.provenance === 'failure' && entry.metadata.file) {
+      failureFiles.add(entry.metadata.file.trim().toLowerCase());
+    }
+  }
+
+  let reconciledCount = 0;
+  const updated = current.map((entry) => {
+    if (entry.metadata.provenance === 'clean' && entry.metadata.file) {
+      const entryFile = entry.metadata.file.trim().toLowerCase();
+      if (failureFiles.has(entryFile)) {
+        reconciledCount++;
+        return {
+          ...entry,
+          metadata: {
+            ...entry.metadata,
+            provenance: 'contradicted' as const,
+            trust: 'revoked' as const,
+            invalidationReason: 'Superseded by verified failure entry on the same file',
+          },
+        };
+      }
+    }
+    return entry;
+  });
+
+  if (reconciledCount > 0) {
+    vectorStore = updated;
+    saveVectorsToIndexedDB(vectorStore).catch(() => {});
+  }
+
+  const cleanCount = vectorStore.filter((v) => v.metadata.provenance === 'clean' && v.metadata.trust !== 'revoked').length;
+  const failureCount = vectorStore.filter((v) => v.metadata.provenance === 'failure').length;
+
+  return { reconciledCount, cleanCount, failureCount };
+}
+
+/**
  * Appends a newly identified failure and paired fix to the RAG memory store and ledger.
  */
 export function appendFailureAndFix(
@@ -629,6 +733,13 @@ export function appendFailureAndFix(
   fingerprint?: string,
   target?: { token: string; repo: string; branch?: string }
 ): void {
+  // First, reconcile and invalidate any previously recorded "clean" vectors on this file
+  invalidateCleanVectorsForFile(
+    filePath,
+    `Superseded by failure [${errorClass}]: ${ruleToAvoid}`,
+    target
+  );
+
   const newEntry: VectorEntry = {
     id: `wrong_${failHash}`,
     metadata: {

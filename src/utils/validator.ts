@@ -71,9 +71,24 @@ export function isConfigOrNonCodeFile(filePath: string): boolean {
   ) {
     return true;
   }
+
+  // Test fixture directories and test payload data (NEVER treat test fixtures as optimizable source code)
+  if (
+    normalized.includes('/tests/files/') ||
+    normalized.includes('/test/files/') ||
+    normalized.includes('/tests/fixtures/') ||
+    normalized.includes('/test/fixtures/') ||
+    normalized.includes('/__fixtures__/') ||
+    normalized.includes('/testdata/') ||
+    normalized.includes('/tests/data/') ||
+    normalized.includes('/test/data/') ||
+    normalized.includes('/fixtures/')
+  ) {
+    return true;
+  }
   
-  // Extension check
-  if (/\.(yaml|yml|toml|ini|xml|txt|env|example|lock|codespellrc|rst|adoc|json|jsonl|ndjson|csv|tsv|parquet|arrow)$/i.test(normalized)) {
+  // Extension check (data files, fixtures, man pages, shell scripts)
+  if (/\.(yaml|yml|toml|ini|xml|txt|env|example|lock|codespellrc|rst|adoc|json|jsonl|ndjson|csv|tsv|parquet|arrow|sql|man|1|2|3|sh|bash|zsh|bat|cmd|ps1)$/i.test(normalized)) {
     return true;
   }
   
@@ -81,7 +96,7 @@ export function isConfigOrNonCodeFile(filePath: string): boolean {
   const basename = normalized.split('/').pop()?.split('\\').pop() || '';
   if (
     /^\.(gitignore|codespellrc|npmrc|eslintignore|prettierignore|env.*|gitattributes|editorconfig)$/i.test(basename) ||
-    /^(license|readme|notice|security|changelog|authors|contributing|hacktober.*)$/i.test(basename)
+    /^(todo|license|readme|notice|security|changelog|authors|contributing|hacktober.*|install|copying|news|authors|porting)(\.[a-z0-9_-]+)?$/i.test(basename)
   ) {
     return true;
   }
@@ -130,18 +145,25 @@ export function isOptimizableFile(filePath: string, allowMarkdown: boolean = fal
   // 2. Filter out configuration/non-code/metadata files and memory/system paths
   if (isConfigOrNonCodeFile(filePath)) return false;
   
-  // 3. Filter out data files, Lockfiles, and structured datasets
-  if (/\.(lock|yaml|yml|json|jsonl|ndjson|toml|ini|xml|csv|tsv|parquet|arrow)$/i.test(normalized)) {
+  // 3. Filter out data files, Lockfiles, test fixtures, and structured datasets
+  if (/\.(lock|yaml|yml|json|jsonl|ndjson|toml|ini|xml|csv|tsv|parquet|arrow|sql|man|1|2|3|sh|bash|zsh|bat|cmd|ps1)$/i.test(normalized)) {
     return false;
   }
   
-  // 4. Base name check for standard config/metadata files
+  // 4. Base name check for standard config/metadata files or extensionless files
   const basename = normalized.split('/').pop()?.split('\\').pop() || '';
   if (
     /^\./i.test(basename) || // All dotfiles
     /^(package-lock|pnpm-lock|yarn|dockerfile|makefile)$/i.test(basename) ||
-    /^(license|notice|security|changelog|authors|contributing|roadmap|tracker)(\.[a-z0-9_-]+)?$/i.test(basename)
+    /^(todo|license|notice|security|changelog|authors|contributing|roadmap|tracker|install|copying|news|porting)(\.[a-z0-9_-]+)?$/i.test(basename) ||
+    !basename.includes('.') // Any extensionless file (TODO, AUTHORS, LICENSE, etc.)
   ) {
+    return false;
+  }
+
+  // 5. Strict code extension whitelist: Ensure the file is genuine source code
+  const isSourceCode = /\.(py|pyi|ts|tsx|js|jsx|mjs|cjs|rs|go|java|c|cpp|h|hpp|cs|rb|php|swift|kt|scala|m|mm)$/i.test(basename);
+  if (!isSourceCode && !(allowMarkdown && isMarkdownFile(basename))) {
     return false;
   }
   

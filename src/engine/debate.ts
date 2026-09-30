@@ -69,25 +69,36 @@ export function executeRAGDebate(filePath: string, proposedMutation: string): De
 
   // 4. Defender (Jesus) Statement & Benefit Score calculation
   const topClean = ragQuery.topCleanPatterns ?? [];
+  const failingFiles = new Set(topFailures.map((f) => (f.metadata.file || '').trim().toLowerCase()).filter(Boolean));
+  const vettedClean = topClean.filter((c) => {
+    const file = (c.metadata.file || '').trim().toLowerCase();
+    return !failingFiles.has(file) && c.metadata.provenance === 'clean' && c.metadata.trust !== 'revoked';
+  });
+
   let benefitScore = 5; // Baseline trust
   if (sanitizerResult.clean) {
     benefitScore += 2;
   }
-  if (topClean.length > 0) {
-    benefitScore += topClean.length * 1.5;
+  if (vettedClean.length > 0) {
+    benefitScore += vettedClean.length * 1.5;
+  } else if (topFailures.length > 0) {
+    // If active failures exist and zero vetted clean patterns exist, penalize benefit score
+    benefitScore = Math.max(1, benefitScore - 3);
   }
   benefitScore = Math.min(10, Math.max(0, benefitScore));
 
-  const defenderArgument = topClean.length > 0
-    ? `This mutation aligns with ${topClean.length} clean, AST-verified historical commits across our repository ledgers. Code sanitizer passed cleanly.`
-    : `Code is clean and complies with core type safety constraints. Calculated benefit score: ${benefitScore}/10.`;
+  const defenderArgument = vettedClean.length > 0
+    ? `This mutation aligns with ${vettedClean.length} clean, AST-verified historical commits across our repository ledgers. Code sanitizer passed cleanly.`
+    : (topFailures.length > 0
+        ? `Caution: No verified clean patterns validate this file; historical failure patterns exist. Calculated benefit score: ${benefitScore}/10.`
+        : `Code is clean and complies with core type safety constraints. Calculated benefit score: ${benefitScore}/10.`);
 
   const defenderStatement: DebateStatement = {
     speaker: 'Defender (Jesus)',
     avatar: '🕊️',
     argument: defenderArgument,
     score: benefitScore,
-    matchedEntries: topClean,
+    matchedEntries: vettedClean,
   };
 
   // 5. Judge (Sovereign Synthesis) Evaluation

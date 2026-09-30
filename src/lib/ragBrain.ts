@@ -51,7 +51,7 @@ export interface RagMutationRecord {
   readonly embedding?: number[];
   readonly similarityScore?: number;
   readonly similarity?: number;
-  readonly verdict?: 'correct' | 'wrong';
+  readonly verdict?: 'correct' | 'wrong' | 'invalidated';
   readonly source?: string;
   readonly rejectionReason?: string;
 }
@@ -352,7 +352,7 @@ export async function saveMutationToRag(mutation: {
   readonly generation?: number;
   readonly commitSha?: string;
   readonly hotswapped?: boolean;
-  readonly verdict?: 'correct' | 'wrong';
+  readonly verdict?: 'correct' | 'wrong' | 'invalidated';
   readonly source?: string;
   readonly rejectionReason?: string;
 }): Promise<string> {
@@ -431,9 +431,24 @@ export async function saveMutationToRag(mutation: {
     }
   }
 
-  // 1. Save to dedicated local RAG mutations store
+  // 1. Save to dedicated local RAG mutations store with epistemic reconciliation
   const existingMutations = getLocalMutations();
-  saveLocalMutations([...existingMutations, record]);
+  const updatedMutations = resolvedVerdict === 'wrong'
+    ? existingMutations.map((m) => {
+        // Reconcile: Invalidate any previous 'correct' record on the same file
+        if (m.filePath === resolvedFilePath && m.verdict === 'correct') {
+          return {
+            ...m,
+            verdict: 'invalidated' as const,
+            rejectionReason: mutation.rejectionReason || 'Contradicted by subsequent validation or test failure',
+            riskScore: 0.95,
+          };
+        }
+        return m;
+      })
+    : existingMutations;
+
+  saveLocalMutations([...updatedMutations, record]);
 
   // 2. Index mutated code chunk into main RAG brain vector memory with positive or negative marker
   try {
@@ -786,7 +801,7 @@ export function executeNeuralSequence(state: NeuralGeneState): NeuralGeneState {
     const SIMILARITY_THRESHOLD = 0.82;
 
     const bestSemanticMatch = relevantPastFixes.find((m) => {
-      if (m.verdict === 'wrong') return false; // CRITICAL: Never reapply a rejected/wrong mutation as a positive exemplar
+      if (m.verdict === 'wrong' || m.verdict === 'invalidated') return false; // CRITICAL: Never reapply a rejected or invalidated mutation as a positive exemplar
       if (!m.mutatedCode || m.mutatedCode.trim() === originalCode.trim()) return false;
       if (m.filePath && filePath && m.filePath !== filePath) return false; // no cross-file paste
       const sim = typeof m.similarity === 'number' ? m.similarity : (typeof m.similarityScore === 'number' ? m.similarityScore : undefined);

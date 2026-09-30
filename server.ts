@@ -368,7 +368,11 @@ async function startServer() {
 14. CROSS-FUNCTION BEHAVIORAL PARITY & DOMAIN SYMMETRY:
    - Audit sibling functions within the same module for input domain consistency and mathematical symmetry.
    - If one function handles a broader or generalized input domain (e.g., negative numbers via abs(), zero, or general edge cases) while a sibling function artificially restricts or crashes on valid inputs with bare asserts, unify and generalize the input handling across the module.
-   - Do NOT merely wrap an artificial limitation in a prettier ValueError if the algorithm can be cleanly generalized using the symmetrical techniques already demonstrated by its sibling functions in the same file.`
+   - Do NOT merely wrap an artificial limitation in a prettier ValueError if the algorithm can be cleanly generalized using the symmetrical techniques already demonstrated by its sibling functions in the same file.
+15. MANDATORY 'from __future__ import annotations' & IMPORT-SAFE TYPE ANNOTATIONS:
+   - When adding modern type annotations in Python, ALWAYS include 'from __future__ import annotations' as the very first import statement in the module (immediately after docstrings).
+   - NEVER invent or use non-existent submodules in type annotations (e.g. use 'sql.TokenList' or 'sql.Statement', NEVER 'sql.statement.TokenList').
+   - Only reference types that are directly imported or exist on the imported namespace.`
         : '';
 
       const prompt = `You are EMG Core Neural Code and Documentation Optimizer Engine.
@@ -670,6 +674,15 @@ CRITICAL Requirements:
               }
             }
           }
+        }
+
+        // Rule 1E: INVALID SUBMODULE ANNOTATIONS (e.g. sql.statement.TokenList)
+        if (/\bsql\.statement\b/.test(code)) {
+          return res.json({
+            valid: false,
+            lintEvidence: `[LINT REJECT: INVALID_MODULE_ANNOTATION] Detected invalid submodule annotation 'sql.statement'. Module 'sqlparse.sql' has no attribute 'statement'; use 'sql.TokenList' or 'sql.Statement'.`,
+            ruleName: 'INVALID_MODULE_ANNOTATION'
+          });
         }
       }
 

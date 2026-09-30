@@ -1,5 +1,5 @@
 import { fetchFileContent, commitFileUpdate } from './github';
-import { findCachedDiagnosisInRag, appendFailureAndFix } from '../memory/emg_rag';
+import { findCachedDiagnosisInRag, appendFailureAndFix, invalidateCleanVectorsForFile } from '../memory/emg_rag';
 
 export async function computeSHA256(str: string): Promise<string> {
   if (typeof crypto !== 'undefined' && crypto.subtle) {
@@ -459,6 +459,7 @@ export function writePostmortem(
     source?: PostmortemSource;
     constraintRule?: string;
     symptom?: string;
+    commitToGit?: boolean;
   }
 ): Promise<PostmortemResult> {
   const executeWrite = async (): Promise<PostmortemResult> => {
@@ -466,6 +467,18 @@ export function writePostmortem(
     const timestamp = new Date().toISOString().split('T')[0];
     const source = options?.source || 'mutation-cycle';
     const fp = fingerprintError(filePath, lintEvidence);
+
+    // Epistemic Reconciliation: When a failure occurs, immediately invalidate stale "clean" vectors on this file
+    if (type === 'Failure') {
+      try {
+        invalidateCleanVectorsForFile(
+          filePath,
+          `Postmortem failure: ${options?.symptom || lintEvidence.slice(0, 100)}`
+        );
+      } catch (ragErr) {
+        console.warn('[Postmortem RAG Invalidate Error]', ragErr);
+      }
+    }
 
     // 1. Check for Isolation Artifact Errors -> BYPASS LEDGER TO PREVENT FALSE ESCALATION
     if (type === 'Failure' && isIsolationError(lintEvidence)) {
@@ -536,32 +549,41 @@ export function writePostmortem(
 
       const hash = await computeSHA256(updatedContent);
 
-      try {
-        await commitFileUpdate(
-          repo,
-          pmPath,
-          updatedContent,
-          pmSha,
-          token,
-          `EMG [${source}]: ${type === 'Failure' ? `Updated post-mortem (${finalStatus}, count: ${occurrenceCount})` : 'Logged clean post-mortem'} for ${filePath}`,
-          branch
-        );
-        return {
-          content: updatedContent,
-          hash,
-          isEscalated,
-          occurrenceCount,
-          status: finalStatus,
-          fingerprint: fp,
-        };
-      } catch (commitErr: any) {
-        if (commitErr.message && commitErr.message.includes('409') && retries > 1) {
-          retries--;
-          await new Promise((r) => setTimeout(r, 1000 + Math.random() * 1000));
-          continue;
+      // Only commit post-mortems to GitHub if explicitly enabled or when escalated to permanent skip list.
+      // Transient failures during automated mutation cycles are kept in local state / memory to prevent git history pollution.
+      const shouldCommit = options?.commitToGit !== undefined
+        ? options.commitToGit
+        : (isEscalated || source !== 'mutation-cycle');
+
+      if (shouldCommit) {
+        try {
+          await commitFileUpdate(
+            repo,
+            pmPath,
+            updatedContent,
+            pmSha,
+            token,
+            `EMG [${source}]: ${type === 'Failure' ? `Updated post-mortem (${finalStatus}, count: ${occurrenceCount})` : 'Logged clean post-mortem'} for ${filePath}`,
+            branch
+          );
+        } catch (commitErr: any) {
+          if (commitErr.message && commitErr.message.includes('409') && retries > 1) {
+            retries--;
+            await new Promise((r) => setTimeout(r, 1000 + Math.random() * 1000));
+            continue;
+          }
+          throw commitErr;
         }
-        throw commitErr;
       }
+
+      return {
+        content: updatedContent,
+        hash,
+        isEscalated,
+        occurrenceCount,
+        status: finalStatus,
+        fingerprint: fp,
+      };
     }
 
     throw new Error('Failed to write postmortem: Max retries exceeded on 409 Conflict.');

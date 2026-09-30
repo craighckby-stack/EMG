@@ -11,7 +11,10 @@
 * **Development Preview:** [https://ais-dev-ipgdsocr7adysm4iwxj2rb-483535245139.asia-southeast1.run.app](https://ais-dev-ipgdsocr7adysm4iwxj2rb-483535245139.asia-southeast1.run.app)
 * **Production Preview:** [https://ais-pre-ipgdsocr7adysm4iwxj2rb-483535245139.asia-southeast1.run.app](https://ais-pre-ipgdsocr7adysm4iwxj2rb-483535245139.asia-southeast1.run.app)
 * **New User & Preview Guide:** [`USER_GUIDE.md`](./USER_GUIDE.md) — Step-by-step onboarding, preview environment overview, and dashboard controls.
-* **Case Study (Python Repo Run):** [`docs/CASE_STUDY_PYTHON_REPO_RUN.md`](./docs/CASE_STUDY_PYTHON_REPO_RUN.md) — Deep-dive audit of the autonomous run on `TheAlgorithms/Python`, good/bad commits, and engine fixes.
+* **Case Study #1 (Python Repo Run):** [`docs/CASE_STUDY_PYTHON_REPO_RUN.md`](./docs/CASE_STUDY_PYTHON_REPO_RUN.md) — Baseline autonomous run on `TheAlgorithms/Python`.
+* **Case Study #2 (Project Euler Run):** [`docs/CASE_STUDY_PYTHON_REPO_RUN_2.md`](./docs/CASE_STUDY_PYTHON_REPO_RUN_2.md) — Combinatorics refactors, AST validation gates, and delimiter fixes.
+* **Case Study #3 (sqlparse Production Run):** [`docs/CASE_STUDY_PYTHON_REPO_RUN_3.md`](./docs/CASE_STUDY_PYTHON_REPO_RUN_3.md) — Production parser contracts, anti-defensive typing gates, and commit loop fixes.
+* **Case Study #4 (Contradictory Evidence & Fixture Isolation):** [`docs/CASE_STUDY_PYTHON_REPO_RUN_4.md`](./docs/CASE_STUDY_PYTHON_REPO_RUN_4.md) — Epistemic contradiction reconciliation, test fixture protection, PEP 563 import safety, and memory revocation.
 
 ---
 
@@ -53,8 +56,9 @@
 
 ## Primary Subsystems
 
-### 1. High-Capacity RAG Vector Memory (`emg_rag.ts`)
+### 1. High-Capacity RAG Vector Memory & Epistemic Reconciliation (`emg_rag.ts`)
 * **IndexedDB Store (1GB+ Limit)**: Replaced browser `localStorage` quotas with IndexedDB persistence, enabling multi-gigabyte vector store capacity.
+* **Epistemic Contradiction Resolution**: Implemented `reconcileContradictoryMemories()` and `invalidateCleanVectorsForFile()`. When a mutation or pattern fails in a subsequent pass, conflicting `clean` vectors are automatically revoked (`provenance: 'contradicted'`, `trust: 'revoked'`), eliminating "Zombie Memory" self-poisoning.
 * **Auto-Publishing to GitHub**: Automatically formats and commits updated `memory/vectors.jsonl` and `STUDIO_ATTACHMENT_*.md` ledgers directly to GitHub when new clean commits or failure/fix pairs are recorded.
 * **Pressure-Decay Memory**: Automatically culls low-entropy noise ($\text{entropy} < 0.2$) under high memory pressure while preserving high-trust clean patterns permanently (`ephemeral.ts`).
 
@@ -71,8 +75,8 @@
 * Output Log: `HALT: CORRECT growth 0, WRONG retrieval 0, sanitizer clean`
 
 ### 4. Ethical Substrate Debate Engine (`debate.ts`)
-* **Prosecutor (Dalek Caan)**: Queries failure vectors in memory and assigns risk scores (0–10).
-* **Defender (Jesus)**: Queries confirmed clean patterns in memory and assigns benefit scores (0–10).
+* **Prosecutor (Dalek Caan)**: Queries failure vectors and newly revoked contradictory memories, assigning risk scores (0–10).
+* **Defender (Jesus)**: Queries confirmed clean patterns in memory, filtering out revoked or contradicted patterns, and assigning benefit scores (0–10).
 * **Judge (Sovereign Synthesis)**: Permits mutations **ONLY IF** $\text{benefit} > \text{risk}$ **AND** Edge Security Sanitizer is **CLEAN**.
 
 ### 5. Multi-Angle Epistemic Alignment Matrix (`alignment-matrix.ts`)
@@ -80,6 +84,15 @@
 
 ### 6. WeakMap Zero-Leak Execution Sandbox (`zero-leak-sandbox.ts`)
 * Manages dynamic mutation execution inside isolated context containers anchored by JavaScript `WeakMap` objects to guarantee zero scope pollution and zero memory leaks.
+
+### 7. Deep Test-Fixture & Non-Code Exclusion Gate (`validator.ts`)
+* Enforces strict isolation of sensitive test data (`/tests/files/`, `/testdata/`, `/fixtures/`) so parser fixtures (Cyrillic encodings, stream boundaries, deliberate syntax cases) are never corrupted.
+* Forbids harvesting extensionless documentation files (`TODO`, `LICENSE`) and non-executable man pages (`.1`, `.man`).
+
+### 8. Python Compiler & Import-Safety Gate (`server.ts`)
+* **Compiler Warning Strictness (`python3 -W error`)**: Treats invalid escape sequences and deprecated syntax as hard failures, enforcing raw strings (`r"""..."""`).
+* **PEP 563 Deferred Annotations (Rule #15)**: Enforces `from __future__ import annotations` when type annotations use module attributes or forward references, preventing import-time `AttributeError` crashes.
+* **Unused Import Rejection**: Blocks redundant imports (`Callable`, `Any`) from polluting namespace.
 
 ---
 
