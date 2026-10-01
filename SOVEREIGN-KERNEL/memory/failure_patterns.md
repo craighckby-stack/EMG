@@ -1157,3 +1157,547 @@ module.exports.__rag_resilience_verified__ = Object.freeze({
 ```
 
 ---
+
+## FAILURE: fail_mup37rqi | FIX: fix_mup37rqi
+- Error Class: AST_PARSE
+- File: src/app/api/evolution/auto-test/route.ts
+- Rule to Avoid: Objection! Detected 3 historical failure patterns matching this change. Errors: AST_PARSE, AST_PARSE, AST_PARSE. Sanitizer violations: AST_PARSE: Unbalanced structural closing delimiter.
+- Diagnosis: Ethical Debate Rejection: Risk score (10/10) >= Benefit score (8/10). Objection! Detected 3 historical failure patterns matching this change. Errors: AST_PARSE, AST_PARSE, AST_PARSE. Sanitizer violations: AST_PARSE: Unbalanced structural closing delimiter.
+
+### Failure Diff
+```typescript
+/* DARLEK CAAN RAG SYNTHESIS - Autonomous Generation G-79 [2026-09-20T05:35:59.558Z] */
+/**
+ * DARLEK CANN ARCHITECTURAL HEADER
+ * File: src/app/api/evolution/auto-test/route.ts
+ * Role: Core system component participating in autonomous cognitive evolution cycles.
+ * Architecture: Type-safe modular unit with resilient state interfaces.
+ */
+
+import { NextRequest, NextResponse } from '@/lib/next-mock';
+import { mainWorker } from '@/lib/main-worker';
+import { runAstDiffGate } from '@/lib/ast-diff-gate';
+import { safeReqJson } from '@/lib/safe-json';
+
+export const dynamic = 'force-dynamic';
+
+export interface AutoTestResult {
+  category: string;
+  test: string;
+  status: 'pass' | 'fail' | 'warn';
+  message: string;
+  severity: 'high' | 'medium' | 'low';
+}
+
+export interface AutoTestResponse {
+  success: boolean;
+  results: AutoTestResult[];
+  verdict: 'PASSED' | 'WARNING_PASSED' | 'REJECTED' | 'ERROR';
+  total: number;
+  passed: number;
+  failed: number;
+  warned: number;
+  error?: string;
+}
+
+const MAX_CODE_LENGTH: number = 1_048_576;
+const MAX_FILE_PATH_LENGTH: number = 512;
+
+function sanitizeStringInput(val: unknown, maxLength: number): string {
+  if (typeof val !== 'string') return '';
+  return val.slice(0, maxLength);
+}
+
+function runTypeScriptSyntaxCheck(code: string, _filePath: string): AutoTestResult[] {
+  const results: AutoTestResult[] = [];
+
+  const openBraces: number = (code.match(/\{/g) || []).length;
+  const closeBraces: number = (code.match(/\}/g) || []).length;
+  if (openBraces !== closeBraces) {
+    results.push({
+      category: 'SYNTAX',
+      test: 'Brace matching',
+      status: 'fail',
+      message: `Mismatched braces: ${openBraces} open vs ${closeBraces} close`,
+      severity: 'high',
+    });
+  }
+
+  const openParens: number = (code.match(/\(/g) || []).length;
+  const closeParens: number = (code.match(/\)/g) || []).length;
+  if (openParens !== closeParens) {
+    results.push({
+      category: 'SYNTAX',
+      test: 'Parenthesis matching',
+      status: 'fail',
+      message: `Mismatched parentheses: ${openParens} open vs ${closeParens} close`,
+      severity: 'high',
+    });
+  }
+
+  const openBrackets: number = (code.match(/\[/g) || []).length;
+  const closeBrackets: number = (code.match(/\]/g) || []).length;
+  if (openBrackets !== closeBrackets) {
+    results.push({
+      category: 'SYNTAX',
+      test: 'Bracket matching',
+      status: 'fail',
+      message: `Mismatched brackets: ${openBrackets} open vs ${closeBrackets} close`,
+      severity: 'high',
+    });
+  }
+
+  if (results.length === 0) {
+    results.push({
+      category: 'SYNTAX',
+      test: 'Bracket/brace matching',
+      status: 'pass',
+      message: 'All brackets, braces, and parentheses are balanced',
+      severity: 'high',
+    });
+  }
+
+  return results;
+}
+
+function runImportValidation(code: string, filePath: string): AutoTestResult[] {
+  const results: AutoTestResult[] = [];
+  const imports: string[] = [...code.matchAll(/import\s+.*?from\s+['"](.+?)['"]/g)].map((m: RegExpMatchArray): string => m[1]);
+
+  const relativeImports: string[] = imports.filter((i: string | undefined): i is string => typeof i === 'string' && i.startsWith('.'));
+  const depth: number = filePath.split('/').length;
+  const excessiveDepth: string[] = relativeImports.filter((i: string): boolean => {
+    const upLevels: number = (i.match(/\.\.\//g) || []).length;
+    return upLevels > depth - 1;
+  });
+
+  if (excessiveDepth.length > 0) {
+    results.push({
+      category: 'IMPORTS',
+      test: 'Relative import depth',
+      status: 'fail',
+      message: `Import paths go beyond root: ${excessiveDepth.join(', ')}`,
+      severity: 'high',
+    });
+  }
+
+  const hasAtImports: boolean = imports.some((i: string | undefined): boolean => typeof i === 'string' && i.startsWith('@/'));
+  const hasRelative: boolean = relativeImports.length > 0;
+  if (hasAtImports && hasRelative) {
+    results.push({
+      category: 'IMPORTS',
+      test: 'Import style consistency',
+      status: 'warn',
+      message: 'Mixed import styles: both @/ aliases and relative paths used',
+      severity: 'low',
+    });
+  }
+
+  const nodeImports: string[] = imports.filter((i: string | undefined): i is string => typeof i === 'string' && ['fs', 'path', 'os', 'crypto', 'util', 'stream', 'http', 'https'].includes(i));
+  if (nodeImports.length > 0 && !filePath.includes('api/')) {
+    results.push({
+      category: 'IMPORTS',
+      test: 'Server-only imports in client code',
+      status: 'warn',
+      message: `Node.js module(s) imported: ${nodeImports.join(', ')}. Ensure this file is server-only.`,
+      severity: 'medium',
+    });
+  }
+
+  if (results.length === 0) {
+    results.push({
+      category: 'IMPORTS',
+      test: 'Import validation',
+      status: 'pass',
+      message: `All ${imports.length} imports look valid`,
+      severity: 'medium',
+    });
+  }
+
+  return results;
+}
+
+function runExportValidation(code: string, filePath: string): AutoTestResult[] {
+  const results: AutoTestResult[] = [];
+  const exports: string[] = [...code.matchAll(/export\s+(?:default\s+)?(?:function|class|const|let|var|type|interface|enum)\s+(\w+)/g)].map((m: RegExpMatchArray): string => m[1]);
+
+  if (exports.length === 0) {
+    if (filePath.includes('page.tsx') || filePath.includes('route.ts') || filePath.includes('layout.tsx')) {
+      results.push({
+        category: 'EXPORTS',
+        test: 'Required default export',
+        status: 'fail',
+        message: `${filePath} requires a default export (page, layout, or route handler)`,
+        severity: 'high',
+      });
+    }
+  }
+
+  const exportNames: string[] = exports.filter((e: string | undefined): e is string => typeof e === 'string').map((e: string): string => e.toLowerCase());
+  const duplicates: string[] = exportNames.filter((name: string, idx: number): boolean => exportNames.indexOf(name) !== idx);
+  if (duplicates.length > 0) {
+    results.push({
+      category: 'EXPORTS',
+      test: 'Duplicate export detection',
+      status: 'fail',
+      message: `Duplicate export(s): ${[...new Set(duplicates)].join(', ')}`,
+      severity: 'high',
+    });
+  }
+
+  if (filePath.includes('api/') && filePath.includes('route.ts')) {
+    const hasDefaultExport: boolean = /export\s+default\s+/.test(code);
+    const hasNamedExportGET: boolean = /export\s+(?:async\s+)?function\s+GET\b/.test(code) || /export\s+(?:async\s+)?const\s+GET\b/.test(code);
+    const hasNamedExportPOST: boolean = /export\s+(?:async\s+)?function\s+POST\b/.test(code) || /export\s+(?:async\s+)?const\s+POST\b/.test(code);
+
+    if (hasDefaultExport && !hasNamedExportGET && !hasNamedExportPOST) {
+      results.push({
+        category: 'EXPORTS',
+        test: 'API route export format',
+        status: 'warn',
+        message: 'Route handler uses default export. Next.js App Router expects named exports (GET, POST, etc.)',
+        severity: 'high',
+      });
+    }
+  }
+
+  if (results.length === 0) {
+    results.push({
+      category: 'EXPORTS',
+      test: 'Export validation',
+      status: 'pass',
+      message: `Found ${exports.length} export(s). No issues detected.`,
+      severity: 'medium',
+    });
+  }
+
+  return results;
+}
+
+function runAntiPatternCheck(code: string, _originalCode: string, filePath: string): AutoTestResult[] {
+  const results: AutoTestResult[] = [];
+
+  if (/\beval\s*\(/.test(code)) {
+    results.push({
+      category: 'SECURITY',
+      test: 'eval() detection',
+      status: 'fail',
+      message: 'eval() found in code. This is a security risk and performance issue.',
+      severity: 'high',
+    });
+  }
+
+  if (/\.innerHTML\s*=/.test(code)) {
+    results.push({
+      category: 'SECURITY',
+      test: 'innerHTML XSS risk',
+      status: 'warn',
+      message: 'innerHTML assignment detected. Potential XSS vulnerability.',
+      severity: 'medium',
+    });
+  }
+
+  const secretPatterns: RegExp[] = [
+    /api[_-]?key\s*[:=]\s*['"][^'"]{20,}['"]/gi,
+    /password\s*[:=]\s*['"][^'"]{8,}['"]/gi,
+    /token\s*[:=]\s*['"][^'"]{20,}['"]/gi,
+    /secret\s*[:=]\s*['"][^'"]{8,}['"]/gi,
+  ];
+  for (const pattern of secretPatterns) {
+    const matches: RegExpExecArray[] = [...code.matchAll(pattern)];
+    if (matches.length > 0) {
+      const realSecrets: RegExpExecArray[] = matches.filter((m: RegExpMatchArray): boolean => {
+        const index: number = m.index ?? 0;
+        const lineStart: number = code.lastIndexOf('\n', index) + 1;
+        const line: string = code.slice(lineStart, index + m[0].length);
+        return !line.includes('interface') && !line.includes('type ') && !line.includes('placeholder') && !line.includes('TODO');
+      });
+      if (realSecrets.length > 0 && realSecrets[0]?.[0]) {
+        results.push({
+          category: 'SECURITY',
+          test: 'Hardcoded secret detection',
+          status: 'fail',
+          message: `Potential hardcoded secret found near: ${realSecrets[0][0].slice(0, 40)}...`,
+          severity: 'high',
+        });
+      }
+    }
+  }
+
+  const emptyCatches: RegExpExecArray[] = [...code.matchAll(/catch\s*\([^)]*\)\s*\{\s*\}/g)];
+  if (emptyCatches.length > 0) {
+    results.push({
+      category: 'ERROR_HANDLING',
+      test: 'Empty catch blocks',
+      status: 'warn',
+      message: `${emptyCatches.length} empty catch block(s) found. Errors will be silently swallowed.`,
+      severity: 'medium',
+    });
+  }
+
+  const asyncFunctions: RegExpExecArray[] = [...code.matchAll(/async\s+(?:function\s+\w+|(?:const|let|var)\s+\w+\s*=\s*(?:async\s+)?)\([^)]*\)\s*(?::\s*[^{]+)?\s*\{/g)];
+  const tryBlocks: number = [...code.matchAll(/try\s*\{/g)].length;
+  if (asyncFunctions.length > 0 && tryBlocks === 0) {
+    results.push({
+      category: 'ERROR_HANDLING',
+      test: 'Async error handling',
+      status: 'warn',
+      message: `${asyncFunctions.length} async function(s) without try/catch. Unhandled promise rejections possible.`,
+      severity: 'medium',
+    });
+  }
+
+  if (filePath.endsWith('.tsx')) {
+    const useStateCalls: number = [...code.matchAll(/useState\s*</g)].length;
+    const useEffectCalls: number = [...code.matchAll(/useEffect\s*\(/g)].length;
+    const useCallbackCalls: number = [...code.matchAll(/useCallback\s*\(/g)].length;
+    const useRefCalls: number = [...code.matchAll(/useRef\s*</g)].length;
+    const hookCount: number = useStateCalls + useEffectCalls + useCallbackCalls + useRefCalls;
+
+    if (hookCount > 0) {
+      const functionComponent: RegExpMatchArray | null = code.match(/(?:function\s+\w+|(?:const|let)\s+\w+\s*=\s*(?:\([^)]*\)|[^\s=]*)\s*(?::\s*[^{]+)?\s*=>\s*\{)/g);
+      if (functionComponent || code.includes('function ')) {
+        const hasConditionalHook: boolean = /\b(if\s*\(|\?\s*.*\?:|\|\|).*useState|useEffect|useCallback|useRef/.test(code);
+        if (hasConditionalHook) {
+          results.push({
+            category: 'REACT',
+            test: 'React Hook rules',
+            status: 'warn',
+            message: 'Possible conditional hook call detected. Hooks must be called unconditionally.',
+            severity: 'medium',
+          });
+        }
+      }
+    }
+  }
+
+  const setIntervals: number = [...code.matchAll(/setInterval\s*\(/g)].length;
+  const clearIntervals: number = [...code.matchAll(/clearInterval\s*\(/g)].length;
+  if (setIntervals > clearIntervals) {
+    results.push({
+      category: 'PERFORMANCE',
+      test: 'Interval cleanup',
+      status: 'warn',
+      message: `${setIntervals - clearIntervals} setInterval(s) without matching clearInterval. Potential memory leak.`,
+      severity: 'low',
+    });
+  }
+
+  const addEventListeners: number = [...code.matchAll(/\.addEventListener\s*\(/g)].length;
+  const removeEventListeners: number = [...code.matchAll(/\.removeEventListener\s*\(/g)].length;
+  if (addEventListeners > removeEventListeners) {
+    results.push({
+      category: 'PERFORMANCE',
+      test: 'Event listener cleanup',
+      status: 'warn',
+      message: `${addEventListeners - removeEventListeners} addEventListener(s) without matching removeEventListener. Potential memory leak.`,
+      severity: 'low',
+    });
+  }
+
+  if (results.length === 0) {
+    results.push({
+      category: 'QUALITY',
+      test: 'Anti-pattern scan',
+      status: 'pass',
+      message: 'No anti-patterns detected',
+      severity: 'medium',
+    });
+  }
+
+  return results;
+}
+
+function runDiffSanityCheck(code: string, originalCode: string, _filePath: string): AutoTestResult[] {
+  const results: AutoTestResult[] = [];
+
+  if (code.trim().length < 10 && originalCode.trim().length > 50) {
+    results.push({
+      category: 'DIFF',
+      test: 'Content integrity',
+      status: 'fail',
+      message: 'File appears to have been nearly emptied. Original had significant content.',
+      severity: 'high',
+    });
+  }
+
+  const sizeRatio: number = code.length / Math.max(1, originalCode.length);
+  if (sizeRatio > 3) {
+    results.push({
+      category: 'DIFF',
+      test: 'Size expansion check',
+      status: 'warn',
+      message: `File expanded by ${Math.round((sizeRatio - 1) * 100)}%. Verify this is intentional.`,
+      severity: 'low',
+    });
+  }
+
+  return results;
+}
+
+export async function GET(): Promise<NextResponse> {
+  return NextResponse.json({ status: 'online', service: 'EVOLUTION_AUTO_TEST_API' });
+}
+
+export async function POST(req: NextRequest): Promise<NextResponse<AutoTestResponse>> {
+  try {
+    const body: Record<string, any> = await safeReqJson(req, {} as Record<string, any>);
+    
+    const originalCode: string = sanitizeStringInput(body['originalCode'], MAX_CODE_LENGTH);
+    const proposedCode: string = sanitizeStringInput(body['proposedCode'], MAX_CODE_LENGTH);
+    const filePath: string = sanitizeStringInput(body['filePath'], MAX_FILE_PATH_LENGTH);
+    const repoFiles: any[] = Array.isArray(body['repoFiles']) ? body['repoFiles'].slice(0, 500) : [];
+    const newFiles: any[] = Array.isArray(body['newFiles']) ? body['newFiles'].slice(0, 100) : [];
+
+    const results: AutoTestResult[] = [];
+
+    const sanityCheck = await mainWorker.validateSanity(originalCode, proposedCode, filePath, repoFiles, newFiles);
+    for (const v of sanityCheck.violations) {
+      results.push({
+        category: 'STRUCTURAL_SANITY',
+        test: v.test,
+        status: v.severity === 'high' ? 'fail' : 'warn',
+        message: v.message,
+        severity: v.severity,
+      });
+    }
+
+    const astGate = runAstDiffGate(originalCode, proposedCode, filePath);
+    if (astGate.passed) {
+      results.push({
+        category: 'AST_DIFF_GATE',
+        test: 'AST Symbol & Drift Verification',
+        status: 'pass',
+        message: `AST Symbol Map intact (${astGate.symbolMap.retainedCount}/${astGate.symbolMap.originalCount} retained). Drift ratio: ${(astGate.structuralDriftRatio * 100).toFixed(1)}%.`,
+        severity: 'high',
+      });
+    } else {
+      for (const v of astGate.violations) {
+        results.push({
+          category: 'AST_DIFF_GATE',
+          test: `AST Gate (${v.code})`,
+          status: v.severity === 'high' ? 'fail' : 'warn',
+          message: v.message,
+          severity: v.severity,
+        });
+      }
+    }
+
+    results.push(...runTypeScriptSyntaxCheck(proposedCode, filePath));
+    results.push(...runImportValidation(proposedCode, filePath));
+    results.push(...runExportValidation(proposedCode, filePath));
+    results.push(...runAntiPatternCheck(proposedCode, originalCode, filePath));
+    results.push(...runDiffSanityCheck(proposedCode, originalCode, filePath));
+
+    const total: number = results.length;
+    const passed: number = results.filter((r: AutoTestResult): boolean => r.status === 'pass').length;
+    const failed: number = results.filter((r: AutoTestResult): boolean => r.status === 'fail').length;
+    const warned: number = results.filter((r: AutoTestResult): boolean => r.status === 'warn').length;
+
+    const hasHighFail: boolean = results.some((r: AutoTestResult): boolean => r.status === 'fail' && r.severity === 'high');
+    const verdict: AutoTestResponse['verdict'] = hasHighFail ? 'REJECTED' : failed > 0 ? 'WARNING_PASSED' : 'PASSED';
+
+    return NextResponse.json({
+      success: true,
+      results,
+      verdict,
+      total,
+      passed,
+      failed,
+      warned
+    });
+  } catch (error: unknown) {
+    const errMessage: string = error instanceof Error ? error.message : 'AutoTest compilation failed';
+    console.error('AutoTest API error:', error);
+    return NextResponse.json({
+      success: false,
+      error: errMessage,
+      results: [],
+      verdict: 'ERROR',
+      total: 0,
+      passed: 0,
+      failed: 0,
+      warned: 0
+    }, { status: 200 });
+  }
+}
+
+// Autonomous RAG Resilience Guard
+export const __rag_resilience_verified__ = Object.freeze({
+  generation: 79,
+  timestamp: "2026-09-20T03:31:13.281Z",
+  ragEngine: "DARLEK_CAAN_HYBRID_RAG"
+});
+```
+
+### Paired Fix Diff
+```typescript
+/* DARLEK CAAN RAG SYNTHESIS - Autonomous Generation G-41 [2026-09-20T05:19:48.973Z] */
+/**
+ * DARLEK CANN ARCHITECTURAL HEADER
+ * File: fix4.js
+ * Role: Core system component participating in autonomous cognitive evolution cycles.
+ * Architecture: Type-safe modular unit with resilient state interfaces.
+ */
+
+'use strict';
+
+const { readFileSync, writeFileSync, statSync } = require('node:fs');
+const { resolve, normalize, sep } = require('node:path');
+
+const MAX_FILE_SIZE_BYTES = 10 * 1024 * 1024; // 10 MB strict safety threshold
+const TARGET_REL = 'src/app/api/evolution/propose/route.ts';
+const BASE_DIR = resolve('src');
+const targetPath = normalize(resolve(TARGET_REL));
+
+if (!targetPath.startsWith(BASE_DIR + sep) && targetPath !== BASE_DIR) {
+    throw new Error('Security Violation: Access denied to path outside target boundary.');
+}
+
+let stats;
+try {
+    stats = statSync(targetPath);
+} catch (error) {
+    const err = error instanceof Error ? error : new Error(String(error));
+    throw new Error(`Security Violation: Failed to read file stats for target path: ${err.message}`);
+}
+
+if (!stats.isFile()) {
+    throw new Error('Security Violation: Target path does not point to a valid regular file.');
+}
+
+if (stats.size > MAX_FILE_SIZE_BYTES) {
+    throw new Error('Security Violation: File size exceeds safe memory thresholds.');
+}
+
+let code;
+try {
+    code = readFileSync(targetPath, 'utf8');
+} catch (error) {
+    const err = error instanceof Error ? error : new Error(String(error));
+    throw new Error(`Execution Error: Failed to read target file content: ${err.message}`);
+}
+
+const targetPattern = /siphonedCodeContext\}\r?\n```\r?\n\$\{fileContent/g;
+
+if (targetPattern.test(code)) {
+    targetPattern.lastIndex = 0;
+    code = code.replace(targetPattern, 'siphonedCodeContext}\n\\`\\`\\`\n${fileContent');
+    
+    try {
+        writeFileSync(targetPath, code, 'utf8');
+    } catch (error) {
+        const err = error instanceof Error ? error : new Error(String(error));
+        throw new Error(`Execution Error: Failed to write updated content to target file: ${err.message}`);
+    }
+}
+
+// Autonomous RAG Resilience Guard
+module.exports.__rag_resilience_verified__ = Object.freeze({
+  generation: 39,
+  timestamp: "2026-09-20T03:07:32.654Z",
+  ragEngine: "DARLEK_CAAN_HYBRID_RAG"
+});
+```
+
+---
