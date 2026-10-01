@@ -389,3 +389,26 @@ export interface DiagnosticReport {
     failed: number;
     is_healthy:
 ```
+
+## COMMIT: 48abd3318689e186fa5255a694e38453b7364ff2
+- File: src/lib/firebase.ts
+- Sanitizer: PASSED
+```typescript
+/**
+ * DARLEK CANN ARCHITECTURAL HEADER
+ * File: src/lib/firebase.ts
+ * Role: Core system component participating in autonomous cognitive evolution cycles.
+ * Architecture: Type-safe modular unit with resilient state interfaces.
+ */
+
+import { initializeApp } from 'firebase/app';
+import { getAuth, GoogleAuthProvider, signInWithPopup, onAuthStateChanged, User } from 'firebase/auth';
+import { getFirestore, doc, setDoc, getDoc, collection, addDoc, query, where, getDocs, serverTimestamp, deleteDoc } from 'firebase/firestore';
+import firebaseConfig from '../../firebase-applet-config.json';
+import { Chunk } from '../types';
+
+const app = initializeApp(firebaseConfig);
+export const db = getFirestore(app, firebaseConfig.firestoreDatabaseId);
+export const auth = getAuth(app);
+export const googleProvi
+```
