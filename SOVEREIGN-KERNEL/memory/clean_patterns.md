@@ -193,3 +193,36 @@ export class SiphonEngine {
   private static readonly MAX_FIELD_LENGTH = 1_024;
   private static readonly PATTERN_REGEX = /\[PATTERN: (.*?), STRATEGY: (.*?)\
 ```
+
+## COMMIT: cc6524b8ef69f6e37ab7cf3d027efc66f211ddc2
+- File: src/main.tsx
+- Sanitizer: PASSED
+```typescript
+/**
+ * DARLEK CANN ARCHITECTURAL HEADER
+ * File: src/main.tsx
+ * Role: Core system component participating in autonomous cognitive evolution cycles.
+ * Architecture: Type-safe modular unit with resilient state interfaces.
+ */
+
+import { StrictMode } from 'react';
+import { createRoot } from 'react-dom/client';
+import App from './App';
+import './index.css';
+
+/**
+ * Validates the existence of the root mount element in the DOM.
+ */
+function getRootContainer(): HTMLElement {
+  const rootElement = document.getElementById('root');
+  if (!rootElement) {
+    throw new Error('Fatal: Root container element with ID "root" not found in DOM.');
+  }
+  return rootElement;
+}
+
+/**
+ * Renders a fallback DOM element if application initialization fails.
+ */
+function renderInitializationError(error: unknown): vo
+```
