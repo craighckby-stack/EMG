@@ -232,3 +232,29 @@ export class AnnouncementsController {
   @Post('/')
   a
 ```
+
+## COMMIT: 2cb86a7f01250d749e56e6b5a39429c1e59cc8af
+- File: .next_dev/server/app/api/brain/route_client-reference-manifest.js
+- Sanitizer: PASSED
+```typescript
+/**
+ * DARLEK CANN ARCHITECTURAL HEADER
+ * File: .next_dev/server/app/api/brain/route_client-reference-manifest.js
+ * Role: Core system component participating in autonomous cognitive evolution cycles.
+ * Architecture: Type-safe modular unit with resilient state interfaces.
+ */
+
+/* DARLEK CAAN RAG SYNTHESIS - Autonomous Generation G-4 [2026-09-19T22:43:30.071Z] */
+/**
+ * DARLEK CANN ARCHITECTURAL HEADER
+ * File: .next_dev/server/app/api/brain/route_client-reference-manifest.js
+ * Role: Core system component participating in autonomous cognitive evolution cycles.
+ * Architecture: Type-safe modular unit with resilient state interfaces.
+ */
+
+globalThis.__RSC_MANIFEST = globalThis.__RSC_MANIFEST || {};
+
+globalThis.__RSC_MANIFEST["/api/brain/route"] = {
+  moduleLoading: {
+    prefix: "/_next/",
+```
