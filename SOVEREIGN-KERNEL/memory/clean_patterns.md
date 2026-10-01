@@ -65,3 +65,31 @@ class EvidenceEntry:
     id: str = field(default_factory=lambda: str(uuid.uuid4()))
     timestamp: str = field(default_factory=lambda: datetime.now(timezone.utc
 ```
+
+## COMMIT: 539737ef8f149e573379295c32ede5d0343dbe80
+- File: src/lib/consensus-config.ts
+- Sanitizer: PASSED
+```typescript
+/**
+ * ARCHITECTURAL CONSENSUS WEIGHTING LOADER
+ * Role: Computes dynamic agent consensus weights and multi-provider fallback priority chains based on environment parameters.
+ * Integration: Imported by the Orchestrator/Agent Kernel to ensure resilient multi-model routing.
+ * Siphoned Pattern: craighckby-stack/AI_Agent_OS consensus-weighting specifications
+ */
+
+export interface ProviderWeightMap {
+  gemini: number;
+  anthropic: number;
+  deepseek: number;
+  xai: number;
+  cerebras: number;
+  groq: number;
+  local: number;
+}
+
+/**
+ * Validates, bounds-checks, and parses a numeric weight from an environment variable string.
+ * Clamps output strictly between 0 and 1, defaulting to fallback if invalid or NaN.
+ */
+function parseAndClampWeight(value: string | undefined, fallback: number): number
+```
