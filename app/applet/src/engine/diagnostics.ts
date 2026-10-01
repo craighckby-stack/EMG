@@ -35,9 +35,18 @@ export interface DiagnosticReport {
   };
 }
 
+function roundToTwoDecimals(value: number): number {
+  return Math.round((value + Number.EPSILON) * 100) / 100;
+}
+
 export async function runSystemDiagnostics(): Promise<DiagnosticReport> {
+  const isBrowser = typeof window !== 'undefined';
+  const hasWeakMap = typeof WeakMap !== 'undefined';
+  const hasFinalizationRegistry = typeof FinalizationRegistry !== 'undefined';
+
   try {
     const checks: Record<string, DiagnosticCheckResult> = {};
+    let passedCount = 0;
 
     // Check 1: RAG Memory Persistence
     const check1Start = performance.now();
@@ -45,7 +54,7 @@ export async function runSystemDiagnostics(): Promise<DiagnosticReport> {
     let ragMessage = 'In-memory fallback active';
 
     try {
-      if (typeof window !== 'undefined' && typeof window.localStorage !== 'undefined') {
+      if (isBrowser && typeof window.localStorage !== 'undefined') {
         const testKey = '__diag_test__';
         window.localStorage.setItem(testKey, '1');
         window.localStorage.removeItem(testKey);
@@ -57,21 +66,26 @@ export async function runSystemDiagnostics(): Promise<DiagnosticReport> {
       ragMessage = 'LocalStorage access restricted; in-memory fallback active';
     }
 
+    if (hasLocalStorage) {
+      passedCount++;
+    }
+
     checks['rag_memory_persistence'] = {
       passed: hasLocalStorage,
-      duration_ms: Number((performance.now() - check1Start).toFixed(2)),
+      duration_ms: roundToTwoDecimals(performance.now() - check1Start),
       message: ragMessage,
     };
 
     // Check 2: Sandbox Isolation Capabilities
     const check2Start = performance.now();
-    const hasWeakMap = typeof WeakMap !== 'undefined';
-    const hasFinalizationRegistry = typeof FinalizationRegistry !== 'undefined';
     const sandboxPassed = hasWeakMap && hasFinalizationRegistry;
+    if (sandboxPassed) {
+      passedCount++;
+    }
 
     checks['sandbox_isolation'] = {
       passed: sandboxPassed,
-      duration_ms: Number((performance.now() - check2Start).toFixed(2)),
+      duration_ms: roundToTwoDecimals(performance.now() - check2Start),
       message: sandboxPassed
         ? 'Sandbox capabilities (WeakMap + FinalizationRegistry) available'
         : 'Sandbox capabilities running in standard mode',
@@ -79,29 +93,30 @@ export async function runSystemDiagnostics(): Promise<DiagnosticReport> {
 
     // Check 3: Ethical Debate Substrate
     const check3Start = performance.now();
+    passedCount++;
     checks['ethical_debate_substrate'] = {
       passed: true,
-      duration_ms: Number((performance.now() - check3Start).toFixed(2)),
+      duration_ms: roundToTwoDecimals(performance.now() - check3Start),
       message: 'Prosecutor (Dalek Caan) vs Defender (Jesus) RAG engine online',
     };
 
     // Check 4: Edge Governance Security Gatekeeper
     const check4Start = performance.now();
+    passedCount++;
     checks['edge_governance_sanitizer'] = {
       passed: true,
-      duration_ms: Number((performance.now() - check4Start).toFixed(2)),
+      duration_ms: roundToTwoDecimals(performance.now() - check4Start),
       message: 'Blocking rules active for secret leakage, PII, AST_PARSE, and HARDCODED_CRED',
     };
 
-    const checkValues = Object.values(checks);
-    const total = checkValues.length;
-    const passed = checkValues.filter((c) => c.passed).length;
+    const total = 4;
+    const passed = passedCount;
     const failed = total - passed;
     const is_healthy = total > 0 && failed === 0;
 
     let memoryUsage: DiagnosticMemoryInfo | undefined;
     if (typeof performance !== 'undefined' && 'memory' in performance) {
-      const mem = (performance as Record<string, unknown>).memory as DiagnosticMemoryInfo | undefined;
+      const mem = (performance as unknown as { memory?: DiagnosticMemoryInfo }).memory;
       if (mem && typeof mem === 'object') {
         memoryUsage = {
           jsHeapSizeLimit: typeof mem.jsHeapSizeLimit === 'number' ? mem.jsHeapSizeLimit : undefined,
@@ -120,10 +135,10 @@ export async function runSystemDiagnostics(): Promise<DiagnosticReport> {
         passed,
         failed,
         is_healthy,
-        pass_rate: total > 0 ? Number(((passed / total) * 100).toFixed(2)) : 0,
+        pass_rate: total > 0 ? roundToTwoDecimals((passed / total) * 100) : 0,
       },
       telemetry: {
-        environment: typeof window !== 'undefined' ? 'browser' : 'node',
+        environment: isBrowser ? 'browser' : 'node',
         hasWeakMap,
         hasFinalizationRegistry,
         memoryUsage,
@@ -142,9 +157,9 @@ export async function runSystemDiagnostics(): Promise<DiagnosticReport> {
         pass_rate: 0,
       },
       telemetry: {
-        environment: typeof window !== 'undefined' ? 'browser' : 'node',
-        hasWeakMap: typeof WeakMap !== 'undefined',
-        hasFinalizationRegistry: typeof FinalizationRegistry !== 'undefined',
+        environment: isBrowser ? 'browser' : 'node',
+        hasWeakMap,
+        hasFinalizationRegistry,
       },
     };
   }
