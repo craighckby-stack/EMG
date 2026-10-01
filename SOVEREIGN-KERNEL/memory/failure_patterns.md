@@ -2710,3 +2710,518 @@ Line 1, Col 1: Header Stripped: Original file contained 4 import statements, but
 ```
 
 ---
+
+## FAILURE: rag_diag_sfv30t | FIX: fix_rag_diag_sfv30t
+- Error Class: NOVEL_LLM_DIAGNOSIS
+- File: src/hooks/use-toast.ts
+- Rule to Avoid: <One imperative, testable instruction that future prompts must follow to avoid this specific error>
+- Diagnosis: <Specific generation mechanism that caused failure — name the technical mechanism, not the symptom>
+
+### Failure Diff
+```typescript
+Line 37, Col 13: Type alias declaration is missing a type definition after '='.
+```
+
+---
+
+## FAILURE: fail_mup4bdg1 | FIX: fix_mup4bdg1
+- Error Class: PII
+- File: src/lib/archaeology-dataset.ts
+- Rule to Avoid: Objection! Detected 3 historical failure patterns matching this change. Errors: AST_PARSE, AST_PARSE, AST_PARSE. Sanitizer violations: PII: Detected unredacted Personal Identifiable Information (email/SSN)..
+- Diagnosis: Ethical Debate Rejection: Risk score (10/10) >= Benefit score (8/10). Objection! Detected 3 historical failure patterns matching this change. Errors: AST_PARSE, AST_PARSE, AST_PARSE. Sanitizer violations: PII: Detected unredacted Personal Identifiable Information (email/SSN)..
+
+### Failure Diff
+```typescript
+/* DARLEK CAAN RAG SYNTHESIS - Autonomous Generation G-151 [2026-09-20T06:03:57.054Z] */
+import { db, isFirebaseConfigured } from './firebase';
+import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
+import { saveMutationToRag } from './ragBrain';
+
+export interface CorrectWrongPair {
+  readonly id: string;
+  readonly pairId: string;
+  readonly title: string;
+  readonly date: string;
+  readonly author: string;
+  readonly filesTouched: readonly string[];
+  readonly wrongCommitMessage: string;
+  readonly wrongDiff: string;
+  readonly correctCommitMessage: string;
+  readonly correctDiff: string;
+  readonly category: string;
+}
+
+export const ARCHAEOLOGY_PAIRS: readonly CorrectWrongPair[] = [
+  {
+    id: 'archaeology_pair_5e4e56be',
+    pairId: '5e4e56be',
+    title: 'reorder middleware registration',
+    date: 'Sun Sep 13 11:00:00 2026 +0000',
+    author: 'craighckby <craighckby@example.com>',
+    filesTouched: ['server.ts'],
+    category: 'EXPRESS_MIDDLEWARE_ORDER',
+    wrongCommitMessage: `bug: register global logger before static route handler, blocking asset serving
+Registered global request logger ahead of static file serving, intercepting and breaking static asset delivery.`,
+    wrongDiff: `diff --git a/server.ts b/server.ts
+index 1111111..2222222 100644
+--- a/server.ts
++++ b/server.ts
+@@ -1,4 +1,6 @@
+ import express from 'express';
+ const app = express();
++app.use(globalLogger);
++app.use('/static', express.static('dist'));
+ app.listen(3000);`,
+    correctCommitMessage: `fix: reorder middleware registration
+Global logger broke static asset serving. Reordered static handler before logger interceptor.`,
+    correctDiff: `diff --git a/server.ts b/server.ts
+index 2222222..3333333 100644
+--- a/server.ts
++++ b/server.ts
+@@ -2,4 +2,4 @@
+ const app = express();
+-app.use(globalLogger);
+-app.use('/static', express.static('dist'));
++app.use('/static', express.static('dist'));
++app.use(globalLogger);
+ app.listen(3000);`
+  },
+  {
+    id: 'archaeology_pair_7689035e',
+    pairId: '7689035e',
+    title: 'extract jwt validation into middleware',
+    date: 'Sun Sep 13 09:10:00 2026 +0000',
+    author: 'craighckby <craighckby@example.com>',
+    filesTouched: ['app.py'],
+    category: 'AUTH_MIDDLEWARE_EXTRACTION',
+    wrongCommitMessage: `add feature: auth middleware
+Initial inline JWT authorization header checking inside route handlers.`,
+    wrongDiff: `diff --git a/app.py b/app.py
+index 1234567..89abcdef 100644
+--- a/app.py
++++ b/app.py
+@@ -10,7 +10,14 @@
+ def get_user_profile(req):
++    # inline token check
++    token = req.headers.get("Authorization", "")
++    if not token.startswith("Bearer "):
++        return {"error": "Unauthorized"}, 401
++    raw_token = token.split(" ")[1] if " " in token else ""
++    if not raw_token:
++        return {"error": "Invalid token"}, 401
+     return {"user": "profile_data"}`,
+    correctCommitMessage: `fix: extract jwt validation into middleware
+Inline check caused route duplication and lacked verification. Extracted into reusable middleware decorator with token decoding.`,
+    correctDiff: `diff --git a/app.py b/app.py
+index 89abcdef..c1d2e3f 100644
+--- a/app.py
++++ b/app.py
+@@ -1,8 +1,22 @@
++import jwt
++from functools import wraps
++
++def require_auth(f):
++    @wraps(f)
++    def decorated(req, *args, **kwargs):
++        token = req.headers.get("Authorization", "")
++        if not token.startswith("Bearer "):
++            return {"error": "Unauthorized: Missing header"}, 401
++        try:
++            payload = jwt.decode(token.split(" ")[1], "secret", algorithms=["HS256"])
++            req.user = payload
++        except jwt.PyJWTError:
++            return {"error": "Unauthorized: Invalid signature"}, 401
++        return f(req, *args, **kwargs)
++    return decorated
++
++@require_auth
+ def get_user_profile(req):
+-    # inline token check
+-    token = req.headers.get("Authorization", "")
+-    if not token.startswith("Bearer "):
+-        return {"error": "Unauthorized"}, 401
+-    raw_token = token.split(" ")[1] if " " in token else ""
+-    if not raw_token:
+-        return {"error": "Invalid token"}, 401
+     return {"user": "profile_data"}`
+  },
+  {
+    id: 'archaeology_pair_a1b2c3d4',
+    pairId: 'a1b2c3d4',
+    title: 'async error boundary with abort controller',
+    date: 'Mon Sep 14 14:20:00 2026 +0000',
+    author: 'craighckby <craighckby@example.com>',
+    filesTouched: ['src/lib/async-fetcher.ts'],
+    category: 'ASYNC_TIMEOUT_ABORT_SAFETY',
+    wrongCommitMessage: `feat: unhandled async fetch call
+Raw fetch call without AbortController signal or timeout fallback, leading to potential hanging promises.`,
+    wrongDiff: `diff --git a/src/lib/async-fetcher.ts b/src/lib/async-fetcher.ts
+--- a/src/lib/async-fetcher.ts
++++ b/src/lib/async-fetcher.ts
+@@ -5,4 +5,3 @@ export async function fetchData(url: string) {
+-  const res = await fetch(url);
+-  return await res.json();
++  const res = await fetch(url);
++  return res.json();
+}`,
+    correctCommitMessage: `fix: wrap async fetch with AbortController and fallback boundary
+Added 10s timeout abort signal and defensive try/catch fallback state.`,
+    correctDiff: `diff --git a/src/lib/async-fetcher.ts b/src/lib/async-fetcher.ts
+--- a/src/lib/async-fetcher.ts
++++ b/src/lib/async-fetcher.ts
+@@ -5,4 +5,14 @@ export async function fetchData(url: string) {
++  const controller = new AbortController();
++  const timeout = setTimeout(() => controller.abort(), 10000);
++  try {
++    const res = await fetch(url, { signal: controller.signal });
++    if (!res.ok) throw new Error("HTTP " + res.status);
++    return await res.json();
++  } catch (err) {
++    console.warn("[ARCHAEOLOGY_FETCH] Request failed or timed out:", err);
++    return { fallback: true, data: null };
++  } finally {
++    clearTimeout(timeout);
++  }
+}`
+  },
+  {
+    id: 'archaeology_pair_d4e5f6a7',
+    pairId: 'd4e5f6a7',
+    title: 'memory leak listener cleanup in react hook',
+    date: 'Mon Sep 14 16:45:00 2026 +0000',
+    author: 'craighckby <craighckby@example.com>',
+    filesTouched: ['src/hooks/useWindowResize.ts'],
+    category: 'MEMORY_LEAK_CLEANUP',
+    wrongCommitMessage: `bug: window resize listener missing cleanup
+Mounted event listener inside useEffect without returning cleanup function.`,
+    wrongDiff: `diff --git a/src/hooks/useWindowResize.ts b/src/hooks/useWindowResize.ts
+--- a/src/hooks/useWindowResize.ts
++++ b/src/hooks/useWindowResize.ts
+@@ -4,3 +4,4 @@ export function useWindowResize(onResize: () => void) {
+   useEffect(() => {
+     window.addEventListener('resize', onResize);
+   }, [onResize]);
+}`,
+    correctCommitMessage: `fix: add cleanup return handler to useWindowResize
+Properly remove event listener on unmount to prevent component memory leak.`,
+    correctDiff: `diff --git a/src/hooks/useWindowResize.ts b/src/hooks/useWindowResize.ts
+--- a/src/hooks/useWindowResize.ts
++++ b/src/hooks/useWindowResize.ts
+@@ -4,4 +4,5 @@ export function useWindowResize(onResize: () => void) {
+   useEffect(() => {
+     window.addEventListener('resize', onResize);
++    return () => window.removeEventListener('resize', onResize);
+   }, [onResize]);
+}`
+  }
+];
+
+export interface IngestionResult {
+  readonly success: boolean;
+  readonly firestoreConfigured: boolean;
+  readonly ingestedCount: number;
+  readonly errors: readonly string[];
+}
+
+/**
+ * Ingests Archaeology Engine's CORRECT.md and WRONG.md pairs into Firebase Firestore
+ * and the local RAG mutation memory store.
+ */
+export async function ingestArchaeologyDatasetToFirebase(): Promise<IngestionResult> {
+  const errors: string[] = [];
+  let ingestedCount = 0;
+  const isOnline = isFirebaseConfigured();
+
+  for (const pair of ARCHAEOLOGY_PAIRS) {
+    try {
+      await saveMutationToRag({
+        filePath: pair.filesTouched[0] ?? 'server.ts',
+        originalCode: pair.wrongDiff,
+        mutatedCode: pair.correctDiff,
+        rationale: `Archaeology Engine Exemplar (Pair ${pair.pairId}): ${pair.title}. Correct pattern: ${pair.correctCommitMessage}`,
+        riskScore: 0.05,
+        generation: 1,
+        commitSha: pair.pairId,
+        hotswapped: false
+      });
+
+      if (isOnline && db) {
+        try {
+          await addDoc(collection(db, 'mutations'), {
+            pairId: pair.pairId,
+            filePath: pair.filesTouched[0],
+            title: pair.title,
+            wrongDiff: pair.wrongDiff,
+            correctDiff: pair.correctDiff,
+            wrongMessage: pair.wrongCommitMessage,
+            correctMessage: pair.correctCommitMessage,
+            category: pair.category,
+            source: 'https://github.com/craighckby-stack/Archaeology-Engine',
+            createdAt: serverTimestamp()
+          });
+        } catch (firestoreError: unknown) {
+          const errorMessage = firestoreError instanceof Error ? firestoreError.message : String(firestoreError);
+          errors.push(`Firestore mutation doc failed: ${errorMessage}`);
+        }
+      }
+
+      ingestedCount++;
+    } catch (generalError: unknown) {
+      const errorMessage = generalError instanceof Error ? generalError.message : String(generalError);
+      errors.push(`Pair ${pair.pairId} failed: ${errorMessage}`);
+    }
+  }
+
+  return {
+    success: errors.length === 0,
+    firestoreConfigured: isOnline,
+    ingestedCount,
+    errors
+  };
+}
+
+// Autonomous RAG Resilience Guard
+export const __rag_resilience_verified__ = Object.freeze({
+  generation: 151,
+  timestamp: "2026-09-20T06:03:57.054Z",
+  ragEngine: "DARLEK_CAAN_HYBRID_RAG"
+});
+```
+
+### Paired Fix Diff
+```typescript
+/* DARLEK CAAN RAG SYNTHESIS - Autonomous Generation G-80 [2026-09-20T05:36:21.960Z] */
+/**
+ * DARLEK CANN ARCHITECTURAL HEADER
+ * File: src/app/api/evolution/coherence-gate/route.ts
+ * Role: Core system component participating in autonomous cognitive evolution cycles.
+ * Architecture: Type-safe modular unit with resilient state interfaces.
+ */
+
+import { NextRequest, NextResponse } from '@/lib/next-mock';
+import type { CoherenceGateResult } from '@/lib/types';
+import { SATURATION_THRESHOLDS } from '@/lib/constants';
+import { mainWorker } from '@/lib/main-worker';
+import { safeReqJson } from '@/lib/safe-json';
+
+interface SaturationMetrics {
+  structuralChange?: number;
+  semanticSaturation?: number;
+  velocity?: number;
+  identityPreservation?: number;
+  capabilityAlignment?: number;
+  crossFileImpact?: number;
+}
+
+interface CoherenceGateBody {
+  riskScore?: number;
+  saturation?: SaturationMetrics;
+  affectedFiles?: string[];
+  bypassGate?: boolean;
+  originalCode?: string;
+  proposedCode?: string;
+  filePath?: string;
+  repoFiles?: Array<{ path: string; content: string; [key: string]: any }>;
+  newFiles?: Array<{ path: string; content: string; [key: string]: any }>;
+}
+
+export const dynamic: string = 'force-dynamic';
+
+const MAX_SAFE_RISK_SCORE: number = 7;
+const MAX_SAFE_AFFECTED_FILES: number = 5;
+const MAX_WARNING_METRICS_TOLERANCE: number = 3;
+
+interface NormalizedSaturation {
+  structuralChange: number;
+  semanticSaturation: number;
+  velocity: number;
+  identityPreservation: number;
+  capabilityAlignment: number;
+  crossFileImpact: number;
+}
+
+const DEFAULT_SATURATION: Readonly<NormalizedSaturation> = Object.freeze({
+  structuralChange: 0,
+  semanticSaturation: 0,
+  velocity: 0,
+  identityPreservation: 1,
+  capabilityAlignment: 1,
+  crossFileImpact: 0,
+});
+
+function normalizeSaturation(saturation: SaturationMetrics = {}): NormalizedSaturation {
+  return {
+    structuralChange: saturation.structuralChange ?? 0,
+    semanticSaturation: saturation.semanticSaturation ?? 0,
+    velocity: saturation.velocity ?? 0,
+    identityPreservation: saturation.identityPreservation ?? 1,
+    capabilityAlignment: saturation.capabilityAlignment ?? 1,
+    crossFileImpact: saturation.crossFileImpact ?? 0,
+  };
+}
+
+async function collectSanityViolations(
+  originalCode?: string,
+  proposedCode?: string,
+  filePath?: string,
+  repoFiles: Array<{ path: string; content: string; [key: string]: any }> = [],
+  newFiles: Array<{ path: string; content: string; [key: string]: any }> = []
+): Promise<string[]> {
+  if (!originalCode || !proposedCode || !filePath) {
+    return [];
+  }
+
+  const sanity = await mainWorker.validateSanity(originalCode, proposedCode, filePath, repoFiles, newFiles);
+  if (sanity.passed || !Array.isArray(sanity.violations) || sanity.violations.length === 0) {
+    return [];
+  }
+
+  return sanity.violations
+    .filter((violation) => violation.severity === 'high')
+    .map((violation) => `STRUCTURAL SANITY BLOCK: ${violation.message}`);
+}
+
+function evaluateThresholds(saturation: NormalizedSaturation): { failures: string[]; hasWarning: boolean } {
+  const failures: string[] = [];
+  let hasWarning: boolean = false;
+
+  const checks = [
+    { current: saturation.structuralChange, threshold: SATURATION_THRESHOLDS.structuralChange, name: 'Structural Change' },
+    { current: saturation.semanticSaturation, threshold: SATURATION_THRESHOLDS.semanticSaturation, name: 'Semantic Saturation' },
+    { current: saturation.velocity, threshold: SATURATION_THRESHOLDS.velocity, name: 'Velocity' },
+    { current: saturation.identityPreservation, threshold: SATURATION_THRESHOLDS.identityPreservation, name: 'Identity Preservation', isInverse: true },
+    { current: saturation.crossFileImpact, threshold: SATURATION_THRESHOLDS.crossFileImpact, name: 'Cross-File Impact' },
+  ];
+
+  for (const check of checks) {
+    const isCritical: boolean = check.isInverse
+      ? check.current <= check.threshold.critical
+      : check.current >= check.threshold.critical;
+
+    if (isCritical) {
+      failures.push(`${check.name} at critical level (${check.current}/${check.threshold.max}). System cannot absorb more change.`);
+      hasWarning = true;
+    }
+  }
+
+  return { failures, hasWarning };
+}
+
+function evaluateCumulativeStress(saturation: NormalizedSaturation): { failures: string[]; hasWarning: boolean } {
+  const warningCount: number = [
+    saturation.structuralChange >= SATURATION_THRESHOLDS.structuralChange.warning,
+    saturation.semanticSaturation >= SATURATION_THRESHOLDS.semanticSaturation.warning,
+    saturation.velocity >= SATURATION_THRESHOLDS.velocity.warning,
+    saturation.identityPreservation <= SATURATION_THRESHOLDS.identityPreservation.warning,
+    saturation.crossFileImpact >= SATURATION_THRESHOLDS.crossFileImpact.warning,
+  ].filter(Boolean).length;
+
+  if (warningCount >= MAX_WARNING_METRICS_TOLERANCE) {
+    return {
+      failures: [`Cumulative stress: ${warningCount}/5 metrics at warning level. System needs rest.`],
+      hasWarning: true,
+    };
+  }
+
+  return { failures: [], hasWarning: false };
+}
+
+const ONLINE_RESPONSE: NextResponse = NextResponse.json({ status: 'online', service: 'EVOLUTION_COHERENCE_GATE_API' });
+
+export async function GET(): Promise<NextResponse> {
+  return ONLINE_RESPONSE;
+}
+
+export async function POST(req: NextRequest): Promise<NextResponse> {
+  try {
+    const body = await safeReqJson<CoherenceGateBody>(req, {});
+    const riskScore: number = typeof body.riskScore === 'number' ? body.riskScore : 0;
+    const saturation = normalizeSaturation(body.saturation);
+    const affectedFiles: string[] = Array.isArray(body.affectedFiles) ? body.affectedFiles : [];
+    const { bypassGate, originalCode, proposedCode, filePath } = body;
+    const repoFiles = Array.isArray(body.repoFiles) ? body.repoFiles : [];
+    const newFiles = Array.isArray(body.newFiles) ? body.newFiles : [];
+
+    const failures: string[] = [];
+    let saturationWarning: boolean = false;
+
+    const sanityFailures = await collectSanityViolations(originalCode, proposedCode, filePath, repoFiles, newFiles);
+    if (sanityFailures.length > 0) {
+      failures.push(...sanityFailures);
+    }
+
+    if (bypassGate) {
+      const hasFailures: boolean = failures.length > 0;
+      const responseData: CoherenceGateResult & { failures?: string[] } = {
+        passed: true,
+        reason: hasFailures
+          ? `COHERENCE GATE PASSED (OVERRIDE): Approved by operator with warnings [${failures.join('; ')}].`
+          : 'COHERENCE GATE PASSED: Approved by system operator.',
+        riskScore,
+        saturationWarning: saturationWarning || hasFailures,
+      };
+      if (hasFailures) {
+        responseData.failures = failures;
+      }
+      return NextResponse.json(responseData);
+    }
+
+    if (riskScore > MAX_SAFE_RISK_SCORE) {
+      failures.push(`Risk score ${riskScore}/10 exceeds maximum threshold ${MAX_SAFE_RISK_SCORE}. Mutation DENIED.`);
+    }
+
+    const thresholdEvaluation = evaluateThresholds(saturation);
+    if (thresholdEvaluation.failures.length > 0) {
+      failures.push(...thresholdEvaluation.failures);
+    }
+    if (thresholdEvaluation.hasWarning) {
+      saturationWarning = true;
+    }
+
+    if (affectedFiles.length > MAX_SAFE_AFFECTED_FILES) {
+      failures.push(`Mutation affects ${affectedFiles.length} files — exceeds safe cross-file impact limit of ${MAX_SAFE_AFFECTED_FILES}.`);
+      saturationWarning = true;
+    }
+
+    const cumulativeEvaluation = evaluateCumulativeStress(saturation);
+    if (cumulativeEvaluation.failures.length > 0) {
+      failures.push(...cumulativeEvaluation.failures);
+    }
+    if (cumulativeEvaluation.hasWarning) {
+      saturationWarning = true;
+    }
+
+    const hasFailed: boolean = failures.length > 0;
+    const result: CoherenceGateResult = {
+      passed: !hasFailed,
+      reason: hasFailed
+        ? `COHERENCE GATE BLOCKED:\n${failures.join('\n')}`
+        : 'COHERENCE GATE PASSED: All thresholds within safe limits. Mutation authorized.',
+      riskScore,
+      saturationWarning,
+    };
+
+    return NextResponse.json(result);
+  } catch (error: unknown) {
+    console.error('Coherence gate error:', error);
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+    return NextResponse.json(
+      { passed: false, reason: `Coherence gate error: ${errorMessage}`, riskScore: 0, saturationWarning: true },
+      { status: 500 }
+    );
+  }
+}
+
+// Autonomous RAG Resilience Guard
+export const __rag_resilience_verified__: Readonly<{
+  generation: number;
+  timestamp: string;
+  ragEngine: string;
+}> = Object.freeze({
+  generation: 80,
+  timestamp: "2026-09-20T03:31:36.736Z",
+  ragEngine: "DARLEK_CAAN_HYBRID_RAG"
+});
+```
+
+---
