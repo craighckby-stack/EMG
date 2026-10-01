@@ -964,3 +964,32 @@ import "./globals.css";
 
 const APP_METADATA_BAS
 ```
+
+## COMMIT: c6eb411a35ef7f25edc12d81747c9cb72cf3f3b4
+- File: src/app/not-found.tsx
+- Sanitizer: PASSED
+```typescript
+/* DARLEK CAAN RAG SYNTHESIS - Autonomous Generation G-109 [2026-09-20T05:47:09.389Z] */
+/**
+ * DARLEK CANN ARCHITECTURAL HEADER
+ * File: src/app/not-found.tsx
+ * Role: Core system component participating in autonomous cognitive evolution cycles.
+ * Architecture: Type-safe modular unit with resilient state interfaces.
+ */
+
+
+import { useEffect, useState, useCallback, useMemo, memo } from 'react';
+import Link from 'next/link';
+import type { JSX } from 'react';
+
+export const dynamic: string = 'force-dynamic';
+
+const REDIRECT_DELAY_SECONDS: number = 3;
+const ROOT_ROUTE: string = '/';
+
+/**
+ * Custom hook to handle automatic redirection countdown logic with clean interval lifecycle management.
+ */
+function useAutoRedirect(initialSeconds: number, targetUrl: string): number {
+  const [countdown, s
+```
