@@ -374,3 +374,33 @@ const REQUEST_HEADERS = Object.freeze({
 const PARSED_ENDPOINT = new URL(SIPHON_ENDPOINT);
 if (PARSED_ENDPOINT.
 ```
+
+## COMMIT: 655e3c5a211aacef6fae0e1557af20eac9fb6f4a
+- File: fix3.js
+- Sanitizer: PASSED
+```typescript
+/* DARLEK CAAN RAG SYNTHESIS - Autonomous Generation G-40 [2026-09-20T05:19:27.856Z] */
+/**
+ * DARLEK CANN ARCHITECTURAL HEADER
+ * File: fix3.js
+ * Role: Core system component participating in autonomous cognitive evolution cycles.
+ * Architecture: Sovereign, type-safe, resilient file transformation module.
+ */
+
+'use strict';
+
+const fs = require('node:fs');
+const path = require('node:path');
+
+/** @type {Readonly<{relativePath: string, pattern: RegExp, replacement: string}>} */
+const CONFIG = Object.freeze({
+  relativePath: 'src/app/api/evolution/propose/route.ts',
+  pattern: /siphonedCodeContext\}\n```\n\$\{fileContent/g,
+  replacement: 'siphonedCodeContext}\n\\`\\`\\`\n${fileContent',
+});
+
+const MAX_FILE_SIZE_BYTES = 10 * 1024 * 1024; // 10MB limit
+
+/**
+ * Validates that the target path s
+```
