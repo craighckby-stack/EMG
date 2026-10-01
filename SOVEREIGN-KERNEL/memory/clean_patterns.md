@@ -464,3 +464,36 @@ const PROMPT_FORMAT_TEMPLATE = `Format your response exactly like this:
   "riskScore": 1,
   "affectedFiles": ["
 ```
+
+## COMMIT: e4381c1c2409ce64a3e0b81aa40bbc2e4c64120e
+- File: fix_prompt8.js
+- Sanitizer: PASSED
+```typescript
+/* DARLEK CAAN RAG SYNTHESIS - Autonomous Generation G-52 [2026-09-20T05:23:54.031Z] */
+/**
+ * DARLEK CANN ARCHITECTURAL HEADER
+ * File: fix_prompt8.js
+ * Role: Core system component participating in autonomous cognitive evolution cycles.
+ * Architecture: Type-safe modular unit with resilient state interfaces.
+ */
+
+'use strict';
+
+const { readFileSync, writeFileSync } = require('node:fs');
+const path = require('node:path');
+
+/** @type {string} */
+const TARGET_FILE_PATH = 'src/app/api/evolution/propose/route.ts';
+
+/**
+ * @typedef {Object} FormattingReplacement
+ * @property {RegExp} pattern
+ * @property {string} replacement
+ */
+
+/** @type {ReadonlyArray<FormattingReplacement>} */
+const FORMATTING_REPLACEMENTS = Object.freeze([
+    {
+        pattern: /\\`\\`\\`json\{/g,
+        replacement: '\
+```
