@@ -1180,3 +1180,35 @@ import { safeSetLocalStorage, safeGetLocalStorage } from './safeStorage';
  * `wrong/<hash>.md` files pushed by the Commit Archaeology Engine app and
  * ingests a
 ```
+
+## COMMIT: 07cb3b3ec1957e07274274278c5028cb1cd82c6e
+- File: src/lib/darlek/ai.ts
+- Sanitizer: PASSED
+```typescript
+import { GoogleGenerativeAI, GenerativeModel } from '@google/generative-ai';
+
+/**
+ * Official Google AI Studio SDK integration helper for DARLEK CAAN.
+ * Lazily initializes the GoogleGenerativeAI client using server-side GEMINI_API_KEY.
+ */
+
+let genAIClient: GoogleGenerativeAI | null = null;
+
+/**
+ * Resolves the configured Gemini API key from available environment variables.
+ */
+function resolveApiKey(): string {
+  return process.env.GEMINI_API_KEY || process.env.API_KEY || '';
+}
+
+export function getGoogleGenerativeAIClient(): GoogleGenerativeAI {
+  const apiKey = resolveApiKey();
+  if (!apiKey) {
+    throw new Error('GEMINI_API_KEY environment variable is required to initialize GoogleGenerativeAI.');
+  }
+
+  if (!genAIClient) {
+    genAIClient = new GoogleGenerativeAI(apiKey);
+  }
+  return
+```
