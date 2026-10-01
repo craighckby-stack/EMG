@@ -238,3 +238,32 @@ createRoot(rootElement).render(
   </StrictMode>,
 );
 ```
+
+## COMMIT: e133a5a54a0f67521bd68db329b4aff69313eab1
+- File: src/types.ts
+- Sanitizer: PASSED
+```typescript
+/**
+ * DARLEK CANN ARCHITECTURAL HEADER
+ * File: src/types.ts
+ * Role: Core system component participating in autonomous cognitive evolution cycles.
+ * Architecture: Type-safe modular unit with resilient state interfaces.
+ */
+
+export interface Chunk {
+  title: string;
+  file: string;
+  code: string;
+  explanation: string;
+  mutation: string;
+  intentAlignmentScore: number;
+  philosophyCheck: string;
+  ccrrScore: number;
+  suggestedBranchName: string;
+  isCriticalUpgrade?: boolean;
+  /** Cryptographic hash or checksum for memory safety and integrity validation */
+  checksum?: string;
+  /** Bounded memory allocation limit for payload deserialization */
+  maxPayloadSize?: number;
+}
+```
