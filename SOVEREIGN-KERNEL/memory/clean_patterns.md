@@ -105,3 +105,37 @@ import { getMode, isDevMode } from './mode.js';
 import { INTERNAL_DIR } from './paths.js';
 import {
 ```
+
+## COMMIT: 87fa0c33bb54e73e1e335299085b5c94298077f7
+- File: apps/cli/src/env.ts
+- Sanitizer: PASSED
+```typescript
+/**
+ * Environment variable loading and credential validation.
+ *
+ * Local mode: loads ./.env via dotenv.
+ * NPX mode: fills gaps from ~/.shannon/config.toml (no .env).
+ */
+
+import fs from 'node:fs';
+import os from 'node:os';
+import path from 'node:path';
+import dotenv from 'dotenv';
+import { resolveConfig } from './config/resolver.js';
+import { getMode } from './mode.js';
+import {
+  CURATED_PROVIDERS,
+  type CuratedProviderId,
+  GENERIC_API_KEY_ENV,
+  isCuratedProvider,
+  PROVIDER_API_KEY_ENV,
+  PROVIDER_CREDENTIAL_HINT,
+  PROVIDER_EXTRA_ENV,
+  resolveModelSpec,
+} from './model-spec.js';
+
+/**
+ * Variables forwarded to every worker container regardless of provider. Each is
+ * forwarded only when set, so an unused one never appears in the container.
+ * SHANNON_AI_API_KEY rides along because
+```
