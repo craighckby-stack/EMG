@@ -617,3 +617,34 @@ interface RepoTreeItem {
 
 interface T
 ```
+
+## COMMIT: 1df89bf4679552d88f94c7be42b67eabb4197d35
+- File: src/app/api/evolution/lock/route.ts
+- Sanitizer: PASSED
+```typescript
+/* DARLEK CAAN RAG SYNTHESIS - Autonomous Generation G-83 [2026-09-20T05:37:28.205Z] */
+/**
+ * DARLEK CANN ARCHITECTURAL HEADER
+ * File: src/app/api/evolution/lock/route.ts
+ * Role: API endpoint providing centralized lock status, acquisition, and release
+ *       across both server and client execution contexts.
+ */
+
+import { NextRequest, NextResponse } from '@/lib/next-mock';
+import { evolutionLock } from '@/lib/evolutionLock';
+import { safeReqJson } from '@/lib/safe-json';
+
+export const dynamic: string = 'force-dynamic';
+
+export async function GET(): Promise<NextResponse> {
+  const status = evolutionLock.getStatus();
+  return NextResponse.json({
+    success: true,
+    ...status,
+  });
+}
+
+export async function POST(req: NextRequest): Promise<NextResponse> {
+  try {
+    const body = await
+```
