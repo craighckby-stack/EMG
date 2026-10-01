@@ -112,3 +112,33 @@ interface CerebrasResponseBody {
 
 const MAX_PROMPT_L
 ```
+
+## COMMIT: e10028380bf634af57f5bd7358d8bf937aff805d
+- File: src/lib/github.ts
+- Sanitizer: PASSED
+```typescript
+/**
+ * DARLEK CANN ARCHITECTURAL HEADER
+ * File: src/lib/github.ts
+ * Role: Core system component participating in autonomous cognitive evolution cycles.
+ * Architecture: Type-safe modular unit with resilient state interfaces.
+ */
+
+export interface GitHubRepo {
+  owner: { login: string };
+  name: string;
+  default_branch: string;
+}
+
+/**
+ * Validates repository owner or name strings to prevent path traversal or injection.
+ */
+const sanitizeSegment = (value: string, fieldName: string): string => {
+  if (typeof value !== 'string' || !/^[a-zA-Z0-9_.-]+$/.test(value)) {
+    throw new Error(`Invalid GitHub ${fieldName}: must contain only alphanumeric characters, hyphens, periods, or underscores.`);
+  }
+  return value;
+};
+
+export const ghFetch = async (url: string, token: string, options: Request
+```
