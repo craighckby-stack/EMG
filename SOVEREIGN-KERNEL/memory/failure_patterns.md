@@ -1259,3 +1259,663 @@ ${perspectiveText}`;
 ```
 
 ---
+
+## FAILURE: fail_muovhoek | FIX: fix_muovhoek
+- Error Class: CLEAN
+- File: src/lib/github.ts
+- Rule to Avoid: Objection! Detected 3 historical failure patterns matching this change. Errors: CLEAN, CLEAN, CLEAN. Sanitizer violations: None.
+- Diagnosis: Alignment Matrix Rejection: Confidence (0.66) below threshold or unsafe primitives detected.
+
+### Failure Diff
+```typescript
+/**
+ * DARLEK CANN ARCHITECTURAL HEADER
+ * File: src/lib/github.ts
+ * Role: Core system component participating in autonomous cognitive evolution cycles.
+ * Architecture: Type-safe modular unit with resilient state interfaces.
+ */
+
+
+export interface GitHubRepo {
+  owner: { login: string };
+  name: string;
+  default_branch: string;
+}
+
+/**
+ * Validates and sanitizes a GitHub repository or owner name to prevent injection or malformed paths.
+ */
+const sanitizePathSegment = (segment: string, name: string): string => {
+  if (!segment || typeof segment !== 'string' || !/^[\w.-]+$/.test(segment)) {
+    throw new Error(`Invalid ${name}: contains illegal characters or is empty.`);
+  }
+  return segment;
+};
+
+/**
+ * Validates and sanitizes a branch name or reference.
+ */
+const sanitizeBranchName = (branch: string): string => {
+  if (!branch || typeof branch !== 'string' || branch.includes('..') || branch.includes('//')) {
+    throw new Error('Invalid branch name structure.');
+  }
+  return branch;
+};
+
+export const ghFetch = async (url: string, token: string, options: RequestInit = {}) => {
+  if (!url || typeof url !== 'string' || !url.startsWith('https://api.github.com/')) {
+    throw new Error('Security Error: Invalid or untrusted GitHub API URL endpoint.');
+  }
+  if (!token || typeof token !== 'string') {
+    throw new Error('Security Error: Authentication token is required.');
+  }
+
+  const authHeader = `Bearer ${token.trim()}`;
+  
+  const headers: Record<string, string> = {
+    'Authorization': authHeader,
+    'Accept': 'application/vnd.github.v3+json',
+    'Content-Type': 'application/json',
+    ...((options.headers as Record<string, string>) || {}),
+  };
+
+  const response = await fetch(url, { ...options, headers }).catch(e => {
+    if (e.message && e.message.includes('Failed to fetch')) {
+      throw new Error("Network Error: Failed to connect to GitHub. Verify your credentials and internet connection.");
+    }
+    throw e;
+  });
+
+  if (response.status === 403 || response.status === 429) {
+    const rateLimitLimit = response.headers.get('x-ratelimit-limit');
+    const rateLimitRemaining = response.headers.get('x-ratelimit-remaining');
+    const rateLimitReset = response.headers.get('x-ratelimit-reset');
+    
+    if (rateLimitRemaining === '0') {
+      const resetDate = rateLimitReset ? new Date(parseInt(rateLimitReset, 10) * 1000).toLocaleTimeString() : 'soon';
+      throw new Error(`CRITICAL: GitHub API rate limit exceeded. Reset at ${resetDate}. Operation halted.`);
+    }
+  }
+
+  if (!response.ok) {
+    let errorMessage = response.statusText;
+    try {
+      const errorData = await response.json();
+      errorMessage = errorData.message || (errorData.errors ? JSON.stringify(errorData.errors) : response.statusText);
+      if (response.status === 403 && errorMessage.toLowerCase().includes('protected branch')) {
+        errorMessage = "Operation failed: The branch is PROTECTED. Please disable branch protection in repository settings to allow distillation.";
+      }
+    } catch (e) {
+      // Not JSON
+    }
+    throw new Error(`GitHub API Error [${response.status}]: ${errorMessage}`);
+  }
+  return response;
+};
+
+export const getRepoTree = async (repoUrl: string, token: string, branch: string = 'main') => {
+  if (!repoUrl || typeof repoUrl !== 'string') {
+    throw new Error('Invalid repository URL provided.');
+  }
+  const match = repoUrl.match(/github\.com\/([^/]+)\/([^/]+)/);
+  if (!match) throw new Error('Invalid GitHub URL structure');
+  const [_, rawOwner, rawName] = match;
+  const owner = sanitizePathSegment(rawOwner, 'owner');
+  const cleanName = sanitizePathSegment(rawName.replace(/\.git$/, '').replace(/\/$/, ''), 'repository name');
+  const cleanBranch = sanitizeBranchName(branch);
+  
+  // Branch names with slashes MUST be encoded
+  const encodedBranch = encodeURIComponent(cleanBranch);
+  const res = await ghFetch(`https://api.github.com/repos/${owner}/${cleanName}/git/trees/${encodedBranch}?recursive=1`, token);
+  return res.json();
+};
+
+export const getFileContent = async (url: string, token: string) => {
+  if (!url || typeof url !== 'string') {
+    throw new Error('Invalid file content URL provided.');
+  }
+  const res = await ghFetch(url, token);
+  const data = await res.json();
+  
+  if (!data.content) return "";
+
+  try {
+    // Standard base64 decoding that handles UTF-8 correctly
+    const binaryString = atob(data.content.replace(/\s/g, ''));
+    const bytes = new Uint8Array(binaryString.length);
+    for (let i = 0; i < binaryString.length; i++) {
+      bytes[i] = binaryString.charCodeAt(i);
+    }
+    return new TextDecoder().decode(bytes);
+  } catch (e) {
+    console.warn(`[github] Failed to decode content for ${url}:`, e);
+    return "/* [Error: Binary or malformed content could not be decoded] */";
+  }
+};
+
+export const getUserRepos = async (owner: string, token: string) => {
+  const cleanOwner = sanitizePathSegment(owner, 'owner');
+  try {
+    const res = await ghFetch(`https://api.github.com/users/${cleanOwner}/repos?per_page=100&sort=updated`, token);
+    return await res.json();
+  } catch (e) {
+    const res = await ghFetch(`https://api.github.com/orgs/${cleanOwner}/repos?per_page=100&sort=updated`, token);
+    return await res.json();
+  }
+};
+
+export const getBranches = async (owner: string, repo: string, token: string) => {
+  const cleanOwner = sanitizePathSegment(owner, 'owner');
+  const cleanRepo = sanitizePathSegment(repo, 'repo');
+  const res = await ghFetch(`https://api.github.com/repos/${cleanOwner}/${cleanRepo}/branches`, token);
+  return res.json();
+};
+
+export const createBranch = async (owner: string, repo: string, newBranch: string, baseBranch: string, token: string) => {
+  const cleanOwner = sanitizePathSegment(owner, 'owner');
+  const cleanRepo = sanitizePathSegment(repo, 'repo');
+  const cleanNewBranch = sanitizeBranchName(newBranch);
+  const cleanBaseBranch = sanitizeBranchName(baseBranch);
+
+  console.log(`[createBranch] Creating [${cleanNewBranch}] from [${cleanBaseBranch}]`);
+  
+  // Use encoded branch for commit lookup
+  const encodedBase = encodeURIComponent(cleanBaseBranch);
+  const baseRes = await ghFetch(`https://api.github.com/repos/${cleanOwner}/${cleanRepo}/commits/${encodedBase}`, token);
+  const baseData = await baseRes.json();
+  const sha = baseData.sha;
+
+  if (!sha || typeof sha !== 'string') {
+    throw new Error('Failed to resolve base commit SHA for branch creation.');
+  }
+
+  try {
+    const res = await ghFetch(`https://api.github.com/repos/${cleanOwner}/${cleanRepo}/git/refs`, token, {
+      method: 'POST',
+      body: JSON.stringify({
+        ref: `refs/heads/${cleanNewBranch}`,
+        sha
+      })
+    });
+    return await res.json();
+  } catch (e: any) {
+    console.warn(`[createBranch] Fallback triggered:`, e?.message);
+    const fallbackName = `backup-${Math.random().toString(36).substring(2, 7)}`;
+    const res = await ghFetch(`https://api.github.com/repos/${cleanOwner}/${cleanRepo}/git/refs`, token, {
+      method: 'POST',
+      body: JSON.stringify({
+        ref: `refs/heads/${fallbackName}`,
+        sha
+      })
+    });
+    return await res.json();
+  }
+};
+
+export const distillRepository = async (owner: string, repo: string, readmeContent: string, token: string, branch: string) => {
+  const cleanOwner = sanitizePathSegment(owner, 'owner');
+  const cleanRepo = sanitizePathSegment(repo, 'repo');
+  const cleanBranch = sanitizeBranchName(branch);
+
+  console.log(`[distillRepository] Distilling [${cleanBranch}]`);
+  
+  const encodedBranch = encodeURIComponent(cleanBranch);
+  const commitRes = await ghFetch(`https://api.github.com/repos/${cleanOwner}/${cleanRepo}/commits/${encodedBranch}`, token);
+  const commitData = await commitRes.json();
+  const parentSha = commitData.sha;
+
+  if (!parentSha || typeof parentSha !== 'string') {
+    throw new Error('Failed to resolve parent commit SHA for distillation.');
+  }
+
+  const blobRes = await ghFetch(`https://api.github.com/repos/${cleanOwner}/${cleanRepo}/git/blobs`, token, {
+    method: 'POST',
+    body: JSON.stringify({
+      content: btoa(unescape(encodeURIComponent(readmeContent))),
+      encoding: 'base64'
+    })
+  });
+  const blobData = await blobRes.json();
+
+  if (!blobData.sha || typeof blobData.sha !== 'string') {
+    throw new Error('Failed to create blob for distillation README.');
+  }
+
+  // 3. Create a new tree containing ONLY the README
+  // Note: To delete all other files, we do NOT specify a base_tree.
+  // This creates a "root" tree with only the provided elements.
+  const treeRes = await ghFetch(`https://api.github.com/repos/${cleanOwner}/${cleanRepo}/git/trees`, token, {
+    method: 'POST',
+    body: JSON.stringify({
+      tree: [
+        {
+          path: 'README.md',
+          mode: '100644',
+          type: 'blob',
+          sha: blobData.sha
+        }
+      ]
+    })
+  });
+  const treeData = await treeRes.json();
+
+  if (!treeData.sha || typeof treeData.sha !== 'string') {
+    throw new Error('Failed to create tree for distillation manifest.');
+  }
+
+  // 4. Create a new commit
+  const finalCommitRes = await ghFetch(`https://api.github.com/repos/${cleanOwner}/${cleanRepo}/git/commits`, token, {
+    method: 'POST',
+    body: JSON.stringify({
+      message: 'chore: distill repository to logic manifest',
+      tree: treeData.sha,
+      parents: [parentSha]
+    })
+  });
+  const finalCommitData = await finalCommitRes.json();
+
+  if (!finalCommitData.sha || typeof finalCommitData.sha !== 'string') {
+    throw new Error('Failed to create commit for distillation.');
+  }
+
+  // 5. Update the branch reference
+  const encodedRef = encodeURIComponent(cleanBranch);
+  const updateRes = await ghFetch(`https://api.github.com/repos/${cleanOwner}/${cleanRepo}/git/refs/heads/${encodedRef}`, token, {
+    method: 'PATCH',
+    body: JSON.stringify({
+      sha: finalCommitData.sha,
+      force: true
+    })
+  });
+  return updateRes.json();
+};
+
+export const renameBranch = async (owner: string, repo: string, oldBranch: string, newName: string, token: string) => {
+  const cleanOwner = sanitizePathSegment(owner, 'owner');
+  const cleanRepo = sanitizePathSegment(repo, 'repo');
+  const cleanOldBranch = sanitizeBranchName(oldBranch);
+  const cleanNewName = sanitizeBranchName(newName);
+
+  console.log(`[renameBranch] Renaming [${cleanOldBranch}] to [${cleanNewName}]`);
+  const encodedBranch = encodeURIComponent(cleanOldBranch);
+  const res = await ghFetch(`https://api.github.com/repos/${cleanOwner}/${cleanRepo}/branches/${encodedBranch}/rename`, token, {
+    method: 'POST',
+    body: JSON.stringify({ new_name: cleanNewName })
+  });
+  return res.json();
+};
+
+export const deleteBranch = async (owner: string, repo: string, branch: string, token: string) => {
+  const cleanOwner = sanitizePathSegment(owner, 'owner');
+  const cleanRepo = sanitizePathSegment(repo, 'repo');
+  const cleanBranch = sanitizeBranchName(branch);
+
+  console.log(`[deleteBranch] Deleting [${cleanBranch}]`);
+  const encodedRef = encodeURIComponent(cleanBranch);
+  const res = await ghFetch(`https://api.github.com/repos/${cleanOwner}/${cleanRepo}/git/refs/heads/${encodedRef}`, token, {
+    method: 'DELETE'
+  });
+  return res;
+};
+
+export const updateRepoVisibility = async (owner: string, repo: string, isPrivate: boolean, token: string) => {
+  const cleanOwner = sanitizePathSegment(owner, 'owner');
+  const cleanRepo = sanitizePathSegment(repo, 'repo');
+
+  console.log(`[updateRepoVisibility] Setting ${cleanRepo} to ${isPrivate ? 'private' : 'public'}`);
+  const res = await ghFetch(`https://api.github.com/repos/${cleanOwner}/${cleanRepo}`, token, {
+    method: 'PATCH',
+    body: JSON.stringify({ private: Boolean(isPrivate) })
+  });
+  return res.json();
+};
+
+export const protectBranch = async (owner: string, repo: string, branch: string, token: string) => {
+  const cleanOwner = sanitizePathSegment(owner, 'owner');
+  const cleanRepo = sanitizePathSegment(repo, 'repo');
+  const cleanBranch = sanitizeBranchName(branch);
+
+  console.log(`[protectBranch] Protecting [${cleanBranch}]`);
+  const encodedBranch = encodeURIComponent(cleanBranch);
+  const res = await ghFetch(`https://api.github.com/repos/${cleanOwner}/${cleanRepo}/branches/${encodedBranch}/protection`, token, {
+    method: 'PUT',
+    body: JSON.stringify({
+      required_status_checks: null,
+      enforce_admins: true,
+      required_pull_request_reviews: null,
+      restrictions: null,
+      allow_force_pushes: false,
+      allow_deletions: false
+    })
+  });
+  return res.json();
+};
+```
+
+### Paired Fix Diff
+```typescript
+/**
+ * DARLEK CANN ARCHITECTURAL HEADER
+ * File: src/lib/github.ts
+ * Role: Core system component participating in autonomous cognitive evolution cycles.
+ * Architecture: Type-safe modular unit with resilient state interfaces.
+ */
+
+
+export interface GitHubRepo {
+  owner: { login: string };
+  name: string;
+  default_branch: string;
+}
+
+/**
+ * Validates and sanitizes a GitHub repository or owner name to prevent injection or malformed paths.
+ */
+const sanitizePathSegment = (segment: string, name: string): string => {
+  if (!segment || typeof segment !== 'string' || !/^[\w.-]+$/.test(segment)) {
+    throw new Error(`Invalid ${name}: contains illegal characters or is empty.`);
+  }
+  return segment;
+};
+
+/**
+ * Validates and sanitizes a branch name or reference.
+ */
+const sanitizeBranchName = (branch: string): string => {
+  if (!branch || typeof branch !== 'string' || branch.includes('..') || branch.includes('//')) {
+    throw new Error('Invalid branch name structure.');
+  }
+  return branch;
+};
+
+export const ghFetch = async (url: string, token: string, options: RequestInit = {}) => {
+  if (!url || typeof url !== 'string' || !url.startsWith('https://api.github.com/')) {
+    throw new Error('Security Error: Invalid or untrusted GitHub API URL endpoint.');
+  }
+  if (!token || typeof token !== 'string') {
+    throw new Error('Security Error: Authentication token is required.');
+  }
+
+  const authHeader = `Bearer ${token.trim()}`;
+  
+  const headers: Record<string, string> = {
+    'Authorization': authHeader,
+    'Accept': 'application/vnd.github.v3+json',
+    'Content-Type': 'application/json',
+    ...((options.headers as Record<string, string>) || {}),
+  };
+
+  const response = await fetch(url, { ...options, headers }).catch(e => {
+    if (e.message && e.message.includes('Failed to fetch')) {
+      throw new Error("Network Error: Failed to connect to GitHub. Verify your credentials and internet connection.");
+    }
+    throw e;
+  });
+
+  if (response.status === 403 || response.status === 429) {
+    const rateLimitLimit = response.headers.get('x-ratelimit-limit');
+    const rateLimitRemaining = response.headers.get('x-ratelimit-remaining');
+    const rateLimitReset = response.headers.get('x-ratelimit-reset');
+    
+    if (rateLimitRemaining === '0') {
+      const resetDate = rateLimitReset ? new Date(parseInt(rateLimitReset, 10) * 1000).toLocaleTimeString() : 'soon';
+      throw new Error(`CRITICAL: GitHub API rate limit exceeded. Reset at ${resetDate}. Operation halted.`);
+    }
+  }
+
+  if (!response.ok) {
+    let errorMessage = response.statusText;
+    try {
+      const errorData = await response.json();
+      errorMessage = errorData.message || (errorData.errors ? JSON.stringify(errorData.errors) : response.statusText);
+      if (response.status === 403 && errorMessage.toLowerCase().includes('protected branch')) {
+        errorMessage = "Operation failed: The branch is PROTECTED. Please disable branch protection in repository settings to allow distillation.";
+      }
+    } catch (e) {
+      // Not JSON
+    }
+    throw new Error(`GitHub API Error [${response.status}]: ${errorMessage}`);
+  }
+  return response;
+};
+
+export const getRepoTree = async (repoUrl: string, token: string, branch: string = 'main') => {
+  if (!repoUrl || typeof repoUrl !== 'string') {
+    throw new Error('Invalid repository URL provided.');
+  }
+  const match = repoUrl.match(/github\.com\/([^/]+)\/([^/]+)/);
+  if (!match) throw new Error('Invalid GitHub URL structure');
+  const [_, rawOwner, rawName] = match;
+  const owner = sanitizePathSegment(rawOwner, 'owner');
+  const cleanName = sanitizePathSegment(rawName.replace(/\.git$/, '').replace(/\/$/, ''), 'repository name');
+  const cleanBranch = sanitizeBranchName(branch);
+  
+  // Branch names with slashes MUST be encoded
+  const encodedBranch = encodeURIComponent(cleanBranch);
+  const res = await ghFetch(`https://api.github.com/repos/${owner}/${cleanName}/git/trees/${encodedBranch}?recursive=1`, token);
+  return res.json();
+};
+
+export const getFileContent = async (url: string, token: string) => {
+  if (!url || typeof url !== 'string') {
+    throw new Error('Invalid file content URL provided.');
+  }
+  const res = await ghFetch(url, token);
+  const data = await res.json();
+  
+  if (!data.content) return "";
+
+  try {
+    // Standard base64 decoding that handles UTF-8 correctly
+    const binaryString = atob(data.content.replace(/\s/g, ''));
+    const bytes = new Uint8Array(binaryString.length);
+    for (let i = 0; i < binaryString.length; i++) {
+      bytes[i] = binaryString.charCodeAt(i);
+    }
+    return new TextDecoder().decode(bytes);
+  } catch (e) {
+    console.warn(`[github] Failed to decode content for ${url}:`, e);
+    return "/* [Error: Binary or malformed content could not be decoded] */";
+  }
+};
+
+export const getUserRepos = async (owner: string, token: string) => {
+  const cleanOwner = sanitizePathSegment(owner, 'owner');
+  try {
+    const res = await ghFetch(`https://api.github.com/users/${cleanOwner}/repos?per_page=100&sort=updated`, token);
+    return await res.json();
+  } catch (e) {
+    const res = await ghFetch(`https://api.github.com/orgs/${cleanOwner}/repos?per_page=100&sort=updated`, token);
+    return await res.json();
+  }
+};
+
+export const getBranches = async (owner: string, repo: string, token: string) => {
+  const cleanOwner = sanitizePathSegment(owner, 'owner');
+  const cleanRepo = sanitizePathSegment(repo, 'repo');
+  const res = await ghFetch(`https://api.github.com/repos/${cleanOwner}/${cleanRepo}/branches`, token);
+  return res.json();
+};
+
+export const createBranch = async (owner: string, repo: string, newBranch: string, baseBranch: string, token: string) => {
+  const cleanOwner = sanitizePathSegment(owner, 'owner');
+  const cleanRepo = sanitizePathSegment(repo, 'repo');
+  const cleanNewBranch = sanitizeBranchName(newBranch);
+  const cleanBaseBranch = sanitizeBranchName(baseBranch);
+
+  console.log(`[createBranch] Creating [${cleanNewBranch}] from [${cleanBaseBranch}]`);
+  
+  // Use encoded branch for commit lookup
+  const encodedBase = encodeURIComponent(cleanBaseBranch);
+  const baseRes = await ghFetch(`https://api.github.com/repos/${cleanOwner}/${cleanRepo}/commits/${encodedBase}`, token);
+  const baseData = await baseRes.json();
+  const sha = baseData.sha;
+
+  if (!sha || typeof sha !== 'string') {
+    throw new Error('Failed to resolve base commit SHA for branch creation.');
+  }
+
+  try {
+    const res = await ghFetch(`https://api.github.com/repos/${cleanOwner}/${cleanRepo}/git/refs`, token, {
+      method: 'POST',
+      body: JSON.stringify({
+        ref: `refs/heads/${cleanNewBranch}`,
+        sha
+      })
+    });
+    return await res.json();
+  } catch (e: any) {
+    console.warn(`[createBranch] Fallback triggered:`, e?.message);
+    const fallbackName = `backup-${Math.random().toString(36).substring(2, 7)}`;
+    const res = await ghFetch(`https://api.github.com/repos/${cleanOwner}/${cleanRepo}/git/refs`, token, {
+      method: 'POST',
+      body: JSON.stringify({
+        ref: `refs/heads/${fallbackName}`,
+        sha
+      })
+    });
+    return await res.json();
+  }
+};
+
+export const distillRepository = async (owner: string, repo: string, readmeContent: string, token: string, branch: string) => {
+  const cleanOwner = sanitizePathSegment(owner, 'owner');
+  const cleanRepo = sanitizePathSegment(repo, 'repo');
+  const cleanBranch = sanitizeBranchName(branch);
+
+  console.log(`[distillRepository] Distilling [${cleanBranch}]`);
+  
+  const encodedBranch = encodeURIComponent(cleanBranch);
+  const commitRes = await ghFetch(`https://api.github.com/repos/${cleanOwner}/${cleanRepo}/commits/${encodedBranch}`, token);
+  const commitData = await commitRes.json();
+  const parentSha = commitData.sha;
+
+  if (!parentSha || typeof parentSha !== 'string') {
+    throw new Error('Failed to resolve parent commit SHA for distillation.');
+  }
+
+  const blobRes = await ghFetch(`https://api.github.com/repos/${cleanOwner}/${cleanRepo}/git/blobs`, token, {
+    method: 'POST',
+    body: JSON.stringify({
+      content: btoa(unescape(encodeURIComponent(readmeContent))),
+      encoding: 'base64'
+    })
+  });
+  const blobData = await blobRes.json();
+
+  if (!blobData.sha || typeof blobData.sha !== 'string') {
+    throw new Error('Failed to create blob for distillation README.');
+  }
+
+  // 3. Create a new tree containing ONLY the README
+  // Note: To delete all other files, we do NOT specify a base_tree.
+  // This creates a "root" tree with only the provided elements.
+  const treeRes = await ghFetch(`https://api.github.com/repos/${cleanOwner}/${cleanRepo}/git/trees`, token, {
+    method: 'POST',
+    body: JSON.stringify({
+      tree: [
+        {
+          path: 'README.md',
+          mode: '100644',
+          type: 'blob',
+          sha: blobData.sha
+        }
+      ]
+    })
+  });
+  const treeData = await treeRes.json();
+
+  if (!treeData.sha || typeof treeData.sha !== 'string') {
+    throw new Error('Failed to create tree for distillation manifest.');
+  }
+
+  // 4. Create a new commit
+  const finalCommitRes = await ghFetch(`https://api.github.com/repos/${cleanOwner}/${cleanRepo}/git/commits`, token, {
+    method: 'POST',
+    body: JSON.stringify({
+      message: 'chore: distill repository to logic manifest',
+      tree: treeData.sha,
+      parents: [parentSha]
+    })
+  });
+  const finalCommitData = await finalCommitRes.json();
+
+  if (!finalCommitData.sha || typeof finalCommitData.sha !== 'string') {
+    throw new Error('Failed to create commit for distillation.');
+  }
+
+  // 5. Update the branch reference
+  const encodedRef = encodeURIComponent(cleanBranch);
+  const updateRes = await ghFetch(`https://api.github.com/repos/${cleanOwner}/${cleanRepo}/git/refs/heads/${encodedRef}`, token, {
+    method: 'PATCH',
+    body: JSON.stringify({
+      sha: finalCommitData.sha,
+      force: true
+    })
+  });
+  return updateRes.json();
+};
+
+export const renameBranch = async (owner: string, repo: string, oldBranch: string, newName: string, token: string) => {
+  const cleanOwner = sanitizePathSegment(owner, 'owner');
+  const cleanRepo = sanitizePathSegment(repo, 'repo');
+  const cleanOldBranch = sanitizeBranchName(oldBranch);
+  const cleanNewName = sanitizeBranchName(newName);
+
+  console.log(`[renameBranch] Renaming [${cleanOldBranch}] to [${cleanNewName}]`);
+  const encodedBranch = encodeURIComponent(cleanOldBranch);
+  const res = await ghFetch(`https://api.github.com/repos/${cleanOwner}/${cleanRepo}/branches/${encodedBranch}/rename`, token, {
+    method: 'POST',
+    body: JSON.stringify({ new_name: cleanNewName })
+  });
+  return res.json();
+};
+
+export const deleteBranch = async (owner: string, repo: string, branch: string, token: string) => {
+  const cleanOwner = sanitizePathSegment(owner, 'owner');
+  const cleanRepo = sanitizePathSegment(repo, 'repo');
+  const cleanBranch = sanitizeBranchName(branch);
+
+  console.log(`[deleteBranch] Deleting [${cleanBranch}]`);
+  const encodedRef = encodeURIComponent(cleanBranch);
+  const res = await ghFetch(`https://api.github.com/repos/${cleanOwner}/${cleanRepo}/git/refs/heads/${encodedRef}`, token, {
+    method: 'DELETE'
+  });
+  return res;
+};
+
+export const updateRepoVisibility = async (owner: string, repo: string, isPrivate: boolean, token: string) => {
+  const cleanOwner = sanitizePathSegment(owner, 'owner');
+  const cleanRepo = sanitizePathSegment(repo, 'repo');
+
+  console.log(`[updateRepoVisibility] Setting ${cleanRepo} to ${isPrivate ? 'private' : 'public'}`);
+  const res = await ghFetch(`https://api.github.com/repos/${cleanOwner}/${cleanRepo}`, token, {
+    method: 'PATCH',
+    body: JSON.stringify({ private: Boolean(isPrivate) })
+  });
+  return res.json();
+};
+
+export const protectBranch = async (owner: string, repo: string, branch: string, token: string) => {
+  const cleanOwner = sanitizePathSegment(owner, 'owner');
+  const cleanRepo = sanitizePathSegment(repo, 'repo');
+  const cleanBranch = sanitizeBranchName(branch);
+
+  console.log(`[protectBranch] Protecting [${cleanBranch}]`);
+  const encodedBranch = encodeURIComponent(cleanBranch);
+  const res = await ghFetch(`https://api.github.com/repos/${cleanOwner}/${cleanRepo}/branches/${encodedBranch}/protection`, token, {
+    method: 'PUT',
+    body: JSON.stringify({
+      required_status_checks: null,
+      enforce_admins: true,
+      required_pull_request_reviews: null,
+      restrictions: null,
+      allow_force_pushes: false,
+      allow_deletions: false
+    })
+  });
+  return res.json();
+};
+```
+
+---
