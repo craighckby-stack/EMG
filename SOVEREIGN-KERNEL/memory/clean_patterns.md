@@ -291,3 +291,37 @@ const __dirname = path.dirname(__filename);
 export type CommitResult = 
   | { success: true; commitHash: string; stamp:
 ```
+
+## COMMIT: 83f005fd1700c9e3d0315ff0d06f2ffa694c6024
+- File: src/lib/consensus-config.ts
+- Sanitizer: PASSED
+```typescript
+/**
+ * ARCHITECTURAL CONSENSUS WEIGHTING LOADER
+ * Role: Computes dynamic agent consensus weights and multi-provider fallback priority chains based on environment parameters.
+ * Integration: Imported by the Orchestrator/Agent Kernel to ensure resilient multi-model routing.
+ * Siphoned Pattern: craighckby-stack/AI_Agent_OS consensus-weighting specifications
+ */
+
+export interface ProviderWeightMap {
+  gemini: number;
+  anthropic: number;
+  deepseek: number;
+  xai: number;
+  cerebras: number;
+  groq: number;
+  local: number;
+}
+
+export const DEFAULT_WEIGHTS: Readonly<ProviderWeightMap> = {
+  gemini: 0.95,
+  anthropic: 0.90,
+  deepseek: 0.85,
+  xai: 0.80,
+  cerebras: 0.75,
+  groq: 0.70,
+  local: 0.60,
+} as const;
+
+const PROVIDER_ENV_KEYS: ReadonlyArray<readonly [keyof ProviderWeightMap, string]
+```
