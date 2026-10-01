@@ -159,3 +159,36 @@ import {
  * exit-code split is unchanged. Call sites on a JSON-capable path must exit through
  * `failWith`/`failUsage`/`crash` (never
 ```
+
+## COMMIT: 7660941e313d7631f9b69f6ce0b0999bc195b232
+- File: apps/cli/src/home.ts
+- Sanitizer: PASSED
+```typescript
+/**
+ * Shannon state directory management.
+ *
+ * Local mode (cloned repo): uses ./workspaces/
+ * NPX mode: uses ~/.shannon/workspaces/, ~/.shannon/
+ */
+
+import fs from 'node:fs';
+import os from 'node:os';
+import path from 'node:path';
+import { getMode } from './mode.js';
+
+const SHANNON_HOME: string = path.join(os.homedir(), '.shannon');
+const CONFIG_FILE: string = path.join(SHANNON_HOME, 'config.toml');
+const WORKSPACES_DIR_NPX: string = path.join(SHANNON_HOME, 'workspaces');
+
+export function getConfigFile(): string {
+  return CONFIG_FILE;
+}
+
+/** Whether the npx-mode credential file (`~/.shannon/config.toml`) exists on disk. */
+export function configFileExists(): boolean {
+  return fs.existsSync(CONFIG_FILE);
+}
+
+export function getWorkspacesDir(): string {
+  return getMode() === 'local' ?
+```
