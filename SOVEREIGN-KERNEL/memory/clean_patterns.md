@@ -264,32 +264,6 @@ function getRootContainer(): HTMLElement {
 function initializeApplication(): void {
 ```
 
-## COMMIT: d6e9bead3642419d557fd354deaaa33c796a8f16
-- File: src/types.ts
-- Sanitizer: PASSED
-```typescript
-/**
- * DARLEK CANN ARCHITECTURAL HEADER
- * File: src/types.ts
- * Role: Core system component participating in autonomous cognitive evolution cycles.
- * Architecture: Type-safe modular unit with resilient state interfaces.
- */
-
-// Branded types for strict input validation and injection mitigation
-export type SanitizedString = string & { readonly __brand: unique symbol };
-export type BoundedProbability = number & { readonly __range: '[0, 1]' };
-export type BoundedScore = number & { readonly __range: '[0, 100]' };
-export type BoundedMemoryLimit = number & { readonly __range: '[1, 1048576]' };
-
-export interface Chunk {
-  readonly title: string;
-  readonly file: string;
-  readonly code: string;
-  readonly explanation: string;
-  readonly mutation: string;
-  /** Bounded between 0 and 1 inclusive
-```
-
 ## COMMIT: 00bc32377879a802ce420f42930af57975ceeb78
 - File: src/lib/consensus-config.ts
 - Sanitizer: PASSED
@@ -400,6 +374,28 @@ const MAX_PROMPT_L
 ```
 
 ## COMMIT: 2f74b6631319f13102eaafb74b2ff497d24aefe3
+- File: src/lib/personas.ts
+- Sanitizer: PASSED
+```typescript
+/**
+ * DARLEK CANN ARCHITECTURAL HEADER
+ * File: src/lib/personas.ts
+ * Role: Core system component participating in autonomous cognitive evolution cycles.
+ * Architecture: Type-safe modular unit with resilient state interfaces.
+ */
+
+export interface Persona {
+  readonly description: string;
+  readonly promptModifier: string;
+}
+
+const STATIC_PERSONAS: Readonly<Record<string, Persona>> = {
+  "First Principles Physicist": {
+    description: "Applies first-principles physics reasoning to decompose complex systems into fundamental truths.",
+    promptModifier: "Provide a deep, comprehensive analysis of the topic from the perspective of a 'First Principles Physicist'. The response must be approximately 250 lines long. Do not use markdown headers, lists, or formatting like bolding or italics, ju
+```
+
+## COMMIT: b9c0ab08a40fce52094e92ab7c2471ea304ceee1
 - File: src/lib/personas.ts
 - Sanitizer: PASSED
 ```typescript
