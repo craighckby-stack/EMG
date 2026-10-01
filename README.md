@@ -1,3 +1,8 @@
+system just self healed there was a disconect between studio github repo and the system identified this problem.
+
+this repo is archived 
+
+
 # EMG (EPHEMERAL MIND GEM)
 
 > **Autonomous C-Dialect Neural Verification & Refactoring Engine**
