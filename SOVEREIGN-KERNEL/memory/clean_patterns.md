@@ -588,3 +588,32 @@ export interface MutationPayload {
   readonly filePath: string;
   readonly sta
 ```
+
+## COMMIT: b6125e076ddb95e4ecffe4379b60a15c0aca751d
+- File: src/app/api/chat/route.ts
+- Sanitizer: PASSED
+```typescript
+/* DARLEK CAAN RAG SYNTHESIS - Autonomous Generation G-76 [2026-09-20T05:34:49.189Z] */
+/**
+ * DARLEK CANN ARCHITECTURAL HEADER
+ * File: src/app/api/chat/route.ts
+ * Role: Core system component participating in autonomous cognitive evolution cycles.
+ * Architecture: Type-safe modular unit with resilient state interfaces.
+ */
+
+import { NextRequest, NextResponse } from '@/lib/next-mock';
+import { callLlm, getDefaultGeminiKey } from '@/lib/llm-provider';
+import { dalekBrainChat } from '@/lib/dalek-brain';
+import { DALEK_CAAN_SYSTEM_PROMPT } from '@/lib/constants';
+import { safeReqJson, safeResponseJson } from '@/lib/safe-json';
+
+export const dynamic: string = 'force-dynamic';
+
+interface RepoTreeItem {
+  readonly path?: string;
+  readonly size?: number;
+  readonly type?: string;
+}
+
+interface T
+```
