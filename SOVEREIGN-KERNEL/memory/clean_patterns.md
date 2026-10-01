@@ -734,3 +734,29 @@ import { enforceRetentionGate, transitionLifecycleState } from '@/lib/retention-
 
 export const dynamic = 'force-dynam
 ```
+
+## COMMIT: 79224a42a9b6298ace1b73a4c955c496354afe07
+- File: src/app/api/learning-logs/sync/route.ts
+- Sanitizer: PASSED
+```typescript
+/* DARLEK CAAN RAG SYNTHESIS - Autonomous Generation G-100 [2026-09-20T05:44:00.210Z] */
+/**
+ * DARLEK CANN ARCHITECTURAL HEADER
+ * File: src/app/api/learning-logs/sync/route.ts
+ * Role: Core system component participating in autonomous cognitive evolution cycles.
+ * Architecture: Type-safe modular unit with resilient state interfaces.
+ */
+
+import { NextResponse } from '@/lib/next-mock';
+import { syncPostmortemsToFirebase, getLearningLogs } from '@/lib/learningLogs';
+
+export const dynamic = 'force-dynamic';
+
+export async function POST(): Promise<Response> {
+  try {
+    await syncPostmortemsToFirebase();
+    const logs = await getLearningLogs();
+    return NextResponse.json({ success: true, logs });
+  } catch (error: unknown) {
+    const errorMessage = error instanceof Error ? error.message
+```
