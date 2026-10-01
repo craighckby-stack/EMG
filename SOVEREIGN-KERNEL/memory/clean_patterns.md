@@ -411,3 +411,42 @@ export interface EnvConfig {
   memoryPersistencePath: string;
   logLevel
 ```
+
+## COMMIT: 8a7258e8f1d2c5708f0868a32e7079ab7d074889
+- File: src/lib/gemini.ts
+- Sanitizer: PASSED
+```typescript
+/**
+ * DARLEK CANN ARCHITECTURAL HEADER
+ * File: src/lib/gemini.ts
+ * Role: Core system component participating in autonomous cognitive evolution cycles.
+ * Architecture: Type-safe modular unit with resilient state interfaces.
+ */
+
+import { GoogleGenAI, Type } from "@google/genai";
+import { Chunk } from '../types';
+
+const DEFAULT_MAX_RETRIES = 5;
+const DEFAULT_INITIAL_DELAY_MS = 1000;
+const PIPELINE_TIMEOUT_MS = 90000;
+const MODEL_NAME = "gemini-3-flash-preview";
+
+interface GroundingSource {
+  title: string;
+  uri: string;
+}
+
+export interface PerspectiveReport {
+  persona: string;
+  perspective: string;
+  sources?: GroundingSource[];
+}
+
+export interface SynthesisResult {
+  report: string;
+  sources: GroundingSource[];
+}
+
+async function fetchWithExponentialBackoff<T>(
+  apiCall: () => Promi
+```
