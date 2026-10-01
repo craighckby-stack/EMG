@@ -289,3 +289,38 @@ export interface Chunk {
   readonly mutation: string;
   /** Bounded between 0 and 1 inclusive
 ```
+
+## COMMIT: 00bc32377879a802ce420f42930af57975ceeb78
+- File: src/lib/consensus-config.ts
+- Sanitizer: PASSED
+```typescript
+/**
+ * ARCHITECTURAL CONSENSUS WEIGHTING LOADER
+ * Role: Computes dynamic agent consensus weights and multi-provider fallback priority chains based on environment parameters.
+ * Integration: Imported by the Orchestrator/Agent Kernel to ensure resilient multi-model routing.
+ * Siphoned Pattern: craighckby-stack/AI_Agent_OS consensus-weighting specifications
+ */
+
+export interface ProviderWeightMap {
+  gemini: number;
+  anthropic: number;
+  deepseek: number;
+  xai: number;
+  cerebras: number;
+  groq: number;
+  local: number;
+}
+
+const DEFAULT_WEIGHTS: Readonly<ProviderWeightMap> = {
+  gemini: 0.95,
+  anthropic: 0.90,
+  deepseek: 0.85,
+  xai: 0.80,
+  cerebras: 0.75,
+  groq: 0.70,
+  local: 0.60,
+} as const;
+
+/**
+ * Validates, bounds-checks, and parses a numeric weight from an environment variabl
+```
