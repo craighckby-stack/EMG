@@ -192,3 +192,40 @@ export function configFileExists(): boolean {
 export function getWorkspacesDir(): string {
   return getMode() === 'local' ?
 ```
+
+## COMMIT: b8023fe6d54de12c8c878dc0aef6752cfcc28283
+- File: apps/cli/src/mode.ts
+- Sanitizer: PASSED
+```typescript
+/**
+ * Runtime mode detection — local (build from source) vs npx (Docker Hub).
+ *
+ * The root `./shannon` entry point sets SHANNON_LOCAL=1 before importing.
+ * When run via npx, `cli/dist/index.js` is executed directly without it.
+ */
+
+export type Mode = 'local' | 'npx';
+
+const MODE_LOCAL: Mode = 'local';
+const MODE_NPX: Mode = 'npx';
+const PREFIX_LOCAL: string = './shannon';
+const PREFIX_NPX: string = 'npx @keygraph/shannon';
+
+let cachedMode: Mode | undefined;
+
+export function getMode(): Mode {
+  if (cachedMode !== undefined) {
+    return cachedMode;
+  }
+
+  cachedMode = process.env.SHANNON_LOCAL === '1' ? MODE_LOCAL : MODE_NPX;
+  return cachedMode;
+}
+
+export function setMode(mode: Mode): void {
+  cachedMode = mode;
+}
+
+export function isLocal(): boolean {
+  return getMode() === MODE_LOCAL;
+```
