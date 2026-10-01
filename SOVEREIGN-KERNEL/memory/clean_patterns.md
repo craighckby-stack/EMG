@@ -101,3 +101,31 @@ const DEFAULT_WEIGHTS: Readonly<ProviderWeightMap> = {
 /**
  * Validates, bounds-checks, and parses a numeric weight from an environment variabl
 ```
+
+## COMMIT: 42c182f493fbb16bd2691a4b89f2e99e3735e28f
+- File: src/lib/env-validator.ts
+- Sanitizer: PASSED
+```typescript
+/**
+ * ARCHITECTURAL SYSTEM ENVIRONMENT VALIDATOR & DIAGNOSTIC LOADER
+ * Role: Validates runtime environment configuration against expected enterprise schemas,
+ *       calculates diagnostic telemetry, and manages resilient multi-provider LLM fallbacks.
+ * Integration: Consumed by kernel initialization and diagnostic execution loops.
+ * Siphoned Pattern: craighckby-stack/AI_Agent_OS Concept/tessera-enterprise/lib/diagnostic-engine.ts
+ */
+
+export interface EnvConfig {
+  geminiApiKey: string;
+  appUrl: string;
+  anthropicApiKey?: string;
+  cerebrasApiKey?: string;
+  xaiApiKey?: string;
+  deepseekApiKey?: string;
+  openaiApiKey?: string;
+  groqApiKey?: string;
+  ollamaBaseUrl?: string;
+  consensusThreshold: number;
+  zeroLeakSandboxEnabled: boolean;
+  memoryPersistencePath: string;
+  logLevel
+```
