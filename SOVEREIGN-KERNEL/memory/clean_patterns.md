@@ -66,3 +66,49 @@ const __dirname = path.dirname(__filename);
 export type CommitResult = 
   | { success: true; commitHash: string; stamp:
 ```
+
+## COMMIT: f99135ae660ae20cce47fa4533d08ed20a06ada0
+- File: src/lib/fallbacks.ts
+- Sanitizer: PASSED
+```typescript
+/**
+ * DARLEK CANN ARCHITECTURAL HEADER
+ * File: src/lib/fallbacks.ts
+ * Role: Core system component participating in autonomous cognitive evolution cycles.
+ * Architecture: Type-safe modular unit with resilient state interfaces.
+ */
+
+import { Chunk } from '../types';
+
+interface FallbackConfig {
+  anthropicKey?: string;
+  cerebrasKey?: string;
+  grokKey?: string;
+}
+
+interface AIProxyRequestPayload {
+  messages: Array<{ role: string; content: string }>;
+}
+
+interface AnthropicResponseContent {
+  text?: string;
+}
+
+interface AnthropicResponseBody {
+  content?: AnthropicResponseContent[];
+}
+
+interface CerebrasChoiceMessage {
+  content?: string;
+}
+
+interface CerebrasChoice {
+  message?: CerebrasChoiceMessage;
+}
+
+interface CerebrasResponseBody {
+  choices?: CerebrasChoice[];
+}
+
+const MAX_PROMPT_L
+```
