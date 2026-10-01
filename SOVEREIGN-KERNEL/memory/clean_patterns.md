@@ -436,3 +436,31 @@ const CONFIG = Object.freeze({
   MAX_FILE_SIZE_BYTES: 10 * 1024 * 1024, // 10MB
   SEARCH_PATTERN:
 ```
+
+## COMMIT: 7794a989cbdf0c7bc6d442985b101ba31ab24a60
+- File: fix_prompt7.js
+- Sanitizer: PASSED
+```typescript
+/* DARLEK CAAN RAG SYNTHESIS - Autonomous Generation G-51 [2026-09-20T05:23:32.374Z] */
+/**
+ * DARLEK CANN ARCHITECTURAL HEADER
+ * File: fix_prompt7.js
+ * Role: Core system component participating in autonomous cognitive evolution cycles.
+ * Architecture: Modular unit with resilient state interfaces.
+ */
+
+'use strict';
+
+const { readFileSync, writeFileSync } = require('node:fs');
+const path = require('node:path');
+
+const TARGET_FILE_PATH = 'src/app/api/evolution/propose/route.ts';
+
+// Pre-allocated static template strings to minimize runtime allocations and string concatenation overhead
+const PROMPT_FORMAT_TEMPLATE = `Format your response exactly like this:
+\\\`\\\`\\\`json
+{
+  "analysis": "Specific analysis of what dead-weight or bugs were fixed...",
+  "riskScore": 1,
+  "affectedFiles": ["
+```
