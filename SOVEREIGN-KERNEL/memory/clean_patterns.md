@@ -231,39 +231,6 @@ class SiphonEngine {
    * Replaces legacy void/nul
 ```
 
-## COMMIT: 6640ac13c62d144fd434c1cc1b67018401fc5d5d
-- File: src/main.tsx
-- Sanitizer: PASSED
-```typescript
-/**
- * DARLEK CANN ARCHITECTURAL HEADER
- * File: src/main.tsx
- * Role: Core system component participating in autonomous cognitive evolution cycles.
- * Architecture: Type-safe modular unit with resilient state interfaces.
- */
-
-import { StrictMode } from 'react';
-import { createRoot } from 'react-dom/client';
-import App from './App';
-import './index.css';
-
-/**
- * Validates the existence of the root mount element in the DOM.
- */
-function getRootContainer(): HTMLElement {
-  const rootElement = document.getElementById('root');
-  if (!rootElement) {
-    throw new Error('Fatal: Root container element with ID "root" not found in DOM.');
-  }
-  return rootElement;
-}
-
-/**
- * Mounts the root application component into the DOM within a strict mode boundary.
- */
-function initializeApplication(): void {
-```
-
 ## COMMIT: 00bc32377879a802ce420f42930af57975ceeb78
 - File: src/lib/consensus-config.ts
 - Sanitizer: PASSED
@@ -415,4 +382,32 @@ const STATIC_PERSONAS: Readonly<Record<string, Persona>> = {
   "First Principles Physicist": {
     description: "Applies first-principles physics reasoning to decompose complex systems into fundamental truths.",
     promptModifier: "Provide a deep, comprehensive analysis of the topic from the perspective of a 'First Principles Physicist'. The response must be approximately 250 lines long. Do not use markdown headers, lists, or formatting like bolding or italics, ju
+```
+
+## COMMIT: 130e383c2359dc204362622c7467e4a2fe1ca0df
+- File: src/lib/env-validator.ts
+- Sanitizer: PASSED
+```typescript
+/**
+ * ARCHITECTURAL SYSTEM ENVIRONMENT VALIDATOR & DIAGNOSTIC LOADER
+ * Role: Validates runtime environment configuration against expected enterprise schemas,
+ *       calculates diagnostic telemetry, and manages resilient multi-provider LLM fallbacks.
+ * Integration: Consumed by kernel initialization and diagnostic execution loops.
+ * Siphoned Pattern: craighckby-stack/AI_Agent_OS Concept/tessera-enterprise/lib/diagnostic-engine.ts
+ */
+
+export interface EnvConfig {
+  geminiApiKey: string;
+  appUrl: string;
+  anthropicApiKey?: string;
+  cerebrasApiKey?: string;
+  xaiApiKey?: string;
+  deepseekApiKey?: string;
+  openaiApiKey?: string;
+  groqApiKey?: string;
+  ollamaBaseUrl?: string;
+  consensusThreshold: number;
+  zeroLeakSandboxEnabled: boolean;
+  memoryPersistencePath: string;
+  logLevel
 ```
