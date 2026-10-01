@@ -142,3 +142,34 @@ import { PaymentService } from '@gitroom/nestjs-libraries/services/payment/payme
 import { PaymentProviderManager } from '@gitroom/nestjs-libraries/services/payment/payment.provider.manager';
 import { RevenueCatProvider } from '@gitroo
 ```
+
+## COMMIT: 69c5c5d6c7a95e79da0f16081611fd2ffeffb430
+- File: apps/backend/src/api/routes/admin.controller.ts
+- Sanitizer: PASSED
+```typescript
+import {
+  Controller,
+  Get,
+  HttpException,
+  HttpStatus,
+  Query,
+} from '@nestjs/common';
+import { GetUserFromRequest } from '@gitroom/nestjs-libraries/user/user.from.request';
+import { User } from '@prisma/client';
+import { ApiTags } from '@nestjs/swagger';
+import { ErrorsService } from '@gitroom/nestjs-libraries/database/prisma/errors/errors.service';
+import { AdminStatsService } from '@gitroom/nestjs-libraries/database/prisma/admin-stats/admin-stats.service';
+import dayjs from 'dayjs';
+
+@ApiTags('Admin')
+@Controller('/admin')
+export class AdminController {
+  constructor(
+    private readonly errorsService: ErrorsService,
+    private readonly adminStatsService: AdminStatsService
+  ) {}
+
+  /**
+   * Validates that the requesting user possesses super administrator privileges.
+   * Thro
+```
