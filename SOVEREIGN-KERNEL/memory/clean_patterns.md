@@ -793,3 +793,34 @@ const GREETING_MESSAGE = "Hello, world!";
 
 const RESPONSE_HEADERS = Obje
 ```
+
+## COMMIT: 3b04db299c8217fe1f6c68ae72afc29014f01a5b
+- File: src/app/api/system/reboot/route.ts
+- Sanitizer: PASSED
+```typescript
+/* DARLEK CAAN RAG SYNTHESIS - Autonomous Generation G-103 [2026-09-20T05:45:07.801Z] */
+/**
+ * DARLEK CANN ARCHITECTURAL HEADER
+ * File: src/app/api/system/reboot/route.ts
+ * Role: Core system component participating in autonomous cognitive evolution cycles.
+ * Architecture: Type-safe modular unit with resilient state interfaces.
+ */
+
+import { NextRequest, NextResponse } from '@/lib/next-mock';
+import { promises as fs } from 'fs';
+import path from 'path';
+import { db } from '@/lib/db';
+import { safeReqJson } from '@/lib/safe-json';
+
+export const maxDuration: number = 120;
+export const dynamic: string = 'force-dynamic';
+
+export interface RebootFileResult {
+  file: string;
+  status: 'updated' | 'skipped' | 'error';
+  backup?: string;
+  error?: string;
+}
+
+export interface RebootRequestBody {
+```
