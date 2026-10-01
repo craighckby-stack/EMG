@@ -2181,3 +2181,16 @@ export const __rag_resilience_verified__: Readonly<{
 ```
 
 ---
+
+## FAILURE: rag_diag_bkw6b5 | FIX: fix_rag_diag_bkw6b5
+- Error Class: NOVEL_LLM_DIAGNOSIS
+- File: src/app/api/github/create-system-repo/route.ts
+- Rule to Avoid: <One imperative, testable instruction that future prompts must follow to avoid this specific error>
+- Diagnosis: <Specific generation mechanism that caused failure — name the technical mechanism, not the symptom>
+
+### Failure Diff
+```typescript
+Line 549, Col 1: A module cannot have multiple default export assignments.
+```
+
+---
