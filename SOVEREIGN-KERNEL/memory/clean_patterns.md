@@ -301,39 +301,6 @@ const sanitizeSegment = (value: string, fieldName: string): string => {
 export const ghFetch = async (url: string, token: string, options: Request
 ```
 
-## COMMIT: e1f914d283233ab87088350c8c7186196181b29b
-- File: lib/diagnostic-engine.ts
-- Sanitizer: PASSED
-```typescript
-/**
- * ARCHITECTURAL SYSTEM DIAGNOSTIC ENGINE
- * Role: Validates kernel integrity, memory persistence layers, sandbox isolation, and consensus weighting status.
- * Integration: Connects to system modules for real-time health monitoring and diagnostic reporting.
- * Module: lib/diagnostic-engine.ts
- */
-
-import * as fs from 'fs';
-import * as path from 'path';
-import { performance } from 'perf_hooks';
-
-export interface DiagnosticCheckResult {
-  passed: boolean;
-  duration_ms: number;
-  message?: string;
-  metadata?: Record<string, any>;
-}
-
-export interface DiagnosticReport {
-  status: 'HEALTHY' | 'DEGRADED' | 'CRITICAL_FAILURE' | 'ERROR';
-  timestamp: string;
-  checks: Record<string, DiagnosticCheckResult>;
-  summary: {
-    total: number;
-    passed: number;
-    failed: number;
-    is_healthy:
-```
-
 ## COMMIT: 71f93e3500e35bd71677a0fc65691256dc071059
 - File: src/lib/github.ts
 - Sanitizer: PASSED
