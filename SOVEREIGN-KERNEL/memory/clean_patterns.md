@@ -1159,3 +1159,24 @@ const ARPEGGIO_NOTES: readonly number[] = [261.63, 329.63, 392.00, 523.25, 659.2
 
 function getAudioContext(): AudioContext
 ```
+
+## COMMIT: 73c300c91286e83e18eb5e324c87b6a40bc496dd
+- File: src/lib/archaeology-live-sync.ts
+- Sanitizer: PASSED
+```typescript
+/* DARLEK CAAN RAG SYNTHESIS - Autonomous Generation G-152 [2026-09-20T06:04:20.806Z] */
+import { db, isFirebaseConfigured } from './firebase';
+import { collection, doc, setDoc, getDocs, addDoc, serverTimestamp } from 'firebase/firestore';
+import { saveMutationToRag } from './ragBrain';
+import { safeSetLocalStorage, safeGetLocalStorage } from './safeStorage';
+
+/**
+ * Live sync from craighckby-stack/Archaeology-Engine into DARLEK's RAG.
+ *
+ * Replaces the old `ingestArchaeologyDatasetToFirebase()` in
+ * archaeology-dataset.ts, which only ever ingested 4 hardcoded example
+ * pairs baked into the source — it never actually read the live repo.
+ * This module fetches the real, current `correct/<hash>.md` and
+ * `wrong/<hash>.md` files pushed by the Commit Archaeology Engine app and
+ * ingests a
+```
