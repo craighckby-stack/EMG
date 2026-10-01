@@ -1020,3 +1020,25 @@ export const revalidate: number = 0;
 const PageLoadingSkeleton = memo(function PageLoadingSkeleton(): JSX.Element {
   return (
 ```
+
+## COMMIT: 5a0b9241e05c1a3cebf0582e43e9eaff3991b7a3
+- File: src/components/DosConsoleModal.tsx
+- Sanitizer: PASSED
+```typescript
+/* DARLEK CAAN RAG SYNTHESIS - Autonomous Generation G-118 [2026-09-20T05:50:41.881Z] */
+/**
+ * DARLEK CANN ARCHITECTURAL HEADER
+ * File: src/components/DosConsoleModal.tsx
+ * Role: Full-time interactive MS-DOS terminal monitor displaying real system telemetry,
+ *       triggering autonomous file hotswaps, and visualizing RAG brain ingestion.
+ */
+
+import React, { useState, useEffect, useRef, useCallback } from 'react';
+import type { SystemState } from '@/lib/types';
+import { Terminal, X, Minimize2, Maximize2, Play, Pause, Zap, Database, RefreshCw, ChevronUp, Brain, HardDrive } from 'lucide-react';
+import { msDosEngine, type DosLogLine, type MsDosEngineState } from '@/lib/msDosEngine';
+import { getRagBrainRealMetrics } from '@/lib/ragBrain';
+
+export interface DosConsoleModalProps {
+  readon
+```
