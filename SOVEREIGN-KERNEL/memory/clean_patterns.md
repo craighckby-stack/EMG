@@ -211,35 +211,6 @@ createRoot(rootElement).render(
 );
 ```
 
-## COMMIT: e133a5a54a0f67521bd68db329b4aff69313eab1
-- File: src/types.ts
-- Sanitizer: PASSED
-```typescript
-/**
- * DARLEK CANN ARCHITECTURAL HEADER
- * File: src/types.ts
- * Role: Core system component participating in autonomous cognitive evolution cycles.
- * Architecture: Type-safe modular unit with resilient state interfaces.
- */
-
-export interface Chunk {
-  title: string;
-  file: string;
-  code: string;
-  explanation: string;
-  mutation: string;
-  intentAlignmentScore: number;
-  philosophyCheck: string;
-  ccrrScore: number;
-  suggestedBranchName: string;
-  isCriticalUpgrade?: boolean;
-  /** Cryptographic hash or checksum for memory safety and integrity validation */
-  checksum?: string;
-  /** Bounded memory allocation limit for payload deserialization */
-  maxPayloadSize?: number;
-}
-```
-
 ## COMMIT: 09d2a909417dc1abd26c7368937e2c26cb1dab8d
 - File: src/lib/consensus-config.ts
 - Sanitizer: PASSED
@@ -298,33 +269,4 @@ class SiphonEngine {
   /**
    * Siphons logic-DNA from raw source buffers.
    * Replaces legacy void/nul
-```
-
-## COMMIT: 0d601feb14db82270a85648fc1cb054ec0cd4e0f
-- File: src/types.ts
-- Sanitizer: PASSED
-```typescript
-/**
- * DARLEK CANN ARCHITECTURAL HEADER
- * File: src/types.ts
- * Role: Core system component participating in autonomous cognitive evolution cycles.
- * Architecture: Type-safe modular unit with resilient state interfaces.
- */
-
-export interface Chunk {
-  title: string;
-  file: string;
-  code: string;
-  explanation: string;
-  mutation: string;
-  /** Bounded between 0 and 1 inclusive for strict probabilistic alignment validation */
-  intentAlignmentScore: number;
-  philosophyCheck: string;
-  /** Bounded between 0 and 100 inclusive for numeric bounds integrity */
-  ccrrScore: number;
-  suggestedBranchName: string;
-  isCriticalUpgrade?: boolean;
-  /** Cryptographic hash or checksum for memory safety and integrity validation */
-  checksum?: string;
-  /** Bounded memory allocation limit for paylo
 ```
