@@ -447,3 +447,257 @@ Line 1, Col 1: License Header Stripped: Original file contained a copyright or l
 ```
 
 ---
+
+## FAILURE: fail_muovf07w | FIX: fix_muovf07w
+- Error Class: CLEAN
+- File: src/lib/firebase.ts
+- Rule to Avoid: Objection! Detected 3 historical failure patterns matching this change. Errors: CLEAN, NOVEL_LLM_DIAGNOSIS, NOVEL_LLM_DIAGNOSIS. Sanitizer violations: None.
+- Diagnosis: Alignment Matrix Rejection: Confidence (0.73) below threshold or unsafe primitives detected.
+
+### Failure Diff
+```typescript
+/**
+ * DARLEK CANN ARCHITECTURAL HEADER
+ * File: src/lib/firebase.ts
+ * Role: Core system component participating in autonomous cognitive evolution cycles.
+ * Architecture: Type-safe modular unit with resilient state interfaces.
+ */
+
+import { initializeApp } from 'firebase/app';
+import { getAuth, GoogleAuthProvider, signInWithPopup, onAuthStateChanged, User } from 'firebase/auth';
+import { getFirestore, doc, setDoc, getDoc, collection, addDoc, query, where, getDocs, serverTimestamp, deleteDoc } from 'firebase/firestore';
+import firebaseConfig from '../../firebase-applet-config.json';
+import { Chunk } from '../types';
+
+const app = initializeApp(firebaseConfig);
+export const db = getFirestore(app, firebaseConfig.firestoreDatabaseId);
+export const auth = getAuth(app);
+export const googleProvider = new GoogleAuthProvider();
+
+export interface FirebaseErrorInfo {
+  error: string;
+  operationType: 'create' | 'update' | 'delete' | 'list' | 'get' | 'write';
+  path: string | null;
+  authInfo: {
+    userId: string;
+    email: string;
+    emailVerified: boolean;
+    isAnonymous: boolean;
+  }
+}
+
+export const handleFirestoreError = (error: any, operationType: any, path: string | null): never => {
+  const user = auth.currentUser;
+  const errorInfo: FirebaseErrorInfo = {
+    error: error instanceof Error ? error.message : String(error),
+    operationType,
+    path,
+    authInfo: {
+      userId: user?.uid || 'anonymous',
+      email: user?.email || 'none',
+      emailVerified: user?.emailVerified || false,
+      isAnonymous: user?.isAnonymous ?? true
+    }
+  };
+  throw new Error(JSON.stringify(errorInfo));
+};
+
+export const saveSiphonedChunk = async (chunk: Chunk) => {
+  if (!auth.currentUser) return;
+  if (!chunk || typeof chunk !== 'object') {
+    throw new Error('Invalid chunk input: payload must be a non-null object.');
+  }
+  try {
+    const chunkRef = collection(db, 'siphoned_chunks');
+    const data: Record<string, any> = {
+      title: typeof chunk.title === 'string' ? chunk.title.slice(0, 512) : '',
+      file: typeof chunk.file === 'string' ? chunk.file.slice(0, 1024) : '',
+      code: typeof chunk.code === 'string' ? chunk.code.slice(0, 65536) : '',
+      explanation: typeof chunk.explanation === 'string' ? chunk.explanation.slice(0, 4096) : '',
+      mutation: typeof chunk.mutation === 'string' ? chunk.mutation.slice(0, 4096) : '',
+      intentAlignmentScore: typeof chunk.intentAlignmentScore === 'number' ? Math.max(0, Math.min(1, chunk.intentAlignmentScore)) : 0,
+      philosophyCheck: Boolean(chunk.philosophyCheck),
+      ccrrScore: typeof chunk.ccrrScore === 'number' ? Math.max(0, Math.min(100, chunk.ccrrScore)) : 0,
+      suggestedBranchName: typeof chunk.suggestedBranchName === 'string' ? chunk.suggestedBranchName.slice(0, 128) : '',
+      userId: auth.currentUser.uid,
+      createdAt: serverTimestamp()
+    };
+    if (chunk.isCriticalUpgrade !== undefined) {
+      data.isCriticalUpgrade = Boolean(chunk.isCriticalUpgrade);
+    }
+    await addDoc(chunkRef, data);
+  } catch (e) {
+    handleFirestoreError(e, 'create', 'siphoned_chunks');
+  }
+};
+
+export const getSiphonedChunks = async () => {
+  if (!auth.currentUser) return [];
+  try {
+    const q = query(collection(db, 'siphoned_chunks'), where('userId', '==', auth.currentUser.uid));
+    const snapshot = await getDocs(q);
+    return snapshot.docs.map(docSnap => ({ id: docSnap.id, ...docSnap.data() } as any));
+  } catch (e) {
+    handleFirestoreError(e, 'list', 'siphoned_chunks');
+  }
+};
+
+export const saveArchetype = async (archetype: string) => {
+  if (!auth.currentUser) return;
+  if (typeof archetype !== 'string') {
+    throw new Error('Invalid archetype input: must be a string.');
+  }
+  const sanitizedArchetype = archetype.slice(0, 256);
+  try {
+    const docRef = doc(db, 'system_archetypes', auth.currentUser.uid);
+    await setDoc(docRef, {
+      archetype: sanitizedArchetype,
+      userId: auth.currentUser.uid,
+      updatedAt: serverTimestamp()
+    });
+  } catch (e) {
+    handleFirestoreError(e, 'update', `system_archetypes/${auth.currentUser.uid}`);
+  }
+};
+
+export const getArchetype = async () => {
+  if (!auth.currentUser) return null;
+  try {
+    const docRef = doc(db, 'system_archetypes', auth.currentUser.uid);
+    const snap = await getDoc(docRef);
+    if (!snap.exists()) return null;
+    const data = snap.data();
+    return typeof data.archetype === 'string' ? data.archetype : null;
+  } catch (e) {
+    handleFirestoreError(e, 'get', `system_archetypes/${auth.currentUser.uid}`);
+  }
+};
+
+export const loginWithGoogle = () => signInWithPopup(auth, googleProvider);
+export const logout = () => auth.signOut();
+```
+
+### Paired Fix Diff
+```typescript
+/**
+ * DARLEK CANN ARCHITECTURAL HEADER
+ * File: src/lib/firebase.ts
+ * Role: Core system component participating in autonomous cognitive evolution cycles.
+ * Architecture: Type-safe modular unit with resilient state interfaces.
+ */
+
+import { initializeApp } from 'firebase/app';
+import { getAuth, GoogleAuthProvider, signInWithPopup, onAuthStateChanged, User } from 'firebase/auth';
+import { getFirestore, doc, setDoc, getDoc, collection, addDoc, query, where, getDocs, serverTimestamp, deleteDoc } from 'firebase/firestore';
+import firebaseConfig from '../../firebase-applet-config.json';
+import { Chunk } from '../types';
+
+const app = initializeApp(firebaseConfig);
+export const db = getFirestore(app, firebaseConfig.firestoreDatabaseId);
+export const auth = getAuth(app);
+export const googleProvider = new GoogleAuthProvider();
+
+export interface FirebaseErrorInfo {
+  error: string;
+  operationType: 'create' | 'update' | 'delete' | 'list' | 'get' | 'write';
+  path: string | null;
+  authInfo: {
+    userId: string;
+    email: string;
+    emailVerified: boolean;
+    isAnonymous: boolean;
+  }
+}
+
+export const handleFirestoreError = (error: any, operationType: any, path: string | null): never => {
+  const user = auth.currentUser;
+  const errorInfo: FirebaseErrorInfo = {
+    error: error instanceof Error ? error.message : String(error),
+    operationType,
+    path,
+    authInfo: {
+      userId: user?.uid || 'anonymous',
+      email: user?.email || 'none',
+      emailVerified: user?.emailVerified || false,
+      isAnonymous: user?.isAnonymous ?? true
+    }
+  };
+  throw new Error(JSON.stringify(errorInfo));
+};
+
+export const saveSiphonedChunk = async (chunk: Chunk) => {
+  if (!auth.currentUser) return;
+  if (!chunk || typeof chunk !== 'object') {
+    throw new Error('Invalid chunk input: payload must be a non-null object.');
+  }
+  try {
+    const chunkRef = collection(db, 'siphoned_chunks');
+    const data: Record<string, any> = {
+      title: typeof chunk.title === 'string' ? chunk.title.slice(0, 512) : '',
+      file: typeof chunk.file === 'string' ? chunk.file.slice(0, 1024) : '',
+      code: typeof chunk.code === 'string' ? chunk.code.slice(0, 65536) : '',
+      explanation: typeof chunk.explanation === 'string' ? chunk.explanation.slice(0, 4096) : '',
+      mutation: typeof chunk.mutation === 'string' ? chunk.mutation.slice(0, 4096) : '',
+      intentAlignmentScore: typeof chunk.intentAlignmentScore === 'number' ? Math.max(0, Math.min(1, chunk.intentAlignmentScore)) : 0,
+      philosophyCheck: Boolean(chunk.philosophyCheck),
+      ccrrScore: typeof chunk.ccrrScore === 'number' ? Math.max(0, Math.min(100, chunk.ccrrScore)) : 0,
+      suggestedBranchName: typeof chunk.suggestedBranchName === 'string' ? chunk.suggestedBranchName.slice(0, 128) : '',
+      userId: auth.currentUser.uid,
+      createdAt: serverTimestamp()
+    };
+    if (chunk.isCriticalUpgrade !== undefined) {
+      data.isCriticalUpgrade = Boolean(chunk.isCriticalUpgrade);
+    }
+    await addDoc(chunkRef, data);
+  } catch (e) {
+    handleFirestoreError(e, 'create', 'siphoned_chunks');
+  }
+};
+
+export const getSiphonedChunks = async () => {
+  if (!auth.currentUser) return [];
+  try {
+    const q = query(collection(db, 'siphoned_chunks'), where('userId', '==', auth.currentUser.uid));
+    const snapshot = await getDocs(q);
+    return snapshot.docs.map(docSnap => ({ id: docSnap.id, ...docSnap.data() } as any));
+  } catch (e) {
+    handleFirestoreError(e, 'list', 'siphoned_chunks');
+  }
+};
+
+export const saveArchetype = async (archetype: string) => {
+  if (!auth.currentUser) return;
+  if (typeof archetype !== 'string') {
+    throw new Error('Invalid archetype input: must be a string.');
+  }
+  const sanitizedArchetype = archetype.slice(0, 256);
+  try {
+    const docRef = doc(db, 'system_archetypes', auth.currentUser.uid);
+    await setDoc(docRef, {
+      archetype: sanitizedArchetype,
+      userId: auth.currentUser.uid,
+      updatedAt: serverTimestamp()
+    });
+  } catch (e) {
+    handleFirestoreError(e, 'update', `system_archetypes/${auth.currentUser.uid}`);
+  }
+};
+
+export const getArchetype = async () => {
+  if (!auth.currentUser) return null;
+  try {
+    const docRef = doc(db, 'system_archetypes', auth.currentUser.uid);
+    const snap = await getDoc(docRef);
+    if (!snap.exists()) return null;
+    const data = snap.data();
+    return typeof data.archetype === 'string' ? data.archetype : null;
+  } catch (e) {
+    handleFirestoreError(e, 'get', `system_archetypes/${auth.currentUser.uid}`);
+  }
+};
+
+export const loginWithGoogle = () => signInWithPopup(auth, googleProvider);
+export const logout = () => auth.signOut();
+```
+
+---
