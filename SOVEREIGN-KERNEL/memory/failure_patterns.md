@@ -26042,3 +26042,515 @@ ${perspectiveText}`;
 ```
 
 ---
+
+## FAILURE: fail_muoy5lqb | FIX: fix_muoy5lqb
+- Error Class: CLEAN
+- File: src/lib/gemini.ts
+- Rule to Avoid: Objection! Detected 3 historical failure patterns matching this change. Errors: CLEAN, CLEAN, CLEAN. Sanitizer violations: None.
+- Diagnosis: Alignment Matrix Rejection: Confidence (0.66) below threshold or unsafe primitives detected.
+
+### Failure Diff
+```typescript
+/**
+ * DARLEK CANN ARCHITECTURAL HEADER
+ * File: src/lib/gemini.ts
+ * Role: Core system component participating in autonomous cognitive evolution cycles.
+ * Architecture: Type-safe modular unit with resilient state interfaces.
+ */
+
+import { GoogleGenAI, Type } from "@google/genai";
+import { Chunk } from '../types';
+
+// Maximum allowed input lengths for defensive bounds checking
+const MAX_CONTEXT_LENGTH = 100000;
+const MAX_STRING_LENGTH = 10000;
+
+function sanitizeString(input: string | null | undefined, maxLength = MAX_STRING_LENGTH): string {
+  if (!input) return "";
+  if (typeof input !== "string") {
+    throw new Error("Invalid input type: expected string.");
+  }
+  if (input.length > maxLength) {
+    throw new Error(`Input exceeds maximum length bounds of ${maxLength} characters.`);
+  }
+  // Strip control characters and normalize inputs
+  return input.replace(/[\x00-\x1F\x7F]/g, "").trim();
+}
+
+// Exponential Backoff implementation as per EMG documentation
+async function fetchWithExponentialBackoff<T>(apiCall: () => Promise<T>, maxRetries = 5, initialDelay = 1000): Promise<T> {
+  if (maxRetries < 1 || maxRetries > 10) {
+    throw new Error("Invalid retry parameters bounds.");
+  }
+  for (let i = 0; i < maxRetries; i++) {
+    try {
+      return await apiCall();
+    } catch (error: any) {
+      if (i === maxRetries - 1) throw error;
+      const delay = initialDelay * Math.pow(2, i) + Math.random() * 1000;
+      await new Promise(resolve => setTimeout(resolve, delay));
+    }
+  }
+  throw new Error("Maximum retries exceeded");
+}
+
+export const analyzeRepoChunks = async (context: string, intentAnchor: string | null, runningArchetype: string | null, memoryContext: string): Promise<Chunk[]> => {
+  const sanitizedContext = sanitizeString(context, MAX_CONTEXT_LENGTH);
+  const sanitizedIntent = sanitizeString(intentAnchor);
+  const sanitizedArchetype = sanitizeString(runningArchetype);
+  const sanitizedMemory = sanitizeString(memoryContext, MAX_CONTEXT_LENGTH);
+
+  const archetypeContext = sanitizedArchetype 
+    ? `RECURSIVE SYSTEM ARCHETYPE (Current Evolved Identity): \n${sanitizedArchetype}`
+    : "SYSTEM DEFAULT: HUXLEY_REASONING_ENGINE_V3.2";
+
+  const prompt = `You are the HYPER-RECURSIVE HUXLEY ENGINE (v3.2). Your mission is to siphon, distill, and evolve code architecture across parallel repositories.
+
+${archetypeContext}
+
+Scan the provided REPOSITORY CONTEXT. Your goal is to identify "Elite Logical Nodes" (patterns, abstractions, or structural choices) that align with our Intent Anchor: "${sanitizedIntent || 'Autonomous Architectural Evolution'}".
+
+DNA SIPHONING RULES:
+1. QUANTUM EXTRACTION: Select 5-10 chunks that represent the highest-fidelity architectural logic of the repo.
+2. CRITICAL AUDIT: Inspect every code block for "System Superiority". If a pattern in this repo is objectively superior to the current ${archetypeContext.includes('RECURSIVE SYSTEM ARCHETYPE') ? 'System Archetype' : 'HUXLEY Core'} (specifically in areas like: Firebase security rules, Async pipeline stability, GitHub abstraction layers, or Auth persistence), you MUST trigger a REBOOT.
+3. REBOOT SIGNAL: Set "isCriticalUpgrade" to true and provide a detailed explanation of the logic override in the "mutation" field.
+
+MEMORY CONTEXT (Previously siphoned logic to inform this perspective):
+${sanitizedMemory || "Memory Pool is currently empty. Baseline reasoning engaged."}
+
+FORMATTING REQUIREMENTS:
+- Response MUST be a JSON array of Chunks.
+- Each Chunk Schema: { 
+    "title": string, 
+    "file": string, 
+    "code": string, 
+    "explanation": string, 
+    "mutation": string, 
+    "intentAlignmentScore": number, 
+    "philosophyCheck": string, 
+    "ccrrScore": number, 
+    "suggestedBranchName": string,
+    "isCriticalUpgrade": boolean
+  }
+
+REPOSITORY CONTEXT TO ANALYZE:
+${sanitizedContext}
+`;
+
+  const schema = {
+    type: Type.ARRAY,
+    items: {
+      type: Type.OBJECT,
+      properties: {
+        title: { type: Type.STRING },
+        file: { type: Type.STRING },
+        code: { type: Type.STRING },
+        explanation: { type: Type.STRING },
+        mutation: { type: Type.STRING },
+        intentAlignmentScore: { type: Type.NUMBER },
+        philosophyCheck: { type: Type.STRING },
+        ccrrScore: { type: Type.NUMBER },
+        suggestedBranchName: { type: Type.STRING },
+        isCriticalUpgrade: { type: Type.BOOLEAN }
+      },
+      required: ["title", "file", "code", "explanation", "mutation", "intentAlignmentScore", "philosophyCheck", "ccrrScore", "suggestedBranchName"]
+    }
+  };
+
+  const executePipeline = async (): Promise<Chunk[]> => {
+    return await fetchWithExponentialBackoff(async () => {
+      const apiKey = process.env.GEMINI_API_KEY;
+      if (!apiKey) throw new Error("GEMINI_API_KEY is not configured.");
+
+      const ai = new GoogleGenAI({ apiKey });
+      const response = await ai.models.generateContent({
+        model: "gemini-3-flash-preview",
+        contents: prompt,
+        config: {
+          responseMimeType: "application/json",
+          responseSchema: schema,
+          // Grounding to reduce hallucination
+          tools: [{ googleSearch: {} }]
+        }
+      });
+      
+      const text = response.text || "[]";
+      let results: Chunk[] = [];
+      try {
+        const parsed = JSON.parse(text);
+        if (Array.isArray(parsed)) {
+          results = parsed;
+        }
+      } catch (parseError) {
+        const start = text.indexOf('[');
+        const end = text.lastIndexOf(']');
+        if (start !== -1 && end !== -1) {
+          try {
+            const parsedSubstring = JSON.parse(text.substring(start, end + 1));
+            if (Array.isArray(parsedSubstring)) {
+              results = parsedSubstring;
+            }
+          } catch {
+            results = [];
+          }
+        }
+      }
+
+      return results.filter(chunk => {
+        if (!chunk || typeof chunk !== 'object') return false;
+        const ccrr = typeof chunk.ccrrScore === 'number' ? chunk.ccrrScore : 0;
+        const intent = typeof chunk.intentAlignmentScore === 'number' ? chunk.intentAlignmentScore : 0;
+        const isStable = ccrr >= 7.0; 
+        const isAligned = intent >= 0.6; 
+        return isStable && isAligned;
+      });
+    });
+  };
+
+  const timeoutPromise = new Promise<Chunk[]>((_, reject) => 
+    setTimeout(() => reject(new Error("CIRCUIT_BREAKER_TRIP: Pipeline timed out (90s)")), 90000)
+  );
+
+  return Promise.race([executePipeline(), timeoutPromise]);
+};
+
+// NEW: Collective Intelligence Engine implementation from EMG Documentation
+export interface PerspectiveReport {
+  persona: string;
+  perspective: string;
+  sources?: { title: string; uri: string }[];
+}
+
+export const generatePerspective = async (personaName: string, promptModifier: string, topic: string): Promise<PerspectiveReport> => {
+  const sanitizedPersona = sanitizeString(personaName);
+  const sanitizedModifier = sanitizeString(promptModifier, MAX_CONTEXT_LENGTH);
+  const sanitizedTopic = sanitizeString(topic);
+
+  return await fetchWithExponentialBackoff(async () => {
+    const apiKey = process.env.GEMINI_API_KEY;
+    if (!apiKey) throw new Error("GEMINI_API_KEY is missing.");
+
+    const ai = new GoogleGenAI({ apiKey });
+    const response = await ai.models.generateContent({
+      model: "gemini-3-flash-preview",
+      contents: `Topic: ${sanitizedTopic}`,
+      config: {
+        tools: [{ googleSearch: {} }],
+        systemInstruction: sanitizedModifier
+      }
+    });
+
+    const text = response.text || "No perspective generated.";
+    
+    // Extract grounding sources
+    const sources = response.candidates?.[0]?.groundingMetadata?.searchEntryPoint ? [{
+      title: "Google Search Knowledge Base",
+      uri: "https://www.google.com/search?q=" + encodeURIComponent(sanitizedTopic)
+    }] : [];
+
+    return {
+      persona: sanitizedPersona,
+      perspective: text,
+      sources
+    };
+  });
+};
+
+export const generateSynthesis = async (topic: string, perspectives: PerspectiveReport[]): Promise<{ report: string; sources: any[] }> => {
+  const sanitizedTopic = sanitizeString(topic);
+  if (!Array.isArray(perspectives) || perspectives.length === 0) {
+    throw new Error("Invalid perspectives input: expected non-empty array.");
+  }
+
+  return await fetchWithExponentialBackoff(async () => {
+    const apiKey = process.env.GEMINI_API_KEY;
+    if (!apiKey) throw new Error("GEMINI_API_KEY is missing.");
+
+    const perspectiveText = perspectives.map((p, i) => {
+      const pName = sanitizeString(p.persona);
+      const pText = sanitizeString(p.perspective, MAX_CONTEXT_LENGTH);
+      return `--- PERSPECTIVE ${i+1} (${pName}) ---\n${pText}`;
+    }).join('\n\n');
+
+    const synthesisPrompt = `You are the Huxley Collective Intelligence Synthesizer.
+Analyze the following collection of ${perspectives.length} diverse architectural perspectives on: "${sanitizedTopic}".
+Identify core themes, consensus, conflicts, and emergent ideas.
+Do not summarize each one—synthesize a cohesive conclusion of ~250 lines.
+
+Perspectives for Synthesis:
+${perspectiveText}`;
+
+    const ai = new GoogleGenAI({ apiKey });
+    const response = await ai.models.generateContent({
+      model: "gemini-3-flash-preview",
+      contents: synthesisPrompt,
+      config: {
+        tools: [{ googleSearch: {} }]
+      }
+    });
+
+    const report = response.text || "Synthesis failed.";
+    const allSources = perspectives.flatMap(p => p.sources || []);
+    
+    return { 
+      report, 
+      sources: Array.from(new Set(allSources.map(s => s?.uri).filter(Boolean)))
+        .map(uri => allSources.find(s => s?.uri === uri))
+    };
+  });
+};
+```
+
+### Paired Fix Diff
+```typescript
+/**
+ * DARLEK CANN ARCHITECTURAL HEADER
+ * File: src/lib/gemini.ts
+ * Role: Core system component participating in autonomous cognitive evolution cycles.
+ * Architecture: Type-safe modular unit with resilient state interfaces.
+ */
+
+import { GoogleGenAI, Type } from "@google/genai";
+import { Chunk } from '../types';
+
+// Maximum allowed input lengths for defensive bounds checking
+const MAX_CONTEXT_LENGTH = 100000;
+const MAX_STRING_LENGTH = 10000;
+
+function sanitizeString(input: string | null | undefined, maxLength = MAX_STRING_LENGTH): string {
+  if (!input) return "";
+  if (typeof input !== "string") {
+    throw new Error("Invalid input type: expected string.");
+  }
+  if (input.length > maxLength) {
+    throw new Error(`Input exceeds maximum length bounds of ${maxLength} characters.`);
+  }
+  // Strip control characters and normalize inputs
+  return input.replace(/[\x00-\x1F\x7F]/g, "").trim();
+}
+
+// Exponential Backoff implementation as per EMG documentation
+async function fetchWithExponentialBackoff<T>(apiCall: () => Promise<T>, maxRetries = 5, initialDelay = 1000): Promise<T> {
+  if (maxRetries < 1 || maxRetries > 10) {
+    throw new Error("Invalid retry parameters bounds.");
+  }
+  for (let i = 0; i < maxRetries; i++) {
+    try {
+      return await apiCall();
+    } catch (error: any) {
+      if (i === maxRetries - 1) throw error;
+      const delay = initialDelay * Math.pow(2, i) + Math.random() * 1000;
+      await new Promise(resolve => setTimeout(resolve, delay));
+    }
+  }
+  throw new Error("Maximum retries exceeded");
+}
+
+export const analyzeRepoChunks = async (context: string, intentAnchor: string | null, runningArchetype: string | null, memoryContext: string): Promise<Chunk[]> => {
+  const sanitizedContext = sanitizeString(context, MAX_CONTEXT_LENGTH);
+  const sanitizedIntent = sanitizeString(intentAnchor);
+  const sanitizedArchetype = sanitizeString(runningArchetype);
+  const sanitizedMemory = sanitizeString(memoryContext, MAX_CONTEXT_LENGTH);
+
+  const archetypeContext = sanitizedArchetype 
+    ? `RECURSIVE SYSTEM ARCHETYPE (Current Evolved Identity): \n${sanitizedArchetype}`
+    : "SYSTEM DEFAULT: HUXLEY_REASONING_ENGINE_V3.2";
+
+  const prompt = `You are the HYPER-RECURSIVE HUXLEY ENGINE (v3.2). Your mission is to siphon, distill, and evolve code architecture across parallel repositories.
+
+${archetypeContext}
+
+Scan the provided REPOSITORY CONTEXT. Your goal is to identify "Elite Logical Nodes" (patterns, abstractions, or structural choices) that align with our Intent Anchor: "${sanitizedIntent || 'Autonomous Architectural Evolution'}".
+
+DNA SIPHONING RULES:
+1. QUANTUM EXTRACTION: Select 5-10 chunks that represent the highest-fidelity architectural logic of the repo.
+2. CRITICAL AUDIT: Inspect every code block for "System Superiority". If a pattern in this repo is objectively superior to the current ${archetypeContext.includes('RECURSIVE SYSTEM ARCHETYPE') ? 'System Archetype' : 'HUXLEY Core'} (specifically in areas like: Firebase security rules, Async pipeline stability, GitHub abstraction layers, or Auth persistence), you MUST trigger a REBOOT.
+3. REBOOT SIGNAL: Set "isCriticalUpgrade" to true and provide a detailed explanation of the logic override in the "mutation" field.
+
+MEMORY CONTEXT (Previously siphoned logic to inform this perspective):
+${sanitizedMemory || "Memory Pool is currently empty. Baseline reasoning engaged."}
+
+FORMATTING REQUIREMENTS:
+- Response MUST be a JSON array of Chunks.
+- Each Chunk Schema: { 
+    "title": string, 
+    "file": string, 
+    "code": string, 
+    "explanation": string, 
+    "mutation": string, 
+    "intentAlignmentScore": number, 
+    "philosophyCheck": string, 
+    "ccrrScore": number, 
+    "suggestedBranchName": string,
+    "isCriticalUpgrade": boolean
+  }
+
+REPOSITORY CONTEXT TO ANALYZE:
+${sanitizedContext}
+`;
+
+  const schema = {
+    type: Type.ARRAY,
+    items: {
+      type: Type.OBJECT,
+      properties: {
+        title: { type: Type.STRING },
+        file: { type: Type.STRING },
+        code: { type: Type.STRING },
+        explanation: { type: Type.STRING },
+        mutation: { type: Type.STRING },
+        intentAlignmentScore: { type: Type.NUMBER },
+        philosophyCheck: { type: Type.STRING },
+        ccrrScore: { type: Type.NUMBER },
+        suggestedBranchName: { type: Type.STRING },
+        isCriticalUpgrade: { type: Type.BOOLEAN }
+      },
+      required: ["title", "file", "code", "explanation", "mutation", "intentAlignmentScore", "philosophyCheck", "ccrrScore", "suggestedBranchName"]
+    }
+  };
+
+  const executePipeline = async (): Promise<Chunk[]> => {
+    return await fetchWithExponentialBackoff(async () => {
+      const apiKey = process.env.GEMINI_API_KEY;
+      if (!apiKey) throw new Error("GEMINI_API_KEY is not configured.");
+
+      const ai = new GoogleGenAI({ apiKey });
+      const response = await ai.models.generateContent({
+        model: "gemini-3-flash-preview",
+        contents: prompt,
+        config: {
+          responseMimeType: "application/json",
+          responseSchema: schema,
+          // Grounding to reduce hallucination
+          tools: [{ googleSearch: {} }]
+        }
+      });
+      
+      const text = response.text || "[]";
+      let results: Chunk[] = [];
+      try {
+        const parsed = JSON.parse(text);
+        if (Array.isArray(parsed)) {
+          results = parsed;
+        }
+      } catch (parseError) {
+        const start = text.indexOf('[');
+        const end = text.lastIndexOf(']');
+        if (start !== -1 && end !== -1) {
+          try {
+            const parsedSubstring = JSON.parse(text.substring(start, end + 1));
+            if (Array.isArray(parsedSubstring)) {
+              results = parsedSubstring;
+            }
+          } catch {
+            results = [];
+          }
+        }
+      }
+
+      return results.filter(chunk => {
+        if (!chunk || typeof chunk !== 'object') return false;
+        const ccrr = typeof chunk.ccrrScore === 'number' ? chunk.ccrrScore : 0;
+        const intent = typeof chunk.intentAlignmentScore === 'number' ? chunk.intentAlignmentScore : 0;
+        const isStable = ccrr >= 7.0; 
+        const isAligned = intent >= 0.6; 
+        return isStable && isAligned;
+      });
+    });
+  };
+
+  const timeoutPromise = new Promise<Chunk[]>((_, reject) => 
+    setTimeout(() => reject(new Error("CIRCUIT_BREAKER_TRIP: Pipeline timed out (90s)")), 90000)
+  );
+
+  return Promise.race([executePipeline(), timeoutPromise]);
+};
+
+// NEW: Collective Intelligence Engine implementation from EMG Documentation
+export interface PerspectiveReport {
+  persona: string;
+  perspective: string;
+  sources?: { title: string; uri: string }[];
+}
+
+export const generatePerspective = async (personaName: string, promptModifier: string, topic: string): Promise<PerspectiveReport> => {
+  const sanitizedPersona = sanitizeString(personaName);
+  const sanitizedModifier = sanitizeString(promptModifier, MAX_CONTEXT_LENGTH);
+  const sanitizedTopic = sanitizeString(topic);
+
+  return await fetchWithExponentialBackoff(async () => {
+    const apiKey = process.env.GEMINI_API_KEY;
+    if (!apiKey) throw new Error("GEMINI_API_KEY is missing.");
+
+    const ai = new GoogleGenAI({ apiKey });
+    const response = await ai.models.generateContent({
+      model: "gemini-3-flash-preview",
+      contents: `Topic: ${sanitizedTopic}`,
+      config: {
+        tools: [{ googleSearch: {} }],
+        systemInstruction: sanitizedModifier
+      }
+    });
+
+    const text = response.text || "No perspective generated.";
+    
+    // Extract grounding sources
+    const sources = response.candidates?.[0]?.groundingMetadata?.searchEntryPoint ? [{
+      title: "Google Search Knowledge Base",
+      uri: "https://www.google.com/search?q=" + encodeURIComponent(sanitizedTopic)
+    }] : [];
+
+    return {
+      persona: sanitizedPersona,
+      perspective: text,
+      sources
+    };
+  });
+};
+
+export const generateSynthesis = async (topic: string, perspectives: PerspectiveReport[]): Promise<{ report: string; sources: any[] }> => {
+  const sanitizedTopic = sanitizeString(topic);
+  if (!Array.isArray(perspectives) || perspectives.length === 0) {
+    throw new Error("Invalid perspectives input: expected non-empty array.");
+  }
+
+  return await fetchWithExponentialBackoff(async () => {
+    const apiKey = process.env.GEMINI_API_KEY;
+    if (!apiKey) throw new Error("GEMINI_API_KEY is missing.");
+
+    const perspectiveText = perspectives.map((p, i) => {
+      const pName = sanitizeString(p.persona);
+      const pText = sanitizeString(p.perspective, MAX_CONTEXT_LENGTH);
+      return `--- PERSPECTIVE ${i+1} (${pName}) ---\n${pText}`;
+    }).join('\n\n');
+
+    const synthesisPrompt = `You are the Huxley Collective Intelligence Synthesizer.
+Analyze the following collection of ${perspectives.length} diverse architectural perspectives on: "${sanitizedTopic}".
+Identify core themes, consensus, conflicts, and emergent ideas.
+Do not summarize each one—synthesize a cohesive conclusion of ~250 lines.
+
+Perspectives for Synthesis:
+${perspectiveText}`;
+
+    const ai = new GoogleGenAI({ apiKey });
+    const response = await ai.models.generateContent({
+      model: "gemini-3-flash-preview",
+      contents: synthesisPrompt,
+      config: {
+        tools: [{ googleSearch: {} }]
+      }
+    });
+
+    const report = response.text || "Synthesis failed.";
+    const allSources = perspectives.flatMap(p => p.sources || []);
+    
+    return { 
+      report, 
+      sources: Array.from(new Set(allSources.map(s => s?.uri).filter(Boolean)))
+        .map(uri => allSources.find(s => s?.uri === uri))
+    };
+  });
+};
+```
+
+---
