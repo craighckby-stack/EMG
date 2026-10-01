@@ -420,3 +420,30 @@ export async function runSystemDiagnostics(): Promise<DiagnosticReport> {
 ```
 
 ---
+
+## FAILURE: rag_diag_exy2n3 | FIX: fix_rag_diag_exy2n3
+- Error Class: NOVEL_LLM_DIAGNOSIS
+- File: server.ts
+- Rule to Avoid: Ensure all TypeScript type alias declarations include a valid RHS type definition prior to AST parsing.
+- Diagnosis: Uncompleted TypeScript type alias declaration resulting from prompt injection leakage into the source generation stream.
+
+### Failure Diff
+```typescript
+Line 26, Col 19: Type alias declaration is missing a type definition after '='.
+```
+
+---
+
+## FAILURE: rag_diag_fhhdb6 | FIX: fix_rag_diag_fhhdb6
+- Error Class: NOVEL_LLM_DIAGNOSIS
+- File: src/App.tsx
+- Rule to Avoid: <One imperative, testable instruction that future prompts must follow to avoid this specific error>
+- Diagnosis: <Specific generation mechanism that caused failure — name the technical mechanism, not the symptom>
+
+### Failure Diff
+```typescript
+Line 1, Col 1: Header Stripped: Original file contained 11 import statements, but candidate contains zero imports. Module imports and file headers were wiped out.
+Line 1, Col 1: License Header Stripped: Original file contained a copyright or license header, but candidate removed it. License headers
+```
+
+---
