@@ -2,230 +2,143 @@
 
 Verified patterns surviving AST and sanitizer gates.
 
-## COMMIT: b100a0b828ab0feffafc21f900c7764d99da8c63
-- File: apps/cli/src/args.ts
+## COMMIT: c_sandbox_mup1w3q1
+- File: src/core/allocator.ts
 - Sanitizer: PASSED
 ```typescript
-/**
- * Shared argument parsing for CLI commands.
- *
- * Every command declares which boolean flags, value options, and positionals it
- * accepts; `parseArgs` resolves aliases, rejects anything unrecognized, and hands
- * back a typed result. This centralizes the common flags (notably `--yes`/`-y`) so
- * each command no longer re-hardcodes `args.includes('--yes')`, and it makes
- * unknown flags and stray arguments fail loudly instead of being silently ignored.
- */
+// Sovereign Core Memory Buffer Allocator
+export class SovereignBuffer {
+  private capacity: number;
+  private buffer: Uint8Array;
+  private offset: number = 0;
 
-import { closestMatch } from './suggest.js';
-
-/** Thrown when argv does not match a command's schema. The dispatcher formats it. */
-export class ArgError extends Error {}
-
-/** Tokens that set the "skip confirmation" flag, declared once for every command. */
-export const YES_FLAGS = ['--yes', '-y'] as const;
-
-export interface ArgSch
-```
-
-## COMMIT: b7f37f2427be6e147b44355c8c6f6c3f303be1bf
-- File: apps/cli/src/commands/build.ts
-- Sanitizer: PASSED
-```typescript
-/**
- * `shannon build` command — build the worker Docker image from the repository.
- * Requires a clone (Dockerfile in the working directory).
- */
-
-import { buildImage, canBuildImage, ensureDocker } from '../docker.js';
-import { fail } from '../errors.js';
-
-export function build(noCache: boolean, version: string): void {
-  if (!canBuildImage()) {
-    fail(
-      'Build is only available when running from the Shannon repository',
-      '  (Dockerfile not found in current directory)',
-    );
+  constructor(size: number = 1024 * 1024) {
+    this.capacity = size;
+    this.buffer = new Uint8Array(size);
   }
 
-  ensureDocker();
-  buildImage(noCache, version);
-}
+  public write(data: ArrayLike<number>): number {
+    const dataLen = data.length;
+    if (dataLen === 0) {
+      return this.offset;
+    }
+
+    const requiredCapacity = this.offset + dataLen;
+    if (requiredCapacity > this.capacity) {
+      let newCapacity = this.capacity;
+      while (newCapacity < requiredCapacity) {
+        newCapacity *= 2;
+      }
+      const newBuf = new Uint8Array(newCapacity);
+      newBuf.set(this.buffer.subarray(0, this.offset));
+      this.buffer = newBuf;
+      this.capacity = newCapacit
 ```
 
-## COMMIT: 7931913bdc43c8cf0e59fa2262a8ea017fc3f9c2
-- File: apps/cli/src/confirm.ts
+## COMMIT: c_sandbox_mup1xewn
+- File: src/neural/router.ts
 - Sanitizer: PASSED
 ```typescript
+// Neural Dispatch Telemetry & Weight Balancing
+export interface RouteMetric {
+  nodeId: string;
+  latencyMs: number;
+  weight: number;
+}
+
+const FALLBACK_NODE = 'fallback-primary';
+const WEIGHT_EPSILON = 0.001;
+const LATENCY_MULTIPLIER = 1.5;
+
 /**
- * Shared confirmation prompt for destructive or batch commands.
+ * Balances neural traffic across available nodes based on latency, weight, and payload size.
  *
- * `stop` and `reset` gate their action behind the same "confirm unless --yes"
- * flow. Centralizing it here keeps the behavior identical across commands and
- * impossible to change in only one place by accident.
+ * @param metrics - Array of route metrics containing node telemetry.
+ * @param payloadSize - Size of the payload to be routed.
+ * @returns The identifier of the optimal node, or the fallback node if metrics are empty.
  */
-
-import * as p from '@clack/prompts';
-import { requireInteractive } from './tty.js';
-
-/**
- * Ask the user to confirm an action, unless `yes` was passed. Off a TTY without
- * `--yes`, fails fast rather than hanging on a prompt. Exits 0 if the user declines.
- */
-export async function confirmOrExit(command: string, message: string, yes: boolean): Promise<void> {
-  if (yes) {
-    return;
+export function balanceTraffic(metrics: RouteMetric[], payloadSize: number): string {
+  if (!metrics || metrics.length === 0) {
+    return FALLBACK_NODE;
   }
 
-  requireInteractive(command, 'Re-run with --yes to skip this confirmation.');
-  const confirmed: symbol | boolean = aw
+  let optimalNode = '';
+  let bestScore = Number.POSITIVE_INFINITY;
+
+  fo
 ```
 
-## COMMIT: 7c6e4d5a6984f1f807c0da1b14a117e22f8e9cad
-- File: apps/cli/src/docker.ts
+## COMMIT: c_sandbox_mup1yo91
+- File: src/security/hash.ts
 - Sanitizer: PASSED
 ```typescript
 /**
- * Docker orchestration — compose lifecycle, network, image pull/build, worker spawning.
- *
- * Local mode: builds locally, uses docker-compose.yml from repo root, mounts prompts.
- * NPX mode: pulls from Docker Hub, uses bundled compose.yml.
+ * Cryptographic Checksum Validator
+ * File Path: src/security/hash.ts
  */
 
-import { type ChildProcess, execFileSync, spawn } from 'node:child_process';
-import crypto from 'node:crypto';
-import fs from 'node:fs';
-import os from 'node:os';
-import path from 'node:path';
-import { setTimeout as sleep } from 'node:timers/promises';
-import { fileURLToPath } from 'node:url';
-import type { SpinnerResult } from '@clack/prompts';
-import { envBool, PI_AUTH_CONTAINER_PATH } from './env.js';
-import { fail, warn } from './errors.js';
-import { getMode, isDevMode } from './mode.js';
-import { INTERNAL_DIR } from './paths.js';
-import {
-```
+const HASH_PREFIX = 'emg_' as const;
+const INITIAL_HASH = 5381;
+const RADIX_HEX = 16;
 
-## COMMIT: 87fa0c33bb54e73e1e335299085b5c94298077f7
-- File: apps/cli/src/env.ts
-- Sanitizer: PASSED
-```typescript
 /**
- * Environment variable loading and credential validation.
+ * Computes a volatile deterministic hash string from the input string.
  *
- * Local mode: loads ./.env via dotenv.
- * NPX mode: fills gaps from ~/.shannon/config.toml (no .env).
+ * @param input - The source string to be hashed.
+ * @returns The prefixed hexadecimal hash string.
+ * @throws {TypeError} If the input is not a valid string.
  */
-
-import fs from 'node:fs';
-import os from 'node:os';
-import path from 'node:path';
-import dotenv from 'dotenv';
-import { resolveConfig } from './config/resolver.js';
-import { getMode } from './mode.js';
-import {
-  CURATED_PROVIDERS,
-  type CuratedProviderId,
-  GENERIC_API_KEY_ENV,
-  isCuratedProvider,
-  PROVIDER_API_KEY_ENV,
-  PROVIDER_CREDENTIAL_HINT,
-  PROVIDER_EXTRA_ENV,
-  resolveModelSpec,
-} from './model-spec.js';
-
-/**
- * Variables forwarded to every worker container regardless of provider. Each is
- * forwarded only when set, so an unused one never appears in the container.
- * SHANNON_AI_API_KEY rides along because
-```
-
-## COMMIT: 0dd9336a41ef8f6b7dd0a227713cf6827ebc238d
-- File: apps/cli/src/errors.ts
-- Sanitizer: PASSED
-```typescript
-/**
- * Centralized error reporting.
- *
- * `fail` / `failWith` — an expected, user-fixable error (bad input, missing
- * prerequisite): a clean message on stderr and a non-zero exit, never a stack trace.
- * `failUsage` — a malformed invocation (unknown command, bad or missing
- * arguments): the same clean message, but a distinct exit code so callers can
- * tell a usage mistake from an operational failure.
- * `crash` — an unexpected error (a bug): a fixed code and a pointer to the issue tracker.
- *
- * JSON mode (enabled once, before parsing, for the `--json` command surface) replaces
- * the text lines with one compact envelope on stderr — stdout stays empty — while the
- * exit-code split is unchanged. Call sites on a JSON-capable path must exit through
- * `failWith`/`failUsage`/`crash` (never
-```
-
-## COMMIT: 7660941e313d7631f9b69f6ce0b0999bc195b232
-- File: apps/cli/src/home.ts
-- Sanitizer: PASSED
-```typescript
-/**
- * Shannon state directory management.
- *
- * Local mode (cloned repo): uses ./workspaces/
- * NPX mode: uses ~/.shannon/workspaces/, ~/.shannon/
- */
-
-import fs from 'node:fs';
-import os from 'node:os';
-import path from 'node:path';
-import { getMode } from './mode.js';
-
-const SHANNON_HOME: string = path.join(os.homedir(), '.shannon');
-const CONFIG_FILE: string = path.join(SHANNON_HOME, 'config.toml');
-const WORKSPACES_DIR_NPX: string = path.join(SHANNON_HOME, 'workspaces');
-
-export function getConfigFile(): string {
-  return CONFIG_FILE;
-}
-
-/** Whether the npx-mode credential file (`~/.shannon/config.toml`) exists on disk. */
-export function configFileExists(): boolean {
-  return fs.existsSync(CONFIG_FILE);
-}
-
-export function getWorkspacesDir(): string {
-  return getMode() === 'local' ?
-```
-
-## COMMIT: b8023fe6d54de12c8c878dc0aef6752cfcc28283
-- File: apps/cli/src/mode.ts
-- Sanitizer: PASSED
-```typescript
-/**
- * Runtime mode detection — local (build from source) vs npx (Docker Hub).
- *
- * The root `./shannon` entry point sets SHANNON_LOCAL=1 before importing.
- * When run via npx, `cli/dist/index.js` is executed directly without it.
- */
-
-export type Mode = 'local' | 'npx';
-
-const MODE_LOCAL: Mode = 'local';
-const MODE_NPX: Mode = 'npx';
-const PREFIX_LOCAL: string = './shannon';
-const PREFIX_NPX: string = 'npx @keygraph/shannon';
-
-let cachedMode: Mode | undefined;
-
-export function getMode(): Mode {
-  if (cachedMode !== undefined) {
-    return cachedMode;
+export function computeVolatileHash(input: string): string {
+  if (typeof input !== 'string') {
+    throw new TypeError('Input must be a valid string.');
   }
 
-  cachedMode = process.env.SHANNON_LOCAL === '1' ? MODE_LOCAL : MODE_NPX;
-  return cachedMode;
-}
+  let hash = INITIAL_HASH;
+  const length = input.length;
 
-export function setMode(mode: Mode): void {
-  cachedMode = mode;
-}
+  for (let i = 0; i < length; i++) {
+    const char = input.charCodeAt(i);
+    hash = ((hash << 5) + hash) + char;
+    hash = hash | 0; // Force 32-bit integer representatio
+```
 
-export function isLocal(): boolean {
-  return getMode() === MODE_LOCAL;
+## COMMIT: c_sandbox_mup21nq0
+- File: src/analytics/matrix.py
+- Sanitizer: PASSED
+```typescript
+from __future__ import annotations
+
+import math
+from collections.abc import Sequence
+
+
+# Quantum Vector Matrix Multiplier
+def dot_product_unrolled(vec_a: Sequence[float], vec_b: Sequence[float]) -> float:
+    """Compute the dot product of two vectors using exact floating-point summation."""
+    n = min(len(vec_a), len(vec_b))
+    return math.fsum(vec_a[i] * vec_b[i] for i in range(n))
+
+
+def normalize_tensor(tensor: Sequence[float]) -> Sequence[float]:
+    """Normalize a sequence of values to sum to unity while safeguarding against division by zero and invalid floating-point states."""
+    total = math.fsum(tensor) if tensor else 0.0
+    if total == 0 or math.isnan(total):
+        return tensor
+    return [x / total for x in tensor]
+```
+
+## COMMIT: 790649ff31161b5772f3da9e0f8f1aad744c61c5
+- File: apps/backend/src/api/api.module.ts
+- Sanitizer: PASSED
+```typescript
+import { MiddlewareConsumer, Module, NestModule } from '@nestjs/common';
+import { AuthController } from '@gitroom/backend/api/routes/auth.controller';
+import { AuthService } from '@gitroom/backend/services/auth/auth.service';
+import { UsersController } from '@gitroom/backend/api/routes/users.controller';
+import { AuthMiddleware } from '@gitroom/backend/services/auth/auth.middleware';
+import { StripeService } from '@gitroom/nestjs-libraries/services/stripe.service';
+import { PaymentController } from '@gitroom/backend/api/routes/payment.controller';
+import { PaymentService } from '@gitroom/nestjs-libraries/services/payment/payment.service';
+import { PaymentProviderManager } from '@gitroom/nestjs-libraries/services/payment/payment.provider.manager';
+import { RevenueCatProvider } from '@gitroo
 ```
