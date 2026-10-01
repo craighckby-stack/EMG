@@ -34,7 +34,11 @@ import {
   commitFileUpdate,
 } from './utils/github';
 import { writePostmortem, computeSHA256 } from './utils/postmortem';
-import { appendCleanCommit, publishRagToGithub } from './memory/emg_rag';
+import { appendCleanCommit, appendFailureAndFix, publishRagToGithub } from './memory/emg_rag';
+import { executeRAGDebate, DebateVerdict } from './engine/debate';
+import { alignmentMatrixEngine, AlignmentMatrixResult } from './engine/alignment-matrix';
+import { checkSelfStoppingPoint, HaltEvaluationState } from './engine/halt';
+import type { DebateAgent, AgentVote, SaturationMetrics as SaturationMetricsType } from './lib/types';
 import { decomposeFile, reassembleChunks } from './utils/fileSplitter';
 import { optimizeSourceCode } from './utils/gemini';
 import { sanitizeCode, sanitizeText } from './utils/sanitizer';
@@ -189,6 +193,9 @@ export default function App() {
   const [isDiagnosticsOpen, setIsDiagnosticsOpen] = useState(false);
   const [isWipeMemoryOpen, setIsWipeMemoryOpen] = useState(false);
   const [isOracleOpen, setIsOracleOpen] = useState(false);
+  const [latestDebate, setLatestDebate] = useState<DebateVerdict | null>(null);
+  const [alignmentResult, setAlignmentResult] = useState<AlignmentMatrixResult | null>(null);
+  const [haltState, setHaltState] = useState<HaltEvaluationState | null>(null);
   const [isCycling, setIsCycling] = useState(false);
   const [isSyncingRag, setIsSyncingRag] = useState(false);
   const [activeTab, setActiveTab] = useState<'dashboard' | 'sovereign' | 'orchestra' | 'debate' | 'bugs' | 'paradox' | 'saturation'>('sovereign');
@@ -672,9 +679,62 @@ export default function App() {
         lastErrorRef.current[targetFile.path] = '';
         pushLog(`[HEURISTIC LINT PASSED] Linting passed.`, 'success', undefined, targetFile.path);
 
+        // --- SOVEREIGN KERNEL ETHICAL DEBATE & ALIGNMENT MATRIX ---
+        const debateVerdict = executeRAGDebate(targetFile.path, cleanCode);
+        setLatestDebate(debateVerdict);
+        const alignRes = alignmentMatrixEngine.evaluateAlignment(cleanCode, targetFile.path);
+        setAlignmentResult(alignRes);
+
+        if (!debateVerdict.approved || !alignRes.alignmentPassed) {
+          const rejectReason = !debateVerdict.approved
+            ? `Ethical Debate Rejection: Risk score (${debateVerdict.riskScore}/10) >= Benefit score (${debateVerdict.benefitScore}/10). ${debateVerdict.prosecutorStatement.argument}`
+            : `Alignment Matrix Rejection: Confidence (${alignRes.overallConfidence}) below threshold or unsafe primitives detected.`;
+
+          pushLog(`[SOVEREIGN DEBATE REJECTED] Mutation blocked on [${targetFile.path}]: ${rejectReason}`, 'error', result.latencyMs, targetFile.path);
+
+          appendFailureAndFix(
+            `fail_${Date.now().toString(36)}`,
+            `fix_${Date.now().toString(36)}`,
+            debateVerdict.sanitizerResult.errorClass || 'ETHICAL_DEBATE_REJECT',
+            targetFile.path,
+            cleanCode,
+            debateVerdict.sanitizerResult.sanitizedCode,
+            debateVerdict.prosecutorStatement.argument,
+            rejectReason
+          );
+
+          setStatus('IDLE');
+          return;
+        }
+
+        pushLog(`[SOVEREIGN DEBATE APPROVED] Net positive benefit (${debateVerdict.benefitScore.toFixed(1)} > ${debateVerdict.riskScore.toFixed(1)}). Sanitizer clean. Alignment passed.`, 'success', undefined, targetFile.path);
+
+        // --- SELF-STOPPING POINT HALT CHECK ---
+        const currentSample = [{ path: targetFile.path, code: cleanCode }];
+        const haltEval = checkSelfStoppingPoint(metrics.enhancements + 1, currentSample);
+        setHaltState(haltEval);
+
+        if (haltEval.isHalted) {
+          pushLog(`[SELF-STOPPING POINT TRIGGERED] ${haltEval.haltReason}. System has reached full convergence with zero growth, zero failure retrievals, and clean sanitizer. 🏁`, 'success');
+          if (isLive) {
+            setIsLive(false);
+          }
+        }
+
         // Apply mutation to sandbox store
         if (!config.dryRun) {
           (targetFile as { content: string }).content = cleanCode;
+        }
+
+        // Record clean pattern in RAG vector store
+        try {
+          appendCleanCommit(
+            `c_sandbox_${Date.now().toString(36)}`,
+            targetFile.path,
+            cleanCode.slice(0, 800)
+          );
+        } catch (ragErr) {
+          console.warn('[RAG Vector Write Warning]', ragErr);
         }
 
         // Auto-mark file as optimized in current session so it does not cycle infinitely
@@ -1404,6 +1464,54 @@ export default function App() {
           }
         }
 
+        // --- SOVEREIGN KERNEL ETHICAL DEBATE & ALIGNMENT MATRIX GATE ---
+        const debateVerdict = executeRAGDebate(target.path, cleanCode);
+        setLatestDebate(debateVerdict);
+        const alignRes = alignmentMatrixEngine.evaluateAlignment(cleanCode, target.path);
+        setAlignmentResult(alignRes);
+
+        if (!debateVerdict.approved || !alignRes.alignmentPassed) {
+          const rejectReason = !debateVerdict.approved
+            ? `Ethical Debate Rejection: Risk score (${debateVerdict.riskScore}/10) >= Benefit score (${debateVerdict.benefitScore}/10). ${debateVerdict.prosecutorStatement.argument}`
+            : `Alignment Matrix Rejection: Confidence (${alignRes.overallConfidence}) below threshold or unsafe primitives detected.`;
+
+          pushLog(`[SOVEREIGN DEBATE REJECTED] Mutation blocked on [${target.path}]: ${rejectReason}`, 'error', result.latencyMs, target.path);
+
+          appendFailureAndFix(
+            `fail_${Date.now().toString(36)}`,
+            `fix_${Date.now().toString(36)}`,
+            debateVerdict.sanitizerResult.errorClass || 'ETHICAL_DEBATE_REJECT',
+            target.path,
+            cleanCode,
+            debateVerdict.sanitizerResult.sanitizedCode,
+            debateVerdict.prosecutorStatement.argument,
+            rejectReason,
+            undefined,
+            config.ghToken && config.targetRepo ? {
+              token: config.ghToken,
+              repo: config.targetRepo,
+              branch: config.branch || 'main'
+            } : undefined
+          );
+
+          setStatus('IDLE');
+          return;
+        }
+
+        pushLog(`[SOVEREIGN DEBATE APPROVED] Net positive benefit (${debateVerdict.benefitScore.toFixed(1)} > ${debateVerdict.riskScore.toFixed(1)}). Sanitizer clean. Alignment passed.`, 'success', undefined, target.path);
+
+        // --- SELF-STOPPING POINT HALT CHECK ---
+        const currentSample = [{ path: target.path, code: cleanCode }];
+        const haltEval = checkSelfStoppingPoint(metrics.enhancements + 1, currentSample);
+        setHaltState(haltEval);
+
+        if (haltEval.isHalted) {
+          pushLog(`[SELF-STOPPING POINT TRIGGERED] ${haltEval.haltReason}. System has reached full convergence with zero growth, zero failure retrievals, and clean sanitizer. 🏁`, 'success');
+          if (isLive) {
+            setIsLive(false);
+          }
+        }
+
         let commitSha = 'dry-run';
 
         if (!config.dryRun) {
@@ -1842,7 +1950,63 @@ export default function App() {
 
       {activeTab === 'debate' && (
         <div className="flex-1 w-full">
-          <DebateChamber agents={[]} currentTopic={config.goal} isActive={isLive} />
+          <DebateChamber
+            agents={[
+              {
+                id: 'caan',
+                name: 'Darlek Caan (Prosecutor)',
+                color: '#f43f5e',
+                icon: '👁️',
+                status: 'active',
+              },
+              {
+                id: 'jesus',
+                name: 'Defender (Jesus)',
+                color: '#10b981',
+                icon: '🕊️',
+                status: 'active',
+              },
+              {
+                id: 'judge',
+                name: 'Judge (Sovereign Synthesis)',
+                color: '#00F5A0',
+                icon: '⚖️',
+                status: 'active',
+              },
+            ]}
+            votes={latestDebate ? [
+              {
+                agentId: 'caan',
+                agentName: 'Darlek Caan (Prosecutor)',
+                vote: latestDebate.riskScore > 5 ? 'reject' : 'approve',
+                confidence: Number((latestDebate.riskScore / 10).toFixed(2)),
+                reasoning: latestDebate.prosecutorStatement.argument,
+                provider: 'RAG Memory Failure Ledger',
+              },
+              {
+                agentId: 'jesus',
+                agentName: 'Defender (Jesus)',
+                vote: latestDebate.benefitScore >= latestDebate.riskScore ? 'approve' : 'reject',
+                confidence: Number((latestDebate.benefitScore / 10).toFixed(2)),
+                reasoning: latestDebate.defenderStatement.argument,
+                provider: 'RAG Memory Clean Ledger',
+              },
+              {
+                agentId: 'judge',
+                agentName: 'Judge (Sovereign Synthesis)',
+                vote: latestDebate.approved ? 'approve' : 'reject',
+                confidence: Number((Math.abs(latestDebate.benefitScore - latestDebate.riskScore) / 10).toFixed(2)),
+                reasoning: latestDebate.verdictSummary,
+                provider: 'EMG Sovereign Synthesis',
+              },
+            ] : []}
+            currentTopic={activePath ? `Mutation Analysis on ${activePath}` : config.goal}
+            isActive={isLive}
+            consensus={latestDebate?.verdictSummary}
+            consensusCoefficient={latestDebate ? (latestDebate.approved ? 0.95 : 0.4) : undefined}
+            cognitiveFriction={latestDebate ? latestDebate.riskScore * 10 : undefined}
+            epistemicRuling={latestDebate?.judgeStatement.argument}
+          />
         </div>
       )}
 

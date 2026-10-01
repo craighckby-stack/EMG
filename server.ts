@@ -415,7 +415,8 @@ CRITICAL Requirements:
    - Python: Ensure all type annotations (Any, Optional, Union, Callable, etc.) have explicit imports from typing. Never reference pytest without importing it.
    - JavaScript/TypeScript: Never alter test assertions to use 'process.env.* || \'\'' or empty strings that make assertions trivially true or tautological.
 10. POSIX TRAILING NEWLINE: Ensure the source code terminates with a single trailing newline.
-11. Output a 1-sentence summary of enhancements immediately after @@@SUMMARY:${pythonDirectives}`;
+11. SATURATION EQUILIBRIUM PROTOCOL: If the provided code is already idiomatic, type-safe, well-documented, and completely optimal under the goal, do NOT invent cosmetic or churn edits. Output ONLY: @@@START NO_CHANGES_NEEDED @@@END
+12. Output a 1-sentence summary of enhancements immediately after @@@SUMMARY:${pythonDirectives}`;
 
       const startTime = performance.now();
 
@@ -560,6 +561,14 @@ CRITICAL Requirements:
         optimized = optimized.replace(/@+\s*$/, '').trim();
       }
 
+      // Handle SATURATION EQUILIBRIUM PROTOCOL: Model signaled 0 diffs needed
+      let isEquilibrium = false;
+      if (optimized.trim() === 'NO_CHANGES_NEEDED' || optimized.includes('NO_CHANGES_NEEDED')) {
+        optimized = code.trim();
+        summary = 'Convergence equilibrium: Code is already optimal and requires no changes (0 diffs).';
+        isEquilibrium = true;
+      }
+
       // Reject token-limit truncated outputs and revert to baseline
       if (wasTokenTruncated && code && code.trim().length >= 5) {
         console.warn(`[SAFETY GATE] Model generation hit MAX_TOKENS ceiling on ${filePath || 'file'}. Preserving baseline.`);
@@ -676,6 +685,7 @@ CRITICAL Requirements:
         tokensEstimate,
         modelUsed: usedModel,
         redactedSecretsCount: sanitizedCodeResult.count + sanitizedSummaryResult.count,
+        isEquilibrium,
       });
     } catch (err: any) {
       console.error('Gemini Optimization Error:', err);

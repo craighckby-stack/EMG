@@ -381,7 +381,7 @@ export async function publishRagToGithub(target?: {
 
       // 2. Sync human-readable clean patterns inside SOVEREIGN-KERNEL/ only
       const correctMd = formatCorrectMdFromVectors(vectorStore);
-      if (correctMd && vectorStore.length % 10 === 0) {
+      if (correctMd) {
         await commitWithRetry(
           'SOVEREIGN-KERNEL/memory/clean_patterns.md',
           correctMd,
@@ -392,7 +392,7 @@ export async function publishRagToGithub(target?: {
 
       // 3. Sync human-readable failure patterns inside SOVEREIGN-KERNEL/ only
       const wrongMd = formatWrongMdFromVectors(vectorStore);
-      if (wrongMd && vectorStore.length % 10 === 0) {
+      if (wrongMd) {
         await commitWithRetry(
           'SOVEREIGN-KERNEL/memory/failure_patterns.md',
           wrongMd,
@@ -430,6 +430,18 @@ function getStoredGithubTarget() {
           branch: parsed.githubBranch || 'main',
         };
       }
+    }
+    const token = localStorage.getItem('emg_github_token') || sessionStorage.getItem('emg_github_token');
+    const repo = localStorage.getItem('emg_target_repo') || sessionStorage.getItem('emg_target_repo');
+    if (token && repo) {
+      const repoStr = repo.trim().replace(/^https:\/\/github\.com\//, '').replace(/\/$/, '');
+      const [owner, repoName] = repoStr.split('/');
+      return {
+        token,
+        owner: owner || 'craighckby-stack',
+        repo: repoName || repoStr,
+        branch: 'main',
+      };
     }
   } catch {}
   return null;

@@ -15,6 +15,7 @@ export interface OptimizationResult {
   tokensEstimate: number;
   modelUsed?: string;
   redactedSecretsCount?: number;
+  isEquilibrium?: boolean;
 }
 
 export interface ServerApiStatus {
@@ -142,6 +143,7 @@ export async function optimizeSourceCode(
         modelUsed: data.modelUsed || model,
         patch: data.patch,
         redactedSecretsCount: (data.redactedSecretsCount || 0) + sanitized.redactedCount,
+        isEquilibrium: data.isEquilibrium || false,
       };
     }
 
