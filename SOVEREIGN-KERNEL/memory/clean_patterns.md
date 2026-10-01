@@ -177,3 +177,36 @@ const STATIC_PERSONAS: Record<string, Persona> = {
     description: "Applies first-principles physics reasoning to decompose complex systems into fundamental truths.",
     promptModifier: "Provide a deep, comprehensive analysis of the topic from the perspective of a 'First Principles Physicist'. The response must be approximately 250 lines long. Do not use markdown headers, lists, or formatting like bolding or italics, just continuous, flowing prose
 ```
+
+## COMMIT: d978437fa8eee5ff890bd6fa7561ad9938ddd6fc
+- File: src/lib/siphon.ts
+- Sanitizer: PASSED
+```typescript
+/**
+ * HUXLEY_V3.2_CORE: Siphon Implementation
+ * Pattern: Functional Result-Type Error Handling
+ * Mutation: Deterministic DNA Extraction with Generational Stamping
+ */
+
+export type DNAFragment = {
+  title: string;
+  mutation: string;
+  ancestry: string; // Generational Stamping
+  weight: number;   // Deterministic AST Weighting
+};
+
+export type SiphonResult<T> = 
+  | { success: true; data: T }
+  | { success: false; error: string; entropyLevel: number };
+
+class SiphonEngine {
+  private currentGeneration: string = "V3.2_CORE";
+  private static readonly MAX_PAYLOAD_LENGTH = 1_048_576; // 1MB bounds limit
+  private static readonly MAX_MATCHES_LIMIT = 10_000;
+
+  /**
+   * Siphons logic-DNA from raw source buffers.
+   * Replaces legacy void/null returns with explicit Result types.
+   */
+  public
+```
