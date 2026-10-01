@@ -675,3 +675,39 @@ export interface AgentConfig {
   readonly name: string;
   readonly color: s
 ```
+
+## COMMIT: 86b5fd578958574bb61276ea16c5f5a62a181a79
+- File: src/app/api/extract-text/route.ts
+- Sanitizer: PASSED
+```typescript
+/* DARLEK CAAN RAG SYNTHESIS - Autonomous Generation G-86 [2026-09-20T05:38:42.610Z] */
+import { NextRequest, NextResponse } from '@/lib/next-mock';
+import mammoth from 'mammoth';
+
+export const dynamic = 'force-dynamic';
+
+export interface SuccessResponse {
+  readonly success: true;
+  readonly text: string;
+  readonly status?: string;
+  readonly service?: string;
+}
+
+export interface ErrorResponse {
+  readonly success: false;
+  readonly error: string;
+}
+
+export type ApiResponse = SuccessResponse | ErrorResponse;
+
+const MAX_PAYLOAD_SIZE_BYTES = 25 * 1024 * 1024; // 25MB safety boundary
+
+const ONLINE_RESPONSE: NextResponse<ApiResponse> = NextResponse.json({ 
+  status: 'online', 
+  service: 'EXTRACT_TEXT_API', 
+  success: true, 
+  text: '' 
+} as SuccessResponse);
+
+const PAYLOAD_TOO_LARGE_RESPON
+```
