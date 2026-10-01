@@ -389,3 +389,219 @@ module.exports.__rag_resilience_verified__ = Object.freeze({
 ```
 
 ---
+
+## FAILURE: fail_mup2uw94 | FIX: fix_mup2uw94
+- Error Class: AST_PARSE
+- File: fix_prompt2.js
+- Rule to Avoid: Objection! Detected 3 historical failure patterns matching this change. Errors: AST_PARSE, AST_PARSE, NOVEL_LLM_DIAGNOSIS. Sanitizer violations: AST_PARSE: Unbalanced delimiters: braces=1, brackets=0, parens=0.
+- Diagnosis: Ethical Debate Rejection: Risk score (10/10) >= Benefit score (8/10). Objection! Detected 3 historical failure patterns matching this change. Errors: AST_PARSE, AST_PARSE, NOVEL_LLM_DIAGNOSIS. Sanitizer violations: AST_PARSE: Unbalanced delimiters: braces=1, brackets=0, parens=0.
+
+### Failure Diff
+```typescript
+/* DARLEK CAAN RAG SYNTHESIS - Autonomous Generation G-47 [2026-09-20T05:21:57.288Z] */
+/**
+ * DARLEK CANN ARCHITECTURAL HEADER
+ * File: fix_prompt2.js
+ * Role: Core system component participating in autonomous cognitive evolution cycles.
+ * Architecture: Modular unit with resilient state verification.
+ * Optimized by: EMG Core v49 Neural Code and Documentation Optimizer Engine.
+ */
+
+'use strict';
+
+const fs = require('node:fs');
+const path = require('node:path');
+
+// Constants & Pre-compiled Regex/Strings
+const TARGET_FILE_RELATIVE = 'src/app/api/evolution/propose/route.ts';
+const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB in bytes
+
+// Pre-compiled literal regex to avoid recompilation overhead during execution cycles
+const REGEX_TO_REPLACE = /```json\n\{\n  "analysis": "Specific analysis of what dead-weight or bugs were fixed\.\.\.",\n  "riskScore": 1,\n  "affectedFiles": \["list of other files"\],\n  "newFiles": \[\n    \{\n      "path": "relative\/path\/to\/new-file\.ts",\n      "content": "Full source code content of the new file to create"\n    \}\n  \]/;
+
+const NEW_STRING = '\\`\\`\\`json\\n{\\n  \\\"analysis\\\": \\\"Specific analysis of what dead-weight or bugs were fixed...\\\",\\n  \\\"riskScore\\\": 1,\\n  \\\"affectedFiles\\\": [\\\"list of other files\\\"],\\n  \\\"newFiles\\\": [\\n    {\\n      \\\"path\\\": \\\"relative/path/to/new-file.ts\\\",\\n      \\\"content\\\": \\\"Full source code content of the new file to create\\\"\\n    }\\n  ]\\n}\\n\\`\\`\\`\\n\\n\\`\\`\\`tsx\\n// Complete proposed code for the active file goes here.\\n// MUST BE COMPLETE FILE, NO PLACEHOLDERS OR TRUNCATIONS\\n\\`\\`\\`';
+
+/**
+ * Validates path security against directory traversal and symlink attacks.
+ * @param {string} relativePath - The relative path to validate and resolve.
+ * @returns {string} The fully validated, real absolute file path.
+ * @throws {TypeError|Error} If security boundaries are breached or path resolution fails.
+ */
+function getValidatedSecurePath(relativePath) {
+    if (typeof relativePath !== 'string' || relativePath.length === 0) {
+        throw new TypeError('SECURITY_VIOLATION: Relative path must be a non-empty string.');
+    }
+
+    const cwd = process.cwd();
+    const expectedBaseDir = path.resolve(cwd, 'src');
+    const resolvedPath = path.resolve(cwd, relativePath);
+
+    if (!resolvedPath.startsWith(expectedBaseDir)) {
+        throw new Error('SECURITY_VIOLATION: Access outside permitted base directory is strictly prohibited.');
+    }
+
+    let realPath;
+    try {
+        realPath = fs.realpathSync(resolvedPath);
+    } catch (err) {
+        const errorMessage = err instanceof Error ? err.message : String(err);
+        throw new Error(`SECURITY_VIOLATION: Target file does not exist or cannot be accessed at validated path: ${relativePath} (${errorMessage})`);
+    }
+
+    if (!realPath.startsWith(expectedBaseDir)) {
+        throw new Error('SECURITY_VIOLATION: Symlink traversal outside permitted base directory is strictly prohibited.');
+    }
+
+    return realPath;
+}
+
+/**
+ * Safely reads a file with strict size and type enforcement.
+ * @param {string} filePath - The absolute real path of the file to read.
+ * @returns {string} The UTF-8 decoded file contents.
+ * @throws {Error} If file constraints, size limits, or I/O checks fail.
+ */
+function readTargetFile(filePath) {
+    let fileDescriptor;
+    try {
+        fileDescriptor = fs.openSync(filePath, 'r');
+        const stats = fs.fstatSync(fileDescriptor);
+
+        if (!stats.isFile()) {
+            throw new Error('SECURITY_VIOLATION: Target path does not resolve to a standard file.');
+        }
+
+        if (stats.size > MAX_FILE_SIZE) {
+            throw new Error('SECURITY_VIOLATION: File size exceeds safety bounds limit.');
+        }
+
+        if (stats.size === 0) {
+            return '';
+        }
+
+        const buffer = Buffer.allocUnsafe(stats.size);
+        fs.readSync(fileDescriptor, buffer, 0, stats.size, 0);
+        return buffer.toString('utf8');
+    } finally {
+        if (fileDescriptor !== undefined) {
+            try {
+                fs.closeSync(fileDescriptor);
+            } catch {
+                // Suppress secondary cleanup exceptions during error propagation
+            }
+        }
+    }
+}
+
+/**
+ * Executes the targeted prompt pattern replacement within the source code.
+ * @param {string} code - Original source code content.
+ * @returns {string} Modified source code content.
+ * @throws {TypeError} If code content is not a valid string.
+ */
+function transformCodeContent(code) {
+    if (typeof code !== 'string') {
+        throw new TypeError('TRANSFORM_ERROR: Code content must be provided as a valid string.');
+    }
+    return code.replace(REGEX_TO_REPLACE, NEW_STRING);
+}
+
+/**
+ * Main Execution Flow with robust error handling and exit codes.
+ */
+function main() {
+    try {
+        const securePath = getValidatedSecurePath(TARGET_FILE_RELATIVE);
+        const originalCode = readTargetFile(securePath);
+        const updatedCode = transformCodeContent(originalCode);
+        
+        fs.writeFileSync(securePath, updatedCode, { encoding: 'utf8', flag: 'w' });
+    } catch (error) {
+        const errorMessage = error instanceof Error ? error.message : String(error);
+        process.stderr.write(`[EMG-CORE-CRITICAL] Execution Failed: ${errorMessage}\n`);
+        process.exitCode = 1;
+    }
+}
+
+// Execute main process
+main();
+
+// Autonomous RAG Resilience Guard
+export const __rag_resilience_verified__ = Object.freeze({
+  generation: 45,
+  timestamp: "2026-09-20T03:09:49.625Z",
+  ragEngine: "DARLEK_CAAN_HYBRID_RAG"
+});
+```
+
+### Paired Fix Diff
+```typescript
+/* DARLEK CAAN RAG SYNTHESIS - Autonomous Generation G-41 [2026-09-20T05:19:48.973Z] */
+/**
+ * DARLEK CANN ARCHITECTURAL HEADER
+ * File: fix4.js
+ * Role: Core system component participating in autonomous cognitive evolution cycles.
+ * Architecture: Type-safe modular unit with resilient state interfaces.
+ */
+
+'use strict';
+
+const { readFileSync, writeFileSync, statSync } = require('node:fs');
+const { resolve, normalize, sep } = require('node:path');
+
+const MAX_FILE_SIZE_BYTES = 10 * 1024 * 1024; // 10 MB strict safety threshold
+const TARGET_REL = 'src/app/api/evolution/propose/route.ts';
+const BASE_DIR = resolve('src');
+const targetPath = normalize(resolve(TARGET_REL));
+
+if (!targetPath.startsWith(BASE_DIR + sep) && targetPath !== BASE_DIR) {
+    throw new Error('Security Violation: Access denied to path outside target boundary.');
+}
+
+let stats;
+try {
+    stats = statSync(targetPath);
+} catch (error) {
+    const err = error instanceof Error ? error : new Error(String(error));
+    throw new Error(`Security Violation: Failed to read file stats for target path: ${err.message}`);
+}
+
+if (!stats.isFile()) {
+    throw new Error('Security Violation: Target path does not point to a valid regular file.');
+}
+
+if (stats.size > MAX_FILE_SIZE_BYTES) {
+    throw new Error('Security Violation: File size exceeds safe memory thresholds.');
+}
+
+let code;
+try {
+    code = readFileSync(targetPath, 'utf8');
+} catch (error) {
+    const err = error instanceof Error ? error : new Error(String(error));
+    throw new Error(`Execution Error: Failed to read target file content: ${err.message}`);
+}
+
+const targetPattern = /siphonedCodeContext\}\r?\n```\r?\n\$\{fileContent/g;
+
+if (targetPattern.test(code)) {
+    targetPattern.lastIndex = 0;
+    code = code.replace(targetPattern, 'siphonedCodeContext}\n\\`\\`\\`\n${fileContent');
+    
+    try {
+        writeFileSync(targetPath, code, 'utf8');
+    } catch (error) {
+        const err = error instanceof Error ? error : new Error(String(error));
+        throw new Error(`Execution Error: Failed to write updated content to target file: ${err.message}`);
+    }
+}
+
+// Autonomous RAG Resilience Guard
+module.exports.__rag_resilience_verified__ = Object.freeze({
+  generation: 39,
+  timestamp: "2026-09-20T03:07:32.654Z",
+  ragEngine: "DARLEK_CAAN_HYBRID_RAG"
+});
+```
+
+---
