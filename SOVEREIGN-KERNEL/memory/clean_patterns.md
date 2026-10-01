@@ -173,3 +173,28 @@ export class AdminController {
    * Validates that the requesting user possesses super administrator privileges.
    * Thro
 ```
+
+## COMMIT: 4b7296be3c470245eaa432680f4f9d1044f79014
+- File: apps/backend/src/api/routes/analytics.controller.ts
+- Sanitizer: PASSED
+```typescript
+import { Controller, Get, Param, Query } from '@nestjs/common';
+import { Organization } from '@prisma/client';
+import { GetOrgFromRequest } from '@gitroom/nestjs-libraries/user/org.from.request';
+import { ApiTags } from '@nestjs/swagger';
+import { IntegrationService } from '@gitroom/nestjs-libraries/database/prisma/integrations/integration.service';
+import { PostsService } from '@gitroom/nestjs-libraries/database/prisma/posts/posts.service';
+
+@ApiTags('Analytics')
+@Controller('/analytics')
+export class AnalyticsController {
+  constructor(
+    private readonly integrationService: IntegrationService,
+    private readonly postsService: PostsService
+  ) {}
+
+  @Get('/:integration')
+  async getIntegration(
+    @GetOrgFromRequest() org: Organization,
+    @Param('integration') integration: string,
+```
