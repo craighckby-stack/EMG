@@ -648,3 +648,30 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
   try {
     const body = await
 ```
+
+## COMMIT: 93ef6339cb882013aea57f3b81b17fc38a8f339b
+- File: src/app/api/evolution/orchestra/route.ts
+- Sanitizer: PASSED
+```typescript
+/* DARLEK CAAN RAG SYNTHESIS - Autonomous Generation G-85 [2026-09-20T05:38:11.072Z] */
+/**
+ * DARLEK CANN ARCHITECTURAL HEADER
+ * File: src/app/api/evolution/orchestra/route.ts
+ * Role: Core system component participating in autonomous cognitive evolution cycles.
+ * Architecture: Type-safe modular unit with resilient state interfaces.
+ */
+
+import { NextRequest, NextResponse } from '@/lib/next-mock';
+import { callLlm, callLlmMultiTurn, getDefaultGeminiKey } from '@/lib/llm-provider';
+import { safeReqJson } from '@/lib/safe-json';
+import type { ApiKeys } from '@/lib/types';
+
+// ─────────────────────────────────────────────
+// Types & Interfaces
+// ─────────────────────────────────────────────
+
+export interface AgentConfig {
+  readonly id: string;
+  readonly name: string;
+  readonly color: s
+```
