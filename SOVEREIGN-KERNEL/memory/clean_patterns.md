@@ -559,3 +559,32 @@ const path = require('node:path');
 /** @type {Config} */
 const CONFIG = Object.freeze(
 ```
+
+## COMMIT: e72ba20f17d73982e9e46053b10d4da7a673b2b5
+- File: src/app/api/brain/types.ts
+- Sanitizer: PASSED
+```typescript
+/* DARLEK CAAN RAG SYNTHESIS - Autonomous Generation G-75 [2026-09-20T05:34:27.104Z] */
+/**
+ * @file src/app/api/brain/types.ts
+ * @module NeuralCode/BrainTypes
+ * @version 49.3.1
+ * @description Sovereign Darlek Caan type definitions for neural mutations and cognitive health metrics with enhanced precision.
+ */
+
+/**
+ * Represents the strict execution lifecycle status of a neural code mutation.
+ * @public
+ */
+export type MutationStatus = 'pending' | 'applied' | 'rejected' | 'stabilizing';
+
+/**
+ * Immutable payload structure describing a code mutation event.
+ * Enforces strict readonly boundaries and branded types for optimal memory efficiency and state predictability.
+ * @public
+ */
+export interface MutationPayload {
+  readonly sessionId: string;
+  readonly filePath: string;
+  readonly sta
+```
