@@ -11204,3 +11204,291 @@ export async function runSystemDiagnostics(): Promise<DiagnosticReport> {
 ```
 
 ---
+
+## FAILURE: fail_muowqgya | FIX: fix_muowqgya
+- Error Class: CLEAN
+- File: src/lib/firebase.ts
+- Rule to Avoid: Objection! Detected 3 historical failure patterns matching this change. Errors: CLEAN, CLEAN, CLEAN. Sanitizer violations: None.
+- Diagnosis: Alignment Matrix Rejection: Confidence (0.73) below threshold or unsafe primitives detected.
+
+### Failure Diff
+```typescript
+/**
+ * DARLEK CANN ARCHITECTURAL HEADER
+ * File: src/lib/firebase.ts
+ * Role: Core system component participating in autonomous cognitive evolution cycles.
+ * Architecture: Type-safe modular unit with resilient state interfaces.
+ */
+
+import { initializeApp } from 'firebase/app';
+import { getAuth, GoogleAuthProvider, signInWithPopup, User } from 'firebase/auth';
+import { getFirestore, doc, setDoc, getDoc, collection, addDoc, query, where, getDocs, serverTimestamp } from 'firebase/firestore';
+import firebaseConfig from '../../firebase-applet-config.json';
+import { Chunk } from '../types';
+
+const app = initializeApp(firebaseConfig);
+export const db = getFirestore(app, firebaseConfig.firestoreDatabaseId);
+export const auth = getAuth(app);
+export const googleProvider = new GoogleAuthProvider();
+
+export interface FirebaseErrorInfo {
+  error: string;
+  operationType: 'create' | 'update' | 'delete' | 'list' | 'get' | 'write';
+  path: string | null;
+  authInfo: {
+    userId: string;
+    email: string;
+    emailVerified: boolean;
+    isAnonymous: boolean;
+  }
+}
+
+// Input validation bounds helpers
+const MAX_STRING_LENGTH = 10000;
+const sanitizeString = (val: unknown, maxLen = MAX_STRING_LENGTH): string => {
+  if (typeof val !== 'string') return '';
+  return val.slice(0, maxLen);
+};
+
+const sanitizeNumber = (val: unknown, min = Number.MIN_SAFE_INTEGER, max = Number.MAX_SAFE_INTEGER): number => {
+  const num = typeof val === 'number' ? val : Number(val);
+  if (Number.isNaN(num)) return 0;
+  return Math.max(min, Math.min(max, num));
+};
+
+export const handleFirestoreError = (error: any, operationType: any, path: string | null): never => {
+  const user = auth.currentUser;
+  const errorInfo: FirebaseErrorInfo = {
+    error: error instanceof Error ? error.message : String(error),
+    operationType,
+    path: sanitizeString(path, 256),
+    authInfo: {
+      userId: sanitizeString(user?.uid, 128) || 'anonymous',
+      email: sanitizeString(user?.email, 256) || 'none',
+      emailVerified: user?.emailVerified || false,
+      isAnonymous: user?.isAnonymous ?? true
+    }
+  };
+  throw new Error(JSON.stringify(errorInfo));
+};
+
+export const saveSiphonedChunk = async (chunk: Chunk) => {
+  if (!auth.currentUser || !chunk) return;
+  try {
+    const chunkRef = collection(db, 'siphoned_chunks');
+    
+    // Strict bounds checking and type sanitization against injection / overflow
+    const data: Record<string, any> = {
+      title: sanitizeString(chunk.title, 256),
+      file: sanitizeString(chunk.file, 512),
+      code: sanitizeString(chunk.code, 50000),
+      explanation: sanitizeString(chunk.explanation, 5000),
+      mutation: sanitizeString(chunk.mutation, 2000),
+      intentAlignmentScore: sanitizeNumber(chunk.intentAlignmentScore, 0, 1),
+      philosophyCheck: Boolean(chunk.philosophyCheck),
+      ccrrScore: sanitizeNumber(chunk.ccrrScore, 0, 1000),
+      suggestedBranchName: sanitizeString(chunk.suggestedBranchName, 128),
+      userId: sanitizeString(auth.currentUser.uid, 128),
+      createdAt: serverTimestamp()
+    };
+
+    if (chunk.isCriticalUpgrade !== undefined) {
+      data.isCriticalUpgrade = Boolean(chunk.isCriticalUpgrade);
+    }
+
+    await addDoc(chunkRef, data);
+  } catch (e) {
+    handleFirestoreError(e, 'create', 'siphoned_chunks');
+  }
+};
+
+export const getSiphonedChunks = async () => {
+  if (!auth.currentUser) return [];
+  try {
+    const userId = sanitizeString(auth.currentUser.uid, 128);
+    const q = query(collection(db, 'siphoned_chunks'), where('userId', '==', userId));
+    const snapshot = await getDocs(q);
+    return snapshot.docs.map(docSnap => ({ id: docSnap.id, ...docSnap.data() } as any));
+  } catch (e) {
+    handleFirestoreError(e, 'list', 'siphoned_chunks');
+  }
+};
+
+export const saveArchetype = async (archetype: string) => {
+  if (!auth.currentUser) return;
+  try {
+    const safeArchetype = sanitizeString(archetype, 256);
+    const userId = sanitizeString(auth.currentUser.uid, 128);
+    const docRef = doc(db, 'system_archetypes', userId);
+    
+    await setDoc(docRef, {
+      archetype: safeArchetype,
+      userId: userId,
+      updatedAt: serverTimestamp()
+    });
+  } catch (e) {
+    const userId = auth.currentUser ? sanitizeString(auth.currentUser.uid, 128) : 'unknown';
+    handleFirestoreError(e, 'update', `system_archetypes/${userId}`);
+  }
+};
+
+export const getArchetype = async () => {
+  if (!auth.currentUser) return null;
+  try {
+    const userId = sanitizeString(auth.currentUser.uid, 128);
+    const docRef = doc(db, 'system_archetypes', userId);
+    const snap = await getDoc(docRef);
+    if (!snap.exists()) return null;
+    const data = snap.data();
+    return data && typeof data.archetype === 'string' ? sanitizeString(data.archetype, 256) : null;
+  } catch (e) {
+    const userId = auth.currentUser ? sanitizeString(auth.currentUser.uid, 128) : 'unknown';
+    handleFirestoreError(e, 'get', `system_archetypes/${userId}`);
+  }
+};
+
+export const loginWithGoogle = () => signInWithPopup(auth, googleProvider);
+export const logout = () => auth.signOut();
+```
+
+### Paired Fix Diff
+```typescript
+/**
+ * DARLEK CANN ARCHITECTURAL HEADER
+ * File: src/lib/firebase.ts
+ * Role: Core system component participating in autonomous cognitive evolution cycles.
+ * Architecture: Type-safe modular unit with resilient state interfaces.
+ */
+
+import { initializeApp } from 'firebase/app';
+import { getAuth, GoogleAuthProvider, signInWithPopup, User } from 'firebase/auth';
+import { getFirestore, doc, setDoc, getDoc, collection, addDoc, query, where, getDocs, serverTimestamp } from 'firebase/firestore';
+import firebaseConfig from '../../firebase-applet-config.json';
+import { Chunk } from '../types';
+
+const app = initializeApp(firebaseConfig);
+export const db = getFirestore(app, firebaseConfig.firestoreDatabaseId);
+export const auth = getAuth(app);
+export const googleProvider = new GoogleAuthProvider();
+
+export interface FirebaseErrorInfo {
+  error: string;
+  operationType: 'create' | 'update' | 'delete' | 'list' | 'get' | 'write';
+  path: string | null;
+  authInfo: {
+    userId: string;
+    email: string;
+    emailVerified: boolean;
+    isAnonymous: boolean;
+  }
+}
+
+// Input validation bounds helpers
+const MAX_STRING_LENGTH = 10000;
+const sanitizeString = (val: unknown, maxLen = MAX_STRING_LENGTH): string => {
+  if (typeof val !== 'string') return '';
+  return val.slice(0, maxLen);
+};
+
+const sanitizeNumber = (val: unknown, min = Number.MIN_SAFE_INTEGER, max = Number.MAX_SAFE_INTEGER): number => {
+  const num = typeof val === 'number' ? val : Number(val);
+  if (Number.isNaN(num)) return 0;
+  return Math.max(min, Math.min(max, num));
+};
+
+export const handleFirestoreError = (error: any, operationType: any, path: string | null): never => {
+  const user = auth.currentUser;
+  const errorInfo: FirebaseErrorInfo = {
+    error: error instanceof Error ? error.message : String(error),
+    operationType,
+    path: sanitizeString(path, 256),
+    authInfo: {
+      userId: sanitizeString(user?.uid, 128) || 'anonymous',
+      email: sanitizeString(user?.email, 256) || 'none',
+      emailVerified: user?.emailVerified || false,
+      isAnonymous: user?.isAnonymous ?? true
+    }
+  };
+  throw new Error(JSON.stringify(errorInfo));
+};
+
+export const saveSiphonedChunk = async (chunk: Chunk) => {
+  if (!auth.currentUser || !chunk) return;
+  try {
+    const chunkRef = collection(db, 'siphoned_chunks');
+    
+    // Strict bounds checking and type sanitization against injection / overflow
+    const data: Record<string, any> = {
+      title: sanitizeString(chunk.title, 256),
+      file: sanitizeString(chunk.file, 512),
+      code: sanitizeString(chunk.code, 50000),
+      explanation: sanitizeString(chunk.explanation, 5000),
+      mutation: sanitizeString(chunk.mutation, 2000),
+      intentAlignmentScore: sanitizeNumber(chunk.intentAlignmentScore, 0, 1),
+      philosophyCheck: Boolean(chunk.philosophyCheck),
+      ccrrScore: sanitizeNumber(chunk.ccrrScore, 0, 1000),
+      suggestedBranchName: sanitizeString(chunk.suggestedBranchName, 128),
+      userId: sanitizeString(auth.currentUser.uid, 128),
+      createdAt: serverTimestamp()
+    };
+
+    if (chunk.isCriticalUpgrade !== undefined) {
+      data.isCriticalUpgrade = Boolean(chunk.isCriticalUpgrade);
+    }
+
+    await addDoc(chunkRef, data);
+  } catch (e) {
+    handleFirestoreError(e, 'create', 'siphoned_chunks');
+  }
+};
+
+export const getSiphonedChunks = async () => {
+  if (!auth.currentUser) return [];
+  try {
+    const userId = sanitizeString(auth.currentUser.uid, 128);
+    const q = query(collection(db, 'siphoned_chunks'), where('userId', '==', userId));
+    const snapshot = await getDocs(q);
+    return snapshot.docs.map(docSnap => ({ id: docSnap.id, ...docSnap.data() } as any));
+  } catch (e) {
+    handleFirestoreError(e, 'list', 'siphoned_chunks');
+  }
+};
+
+export const saveArchetype = async (archetype: string) => {
+  if (!auth.currentUser) return;
+  try {
+    const safeArchetype = sanitizeString(archetype, 256);
+    const userId = sanitizeString(auth.currentUser.uid, 128);
+    const docRef = doc(db, 'system_archetypes', userId);
+    
+    await setDoc(docRef, {
+      archetype: safeArchetype,
+      userId: userId,
+      updatedAt: serverTimestamp()
+    });
+  } catch (e) {
+    const userId = auth.currentUser ? sanitizeString(auth.currentUser.uid, 128) : 'unknown';
+    handleFirestoreError(e, 'update', `system_archetypes/${userId}`);
+  }
+};
+
+export const getArchetype = async () => {
+  if (!auth.currentUser) return null;
+  try {
+    const userId = sanitizeString(auth.currentUser.uid, 128);
+    const docRef = doc(db, 'system_archetypes', userId);
+    const snap = await getDoc(docRef);
+    if (!snap.exists()) return null;
+    const data = snap.data();
+    return data && typeof data.archetype === 'string' ? sanitizeString(data.archetype, 256) : null;
+  } catch (e) {
+    const userId = auth.currentUser ? sanitizeString(auth.currentUser.uid, 128) : 'unknown';
+    handleFirestoreError(e, 'get', `system_archetypes/${userId}`);
+  }
+};
+
+export const loginWithGoogle = () => signInWithPopup(auth, googleProvider);
+export const logout = () => auth.signOut();
+```
+
+---
