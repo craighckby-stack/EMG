@@ -142,3 +142,25 @@ const sanitizeSegment = (value: string, fieldName: string): string => {
 
 export const ghFetch = async (url: string, token: string, options: Request
 ```
+
+## COMMIT: 3941acf16a28f5f20166d3d0fb7be01ff65f1d43
+- File: src/lib/personas.ts
+- Sanitizer: PASSED
+```typescript
+/**
+ * DARLEK CANN ARCHITECTURAL HEADER
+ * File: src/lib/personas.ts
+ * Role: Core system component participating in autonomous cognitive evolution cycles.
+ * Architecture: Type-safe modular unit with resilient state interfaces.
+ */
+
+export interface Persona {
+  readonly description: string;
+  readonly promptModifier: string;
+}
+
+const STATIC_PERSONAS: Readonly<Record<string, Persona>> = Object.freeze({
+  "First Principles Physicist": {
+    description: "Applies first-principles physics reasoning to decompose complex systems into fundamental truths.",
+    promptModifier: "Provide a deep, comprehensive analysis of the topic from the perspective of a 'First Principles Physicist'. The response must be approximately 250 lines long. Do not use markdown headers, lists, or formatting like bolding
+```
