@@ -26,3 +26,28 @@ export const YES_FLAGS = ['--yes', '-y'] as const;
 
 export interface ArgSch
 ```
+
+## COMMIT: b7f37f2427be6e147b44355c8c6f6c3f303be1bf
+- File: apps/cli/src/commands/build.ts
+- Sanitizer: PASSED
+```typescript
+/**
+ * `shannon build` command — build the worker Docker image from the repository.
+ * Requires a clone (Dockerfile in the working directory).
+ */
+
+import { buildImage, canBuildImage, ensureDocker } from '../docker.js';
+import { fail } from '../errors.js';
+
+export function build(noCache: boolean, version: string): void {
+  if (!canBuildImage()) {
+    fail(
+      'Build is only available when running from the Shannon repository',
+      '  (Dockerfile not found in current directory)',
+    );
+  }
+
+  ensureDocker();
+  buildImage(noCache, version);
+}
+```
