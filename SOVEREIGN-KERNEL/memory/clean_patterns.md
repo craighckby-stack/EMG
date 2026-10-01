@@ -267,3 +267,35 @@ export interface ProviderWeightMap {
  */
 function parseAndClampWeight(value: string | undefined, fallback: number): number
 ```
+
+## COMMIT: 7fac0c4bf306c57302105971ed4a13e73f96338c
+- File: src/lib/siphon.ts
+- Sanitizer: PASSED
+```typescript
+/**
+ * HUXLEY_V3.2_CORE: Siphon Implementation
+ * Pattern: Functional Result-Type Error Handling
+ * Mutation: Deterministic DNA Extraction with Generational Stamping
+ */
+
+export type DNAFragment = {
+  title: string;
+  mutation: string;
+  ancestry: string; // Generational Stamping
+  weight: number;   // Deterministic AST Weighting
+};
+
+export type SiphonResult<T> = 
+  | { success: true; data: T }
+  | { success: false; error: string; entropyLevel: number };
+
+class SiphonEngine {
+  private currentGeneration: string = "V3.2_CORE";
+  private static readonly MAX_PAYLOAD_LENGTH = 1_048_576; // 1MB bounds limit
+  private static readonly MAX_MATCHES_LIMIT = 10_000;
+  private static readonly MAX_FIELD_LENGTH = 1_024;
+
+  /**
+   * Siphons logic-DNA from raw source buffers.
+   * Replaces legacy void/nul
+```
