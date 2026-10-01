@@ -993,3 +993,30 @@ const ROOT_ROUTE: string = '/';
 function useAutoRedirect(initialSeconds: number, targetUrl: string): number {
   const [countdown, s
 ```
+
+## COMMIT: c864a56fd33beb3fca684f874ae6ddf387e81c00
+- File: src/app/page.tsx
+- Sanitizer: PASSED
+```typescript
+/* DARLEK CAAN RAG SYNTHESIS - Autonomous Generation G-110 [2026-09-20T05:47:32.902Z] */
+/**
+ * DARLEK CANN ARCHITECTURAL HEADER
+ * File: src/app/page.tsx
+ * Role: Core system component participating in autonomous cognitive evolution cycles.
+ * Architecture: Type-safe modular unit with resilient state interfaces.
+ */
+
+import { JSX, Suspense, memo } from 'react';
+import PageClient from '@/components/PageClient';
+
+export const dynamic: string = 'force-dynamic';
+export const fetchCache: string = 'default-no-store';
+export const revalidate: number = 0;
+
+/**
+ * Fallback skeleton for the initial suspension boundary.
+ * Memoized to prevent redundant renders and structured for minimal paint overhead.
+ */
+const PageLoadingSkeleton = memo(function PageLoadingSkeleton(): JSX.Element {
+  return (
+```
