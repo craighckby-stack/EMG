@@ -812,7 +812,7 @@ export async function validateSourceCode(
   }
 
   // Destructive Truncation & Code Deletion Sanity Gate
-  if (originalCode && typeof originalCode === 'string' && originalCode.trim().length > 80) {
+  if (originalCode && typeof originalCode === 'string' && originalCode.trim().length > 10) {
     const origLines = originalCode.trim().split('\n').length;
     const candLines = code.trim().split('\n').length;
 

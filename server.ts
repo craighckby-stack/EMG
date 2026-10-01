@@ -568,7 +568,7 @@ CRITICAL Requirements:
       }
 
       // Catastrophic Truncation & Destructive Deletion Guard
-      if (code && typeof code === 'string' && code.trim().length > 80 && !isMarkdown) {
+      if (code && typeof code === 'string' && code.trim().length > 10 && !isMarkdown) {
         const origLines = code.trim().split('\n');
         const optLines = optimized.trim().split('\n');
 
@@ -928,7 +928,7 @@ CRITICAL Requirements:
       }
 
       // Universal Destructive Truncation & Deletion Sanity Gate
-      if (originalCode && typeof originalCode === 'string' && originalCode.trim().length > 80) {
+      if (originalCode && typeof originalCode === 'string' && originalCode.trim().length > 10) {
         const origLines = originalCode.trim().split('\n').length;
         const candLines = code.trim().split('\n').length;
 
