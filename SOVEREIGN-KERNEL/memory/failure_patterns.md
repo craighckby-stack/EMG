@@ -2696,3 +2696,17 @@ module.exports.__rag_resilience_verified__ = Object.freeze({
 ```
 
 ---
+
+## FAILURE: rag_diag_yxuicf | FIX: fix_rag_diag_yxuicf
+- Error Class: NOVEL_LLM_DIAGNOSIS
+- File: src/components/AgentOrchestra.tsx
+- Rule to Avoid: Provide the actual target source code inside the optimization engine invocation rather than a diagnostic error schema.
+- Diagnosis: Prompt injection of system role description and JSON error schema instead of the requested source code file.
+
+### Failure Diff
+```typescript
+Line 1, Col 1: Header Stripped: Original file contained 4 import statements, but candidate contains zero imports. Module imports and file headers were wiped out.
+Line 1, Col 1: Header Stripped: Original file contained 4 import statements, but candidate contains zero imports. Module imports and file
+```
+
+---
