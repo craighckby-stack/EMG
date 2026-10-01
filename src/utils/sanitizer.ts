@@ -139,7 +139,7 @@ const CODE_SECRET_ASSIGNMENTS: Array<{
  */
 export function sanitizeCode(
   rawCode: string,
-  _filePath?: string
+  filePath?: string
 ): SanitizationResult {
   if (!rawCode || typeof rawCode !== 'string') {
     return {
@@ -224,6 +224,9 @@ export function sanitizeCode(
     }
   }
 
+  // 3. Sanitize relative TypeScript/JavaScript import extensions to prevent TS5097
+  code = sanitizeTypeScriptImports(code, filePath);
+
   // Enforce POSIX single trailing newline
   let finalCode = code;
   if (finalCode.trim().length > 0) {
@@ -236,6 +239,24 @@ export function sanitizeCode(
     redactedTypes: Array.from(redactedTypesSet),
     findings,
   };
+}
+
+/**
+ * Sanitizes TypeScript and JavaScript module import paths by stripping explicit
+ * file extensions (.ts, .tsx, .js, .jsx) from relative imports to avoid TS5097 errors,
+ * while preserving asset imports (.json, .css, .scss, .svg, .png, etc.).
+ */
+export function sanitizeTypeScriptImports(code: string, filePath?: string): string {
+  if (!code || typeof code !== 'string') return '';
+  if (filePath && !/\.(ts|tsx|js|jsx)$/i.test(filePath)) {
+    return code;
+  }
+
+  // Matches import/export ... from './path.tsx' and dynamic import('./path.tsx')
+  return code.replace(
+    /((?:import|export)\s+[\s\S]*?from\s+['"]|import\s*\(\s*['"])(\.{1,2}\/[^'"]+?)\.(?:tsx|ts|jsx)(['"]\s*\)?)/g,
+    '$1$2$3'
+  );
 }
 
 /**

@@ -278,6 +278,7 @@
 ## 11. Documentation & Case Studies (`docs/`)
 
 * `docs/emg_regression.md`: Formal 12-scenario anti-regression test suite.
+* `docs/CASE_STUDY_HUXLEY_SINGULARITY_LOOP_RUN_6.md`: Forensic audit of Run #6 on `craighckby-stack/Huxley-Singularity-Loop-`.
 * `docs/CASE_STUDY_PYTHON_REPO_RUN_5.md`: Real-world case study documenting audit of `agent-governance-toolkit`.
 * `docs/POSTMORTEMS.md`: Real-time negative constraint ledger.
 * `docs/SELF_STOPPING_MECHANISMS.md`: Theoretical foundations of self-stopping point convergence.
@@ -299,7 +300,7 @@
 | `/src/governance/sanitizer.ts` | Governance | Verified | Edge security sanitizer, entropy scanner, PII & claims guard |
 | `/src/memory/emg_rag.ts` | Memory | Verified | Vector RAG store, IndexedDB persistence, GitHub ledger publishing |
 | `/src/utils/validator.ts` | Utilities | Verified | Client AST verification, truncation & test count guard |
-| `/src/utils/sanitizer.ts` | Utilities | Verified | Code sanitization & POSIX newline compliance |
+| `/src/utils/sanitizer.ts` | Utilities | Verified | Code sanitization, TS import path extension cleaner & POSIX newline compliance |
 | `/src/utils/gemini.ts` | Utilities | Verified | Gemini model caller with negative constraints |
 | `/src/utils/github.ts` | Utilities | Verified | GitHub REST API tree, blob, and commit handler |
 | `/src/utils/fileSplitter.ts` | Utilities | Verified | Chunked decomposition for $>1000$ line files |
@@ -308,6 +309,7 @@
 | `/src/components/SovereignKernelPanel.tsx` | Components | Verified | Sovereign Kernel dashboard, RAG search, vector manager |
 | `/src/components/DebateChamber.tsx` | Components | Verified | Live multi-agent debate chamber |
 | `/docs/emg_regression.md` | Docs | Verified | Anti-regression test case and scenario matrix |
+| `/docs/CASE_STUDY_HUXLEY_SINGULARITY_LOOP_RUN_6.md` | Docs | Verified | Forensic audit of Run #6 on Huxley-Singularity-Loop- |
 | `/emg_file_changes/EMG_SYSTEM_FILE_CHANGES_CHRONOLOGY.md` | Docs | Verified | Master file changes chronology and ledger |
 
 ---

@@ -674,6 +674,15 @@ CRITICAL Requirements:
 
       // Enforce POSIX standard: source code files must end with a single trailing newline
       let finalCode = sanitizedCodeResult.text;
+
+      // Sanitize relative TypeScript/JavaScript import extensions (.ts/.tsx) to prevent TS5097
+      if (filePath && /\.(ts|tsx|js|jsx)$/i.test(filePath)) {
+        finalCode = finalCode.replace(
+          /((?:import|export)\s+[\s\S]*?from\s+['"]|import\s*\(\s*['"])(\.{1,2}\/[^'"]+?)\.(?:tsx|ts|jsx)(['"]\s*\)?)/g,
+          '$1$2$3'
+        );
+      }
+
       if (!isMarkdown) {
         finalCode = finalCode.trimEnd() + '\n';
       }
