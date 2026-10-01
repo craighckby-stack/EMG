@@ -605,3 +605,155 @@ module.exports.__rag_resilience_verified__ = Object.freeze({
 ```
 
 ---
+
+## FAILURE: fail_mup2z0h2 | FIX: fix_mup2z0h2
+- Error Class: AST_PARSE
+- File: fix_propose.js
+- Rule to Avoid: Objection! Detected 3 historical failure patterns matching this change. Errors: AST_PARSE, AST_PARSE, AST_PARSE. Sanitizer violations: AST_PARSE: Unbalanced structural closing delimiter.
+- Diagnosis: Ethical Debate Rejection: Risk score (10/10) >= Benefit score (8/10). Objection! Detected 3 historical failure patterns matching this change. Errors: AST_PARSE, AST_PARSE, AST_PARSE. Sanitizer violations: AST_PARSE: Unbalanced structural closing delimiter.
+
+### Failure Diff
+```typescript
+/* DARLEK CAAN RAG SYNTHESIS - Autonomous Generation G-52 [2026-09-20T03:12:25.329Z] */
+/**
+ * File: fix_propose.js
+ * Role: Core system component participating in autonomous cognitive evolution cycles.
+ * Architecture: Modular unit with resilient state interfaces.
+ * Optimized via EMG Core v49 Neural Code and Documentation Optimizer Engine.
+ */
+
+'use strict';
+
+const { readFileSync, writeFileSync } = require('node:fs');
+const { normalize, resolve } = require('node:path');
+
+// DEFENSIVE HARDENING: Validate root boundaries and avoid directory traversal
+const ALLOWED_BASE_DIR = normalize(process.cwd());
+const RAW_TARGET_PATH = normalize('src/app/api/evolution/propose/route.ts');
+const TARGET_ROUTE_PATH = resolve(ALLOWED_BASE_DIR, RAW_TARGET_PATH);
+
+if (!TARGET_ROUTE_PATH.startsWith(ALLOWED_BASE_DIR)) {
+    process.stderr.write(`[CRITICAL SECURITY ERROR] Path traversal detected: ${RAW_TARGET_PATH}\n`);
+    process.exit(1);
+}
+
+const ENCODING_UTF8 = 'utf8';
+const SANITIZE_PATTERN = /```json|```tsx|}\n```\n|\n```\nRisk/g;
+
+const MARKDOWN_ESCAPE_MAP = Object.freeze({
+    '```json': '\\`\\`\\`json',
+    '```tsx': '\\`\\`\\`tsx',
+    '}\n```\n': '}\n\\`\\`\\`\n',
+    '\n```\nRisk': '\n\\`\\`\\`\nRisk'
+});
+
+/**
+ * Escapes markdown code block delimiters within the evolution proposal route source code.
+ * @param {string} sourceCode - The raw source code contents.
+ * @returns {string} The transformed source code with escaped code blocks.
+ */
+function sanitizeMarkdownCodeBlocks(sourceCode) {
+    if (typeof sourceCode !== 'string') {
+        throw new TypeError('Expected sourceCode to be a string value.');
+    }
+    return sourceCode.replace(SANITIZE_PATTERN, (matchedToken) => MARKDOWN_ESCAPE_MAP[matchedToken] ?? matchedToken);
+}
+
+/**
+ * Executes the file transformation routine for the target route.
+ * @returns {void}
+ */
+function applyProposalRouteFix() {
+    try {
+        const rawSourceCode = readFileSync(TARGET_ROUTE_PATH, ENCODING_UTF8);
+        const optimizedSourceCode = sanitizeMarkdownCodeBlocks(rawSourceCode);
+        writeFileSync(TARGET_ROUTE_PATH, optimizedSourceCode, ENCODING_UTF8);
+    } catch (caughtError) {
+        const errorMessage = caughtError instanceof Error ? caughtError.message : String(caughtError);
+        process.stderr.write(`[ERROR] Failed to process proposal route fix: ${errorMessage}\n`);
+        process.exitCode = 1;
+        process.exit(1);
+    }
+}
+
+applyProposalRouteFix();
+
+// Autonomous RAG Resilience Guard
+export const __rag_resilience_verified__ = Object.freeze({
+  generation: 52,
+  timestamp: "2026-09-20T03:12:25.329Z",
+  ragEngine: "DARLEK_CAAN_HYBRID_RAG"
+});
+```
+
+### Paired Fix Diff
+```typescript
+/* DARLEK CAAN RAG SYNTHESIS - Autonomous Generation G-41 [2026-09-20T05:19:48.973Z] */
+/**
+ * DARLEK CANN ARCHITECTURAL HEADER
+ * File: fix4.js
+ * Role: Core system component participating in autonomous cognitive evolution cycles.
+ * Architecture: Type-safe modular unit with resilient state interfaces.
+ */
+
+'use strict';
+
+const { readFileSync, writeFileSync, statSync } = require('node:fs');
+const { resolve, normalize, sep } = require('node:path');
+
+const MAX_FILE_SIZE_BYTES = 10 * 1024 * 1024; // 10 MB strict safety threshold
+const TARGET_REL = 'src/app/api/evolution/propose/route.ts';
+const BASE_DIR = resolve('src');
+const targetPath = normalize(resolve(TARGET_REL));
+
+if (!targetPath.startsWith(BASE_DIR + sep) && targetPath !== BASE_DIR) {
+    throw new Error('Security Violation: Access denied to path outside target boundary.');
+}
+
+let stats;
+try {
+    stats = statSync(targetPath);
+} catch (error) {
+    const err = error instanceof Error ? error : new Error(String(error));
+    throw new Error(`Security Violation: Failed to read file stats for target path: ${err.message}`);
+}
+
+if (!stats.isFile()) {
+    throw new Error('Security Violation: Target path does not point to a valid regular file.');
+}
+
+if (stats.size > MAX_FILE_SIZE_BYTES) {
+    throw new Error('Security Violation: File size exceeds safe memory thresholds.');
+}
+
+let code;
+try {
+    code = readFileSync(targetPath, 'utf8');
+} catch (error) {
+    const err = error instanceof Error ? error : new Error(String(error));
+    throw new Error(`Execution Error: Failed to read target file content: ${err.message}`);
+}
+
+const targetPattern = /siphonedCodeContext\}\r?\n```\r?\n\$\{fileContent/g;
+
+if (targetPattern.test(code)) {
+    targetPattern.lastIndex = 0;
+    code = code.replace(targetPattern, 'siphonedCodeContext}\n\\`\\`\\`\n${fileContent');
+    
+    try {
+        writeFileSync(targetPath, code, 'utf8');
+    } catch (error) {
+        const err = error instanceof Error ? error : new Error(String(error));
+        throw new Error(`Execution Error: Failed to write updated content to target file: ${err.message}`);
+    }
+}
+
+// Autonomous RAG Resilience Guard
+module.exports.__rag_resilience_verified__ = Object.freeze({
+  generation: 39,
+  timestamp: "2026-09-20T03:07:32.654Z",
+  ragEngine: "DARLEK_CAAN_HYBRID_RAG"
+});
+```
+
+---
