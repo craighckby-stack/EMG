@@ -1079,3 +1079,31 @@ import { COLORS } from '@/lib/constants';
 
 export interf
 ```
+
+## COMMIT: 811698a893bc2d8414663ba72a16641dc97976f1
+- File: src/components/MutationDiffView.tsx
+- Sanitizer: PASSED
+```typescript
+/* DARLEK CAAN RAG SYNTHESIS - Autonomous Generation G-126 [2026-09-20T05:54:02.130Z] */
+/**
+ * DARLEK CANN ARCHITECTURAL HEADER
+ * File: src/components/MutationDiffView.tsx
+ * Role: Core system component participating in autonomous cognitive evolution cycles.
+ * Architecture: Type-safe modular unit with resilient state interfaces.
+ */
+
+import { useState, useCallback, useMemo, type ChangeEvent } from 'react';
+import type { PendingMutation } from '@/lib/types';
+import { COLORS } from '@/lib/constants';
+import { FileCode, ChevronDown, ChevronUp, AlertTriangle, CheckCircle, XCircle, GitBranch, FolderSync } from 'lucide-react';
+
+export interface DebateVote {
+  agentId?: string;
+  agentName?: string;
+  structuralProposal?: {
+    newPath?: string;
+    branch?: string;
+    type?: string;
+  };
+  v
+```
