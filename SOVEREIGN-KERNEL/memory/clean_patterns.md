@@ -271,58 +271,6 @@ class SiphonEngine {
    * Replaces legacy void/nul
 ```
 
-## COMMIT: 6cba05c1023c59e1d7d27b27344b6b0ed4be613a
-- File: src/types.ts
-- Sanitizer: PASSED
-```typescript
-/**
- * DARLEK CANN ARCHITECTURAL HEADER
- * File: src/types.ts
- * Role: Core system component participating in autonomous cognitive evolution cycles.
- * Architecture: Type-safe modular unit with resilient state interfaces.
- */
-
-// Branded types for strict input validation and injection mitigation
-export type SanitizedString = string & { readonly __brand: unique symbol };
-export type BoundedProbability = number & { readonly __range: '[0, 1]' };
-export type BoundedScore = number & { readonly __range: '[0, 100]' };
-export type BoundedMemoryLimit = number & { readonly __range: '[1, 1048576]' };
-
-export interface Chunk {
-  title: string;
-  file: string;
-  code: string;
-  explanation: string;
-  mutation: string;
-  /** Bounded between 0 and 1 inclusive for strict probabilistic alignment validation
-```
-
-## COMMIT: 5f4da868f810ca3a90815a1d2184821926c10786
-- File: src/types.ts
-- Sanitizer: PASSED
-```typescript
-/**
- * DARLEK CANN ARCHITECTURAL HEADER
- * File: src/types.ts
- * Role: Core system component participating in autonomous cognitive evolution cycles.
- * Architecture: Type-safe modular unit with resilient state interfaces.
- */
-
-// Branded types for strict input validation and injection mitigation
-export type SanitizedString = string & { readonly __brand: unique symbol };
-export type BoundedProbability = number & { readonly __range: '[0, 1]' };
-export type BoundedScore = number & { readonly __range: '[0, 100]' };
-export type BoundedMemoryLimit = number & { readonly __range: '[1, 1048576]' };
-
-export interface Chunk {
-  title: string;
-  file: string;
-  code: string;
-  explanation: string;
-  mutation: string;
-  /** Bounded between 0 and 1 inclusive for strict probabilistic alignment validation
-```
-
 ## COMMIT: 8ae1acf126085b31c5309024981bf246f0db14ab
 - File: src/lib/github.ts
 - Sanitizer: PASSED
@@ -351,4 +299,37 @@ const sanitizeSegment = (value: string, fieldName: string): string => {
 };
 
 export const ghFetch = async (url: string, token: string, options: Request
+```
+
+## COMMIT: e1f914d283233ab87088350c8c7186196181b29b
+- File: lib/diagnostic-engine.ts
+- Sanitizer: PASSED
+```typescript
+/**
+ * ARCHITECTURAL SYSTEM DIAGNOSTIC ENGINE
+ * Role: Validates kernel integrity, memory persistence layers, sandbox isolation, and consensus weighting status.
+ * Integration: Connects to system modules for real-time health monitoring and diagnostic reporting.
+ * Module: lib/diagnostic-engine.ts
+ */
+
+import * as fs from 'fs';
+import * as path from 'path';
+import { performance } from 'perf_hooks';
+
+export interface DiagnosticCheckResult {
+  passed: boolean;
+  duration_ms: number;
+  message?: string;
+  metadata?: Record<string, any>;
+}
+
+export interface DiagnosticReport {
+  status: 'HEALTHY' | 'DEGRADED' | 'CRITICAL_FAILURE' | 'ERROR';
+  timestamp: string;
+  checks: Record<string, DiagnosticCheckResult>;
+  summary: {
+    total: number;
+    passed: number;
+    failed: number;
+    is_healthy:
 ```
