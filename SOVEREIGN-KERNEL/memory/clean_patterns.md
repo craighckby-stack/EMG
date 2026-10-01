@@ -226,3 +226,36 @@ function getRootContainer(): HTMLElement {
  */
 function renderInitializationError(error: unknown): vo
 ```
+
+## COMMIT: 4e7df76f497f6ecb11202d43a2d2c18ac58fe34c
+- File: lib/diagnostic-engine.ts
+- Sanitizer: PASSED
+```typescript
+/**
+ * ARCHITECTURAL SYSTEM DIAGNOSTIC ENGINE
+ * Role: Validates kernel integrity, memory persistence layers, sandbox isolation, and consensus weighting status.
+ * Integration: Connects to system modules for real-time health monitoring and diagnostic reporting.
+ * Module: lib/diagnostic-engine.ts
+ */
+
+import * as fs from 'fs';
+import * as path from 'path';
+import { performance } from 'perf_hooks';
+
+export interface DiagnosticCheckResult {
+  passed: boolean;
+  duration_ms: number;
+  message?: string;
+  metadata?: Record<string, unknown>;
+}
+
+export interface DiagnosticReport {
+  status: 'HEALTHY' | 'DEGRADED' | 'CRITICAL_FAILURE' | 'ERROR';
+  timestamp: string;
+  checks: Record<string, DiagnosticCheckResult>;
+  summary: {
+    total: number;
+    passed: number;
+    failed: number;
+    is_heal
+```
