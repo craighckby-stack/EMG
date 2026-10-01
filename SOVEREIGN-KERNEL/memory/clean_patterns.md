@@ -139,3 +139,23 @@ import {
  * forwarded only when set, so an unused one never appears in the container.
  * SHANNON_AI_API_KEY rides along because
 ```
+
+## COMMIT: 0dd9336a41ef8f6b7dd0a227713cf6827ebc238d
+- File: apps/cli/src/errors.ts
+- Sanitizer: PASSED
+```typescript
+/**
+ * Centralized error reporting.
+ *
+ * `fail` / `failWith` — an expected, user-fixable error (bad input, missing
+ * prerequisite): a clean message on stderr and a non-zero exit, never a stack trace.
+ * `failUsage` — a malformed invocation (unknown command, bad or missing
+ * arguments): the same clean message, but a distinct exit code so callers can
+ * tell a usage mistake from an operational failure.
+ * `crash` — an unexpected error (a bug): a fixed code and a pointer to the issue tracker.
+ *
+ * JSON mode (enabled once, before parsing, for the `--json` command surface) replaces
+ * the text lines with one compact envelope on stderr — stdout stays empty — while the
+ * exit-code split is unchanged. Call sites on a JSON-capable path must exit through
+ * `failWith`/`failUsage`/`crash` (never
+```
