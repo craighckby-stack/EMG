@@ -258,3 +258,33 @@ globalThis.__RSC_MANIFEST["/api/brain/route"] = {
   moduleLoading: {
     prefix: "/_next/",
 ```
+
+## COMMIT: 6541262e125847ce8e608f91f2eee3d2334219f4
+- File: check_github_page.js
+- Sanitizer: PASSED
+```typescript
+/* DARLEK CAAN RAG SYNTHESIS - Autonomous Generation G-19 [2026-09-20T05:11:32.025Z] */
+const { URL } = require('node:url');
+
+/**
+ * System configuration parameters for ingestion and network operations.
+ */
+const NETWORK_CONFIG = Object.freeze({
+  USER_AGENT: 'DARLEK-CANN-Engine/89.1 (Node.js/Sovereign)',
+  TIMEOUT_MS: 15000, // Enforced 15-second safeguard timeout protection
+  PREVIEW_LINE_COUNT: 5,
+  MAX_RESPONSE_BYTES: 10 * 1024 * 1024, // 10MB memory protection limit
+  ALLOWED_HOSTNAMES: Object.freeze([
+    'raw.githubusercontent.com',
+    'github.com',
+    'api.github.com',
+  ]),
+});
+
+/**
+ * Standard headers matching DARLEK CANN ingestion specifications.
+ */
+const BASE_HEADERS = Object.freeze({
+  'User-Agent': NETWORK_CONFIG.USER_AGENT,
+  'Accept': 'text/plain,application/vnd.github.v
+```
