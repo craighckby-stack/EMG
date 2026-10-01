@@ -900,3 +900,39 @@ interface ErrorResponse {
 
 const DEFAULT_FILE_NAM
 ```
+
+## COMMIT: 68cad9c810901322b8e6873e2828179d972be2bd
+- File: src/app/error.tsx
+- Sanitizer: PASSED
+```typescript
+/* DARLEK CAAN RAG SYNTHESIS - Autonomous Generation G-106 [2026-09-20T05:46:15.002Z] */
+/**
+ * DARLEK CANN ARCHITECTURAL HEADER
+ * File: src/app/error.tsx
+ * Role: Core system component participating in autonomous cognitive evolution cycles.
+ * Architecture: Type-safe modular unit with resilient state interfaces.
+ */
+
+
+import { useEffect, useCallback, type JSX, type MouseEvent } from 'react';
+
+interface ApplicationError extends Error {
+  readonly digest?: string;
+}
+
+interface ErrorBoundaryProps {
+  readonly error: ApplicationError;
+  readonly reset: () => void;
+}
+
+interface ErrorContainerProps {
+  readonly errorMessage: string;
+  readonly onReset: (event: MouseEvent<HTMLButtonElement>) => void;
+}
+
+interface ErrorMessageProps {
+  readonly message: string;
+}
+
+interface ResetButtonProps {
+```
