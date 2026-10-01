@@ -198,3 +198,37 @@ export class AnalyticsController {
     @GetOrgFromRequest() org: Organization,
     @Param('integration') integration: string,
 ```
+
+## COMMIT: a64cc480406bd99c93fa345c075edeafec7edebe
+- File: apps/backend/src/api/routes/announcements.controller.ts
+- Sanitizer: PASSED
+```typescript
+import {
+  Body,
+  Controller,
+  Delete,
+  Get,
+  HttpException,
+  HttpStatus,
+  Param,
+  Post,
+} from '@nestjs/common';
+import { GetUserFromRequest } from '@gitroom/nestjs-libraries/user/user.from.request';
+import { User } from '@prisma/client';
+import { ApiTags } from '@nestjs/swagger';
+import { AnnouncementsService } from '@gitroom/nestjs-libraries/database/prisma/announcements/announcements.service';
+import { AnnouncementDto } from '@gitroom/nestjs-libraries/dtos/announcements/announcements.dto';
+
+@ApiTags('Announcements')
+@Controller('/announcements')
+export class AnnouncementsController {
+  constructor(private readonly announcementsService: AnnouncementsService) {}
+
+  @Get('/')
+  async getAnnouncements() {
+    return this.announcementsService.getAnnouncements();
+  }
+
+  @Post('/')
+  a
+```
