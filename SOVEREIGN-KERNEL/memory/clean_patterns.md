@@ -270,3 +270,29 @@ class SiphonEngine {
    * Siphons logic-DNA from raw source buffers.
    * Replaces legacy void/nul
 ```
+
+## COMMIT: 6cba05c1023c59e1d7d27b27344b6b0ed4be613a
+- File: src/types.ts
+- Sanitizer: PASSED
+```typescript
+/**
+ * DARLEK CANN ARCHITECTURAL HEADER
+ * File: src/types.ts
+ * Role: Core system component participating in autonomous cognitive evolution cycles.
+ * Architecture: Type-safe modular unit with resilient state interfaces.
+ */
+
+// Branded types for strict input validation and injection mitigation
+export type SanitizedString = string & { readonly __brand: unique symbol };
+export type BoundedProbability = number & { readonly __range: '[0, 1]' };
+export type BoundedScore = number & { readonly __range: '[0, 100]' };
+export type BoundedMemoryLimit = number & { readonly __range: '[1, 1048576]' };
+
+export interface Chunk {
+  title: string;
+  file: string;
+  code: string;
+  explanation: string;
+  mutation: string;
+  /** Bounded between 0 and 1 inclusive for strict probabilistic alignment validation
+```
