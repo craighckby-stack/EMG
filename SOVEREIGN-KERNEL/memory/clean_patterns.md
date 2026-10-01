@@ -267,3 +267,31 @@ export interface Chunk {
   maxPayloadSize?: number;
 }
 ```
+
+## COMMIT: 09d2a909417dc1abd26c7368937e2c26cb1dab8d
+- File: src/lib/consensus-config.ts
+- Sanitizer: PASSED
+```typescript
+/**
+ * ARCHITECTURAL CONSENSUS WEIGHTING LOADER
+ * Role: Computes dynamic agent consensus weights and multi-provider fallback priority chains based on environment parameters.
+ * Integration: Imported by the Orchestrator/Agent Kernel to ensure resilient multi-model routing.
+ * Siphoned Pattern: craighckby-stack/AI_Agent_OS consensus-weighting specifications
+ */
+
+export interface ProviderWeightMap {
+  gemini: number;
+  anthropic: number;
+  deepseek: number;
+  xai: number;
+  cerebras: number;
+  groq: number;
+  local: number;
+}
+
+/**
+ * Validates, bounds-checks, and parses a numeric weight from an environment variable string.
+ * Clamps output strictly between 0 and 1, defaulting to fallback if invalid or NaN.
+ */
+function parseAndClampWeight(value: string | undefined, fallback: number): number
+```
