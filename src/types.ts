@@ -60,6 +60,7 @@ export type FileScopeFilter = 'all' | 'markdown-only' | 'specific';
 
 export interface EngineConfig {
   readonly targetRepo: string;
+  readonly emgRepo?: string;
   readonly ghToken: string;
   readonly geminiKey: string;
   readonly model: GeminiModelId;

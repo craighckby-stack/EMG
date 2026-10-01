@@ -56,6 +56,7 @@ import { Cpu, Users, MessageSquareCode, Bug, History, Gauge, Terminal, Volume2, 
 
 const INITIAL_CONFIG: EngineConfig = {
   targetRepo: 'craighckby/sovereign-kernel',
+  emgRepo: 'craighckby-stack/EMG',
   ghToken: '',
   geminiKey: '',
   model: 'gemini-3.7-flash',
@@ -311,30 +312,28 @@ export default function App() {
     setConfig((prev) => ({ ...prev, [key]: value }));
   };
 
-  // Synchronize RAG vector database & ledgers to remote GitHub repository
+  // Synchronize RAG vector database & ledgers to dedicated EMG repository
   const handleSyncRag = useCallback(async () => {
     if (!config.ghToken) {
       pushLog('[RAG SYNC] GitHub PAT Token required to sync vectors to repository.', 'warning');
       return;
     }
-    if (!config.targetRepo) {
-      pushLog('[RAG SYNC] Target repository is not configured.', 'warning');
-      return;
-    }
+    const destRepo = config.emgRepo || 'craighckby-stack/EMG';
 
     setIsSyncingRag(true);
-    pushLog(`[RAG SYNC] Synchronizing vector database & ledgers to ${config.targetRepo}...`, 'info');
+    pushLog(`[RAG SYNC] Synchronizing vector database & ledgers to dedicated EMG repository [${destRepo}]...`, 'info');
 
     try {
       const res = await publishRagToGithub({
         token: config.ghToken,
         repo: config.targetRepo,
-        branch: config.branch || 'main',
+        emgRepo: destRepo,
+        branch: 'main',
       });
 
       if (res.success) {
         pushLog(
-          `[RAG SYNC SUCCESS] Synchronized ${(res.syncedFiles || []).length} RAG artifacts to ${config.targetRepo} [${(res.commitSha || '').slice(0, 7)}]`,
+          `[RAG SYNC SUCCESS] Synchronized ${(res.syncedFiles || []).length} RAG artifacts to [${destRepo}] [${(res.commitSha || '').slice(0, 7)}]`,
           'success'
         );
       } else {
@@ -345,7 +344,7 @@ export default function App() {
     } finally {
       setIsSyncingRag(false);
     }
-  }, [config.ghToken, config.targetRepo, config.branch, pushLog]);
+  }, [config.ghToken, config.targetRepo, config.emgRepo, pushLog]);
 
   // Skip List & Saturation Handlers
   const handleAddToSkipList = (path: string, resumeLoop: boolean = true, autoApproveFuture: boolean = false) => {
@@ -1487,10 +1486,11 @@ export default function App() {
             debateVerdict.prosecutorStatement.argument,
             rejectReason,
             undefined,
-            config.ghToken && config.targetRepo ? {
+            config.ghToken ? {
               token: config.ghToken,
               repo: config.targetRepo,
-              branch: config.branch || 'main'
+              emgRepo: config.emgRepo || 'craighckby-stack/EMG',
+              branch: 'main',
             } : undefined
           );
 
@@ -1571,16 +1571,17 @@ export default function App() {
         setMutations((prev) => [record, ...prev]);
         recordLatency(result.latencyMs);
 
-        // Record clean pattern in RAG vector store and schedule debounced sync to GitHub
+        // Record clean pattern in RAG vector store and schedule debounced sync to dedicated EMG repository
         try {
           appendCleanCommit(
             commitSha || `c_${Date.now()}`,
             target.path,
             cleanCode.slice(0, 800),
-            config.ghToken && config.targetRepo ? {
+            config.ghToken ? {
               token: config.ghToken,
               repo: config.targetRepo,
-              branch: config.branch || 'main'
+              emgRepo: config.emgRepo || 'craighckby-stack/EMG',
+              branch: 'main',
             } : undefined
           );
         } catch (ragErr) {

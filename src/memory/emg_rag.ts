@@ -302,38 +302,63 @@ export function formatWrongMdFromVectors(vectors: VectorEntry[]): string {
   return out.trim() + '\n';
 }
 
-/**
- * Publishes updated RAG vectors and ledgers directly back to the GitHub repository.
- * Uses Fresh-SHA fetch with exponential backoff on HTTP 409 conflicts and formats
- * human-readable STUDIO_ATTACHMENT_CORRECT.md and STUDIO_ATTACHMENT_WRONG.md alongside vectors.jsonl.
- */
-export async function publishRagToGithub(target?: {
+export const DEFAULT_EMG_REPO = 'craighckby-stack/EMG';
+
+export interface RagPublishTarget {
   token: string;
   owner?: string;
-  repo: string;
+  repo?: string;
+  emgRepo?: string;
   branch?: string;
-}): Promise<{ success: boolean; commitSha?: string; syncedFiles?: string[]; error?: string }> {
-  const executeSync = async (): Promise<{ success: boolean; commitSha?: string; syncedFiles?: string[]; error?: string }> => {
+}
+
+/**
+ * Publishes updated RAG vectors and ledgers directly back to the dedicated EMG repository.
+ * Strictly prevents cross-repository contamination when enhancing external repositories.
+ * Uses Fresh-SHA fetch with exponential backoff on HTTP 409 conflicts.
+ */
+export async function publishRagToGithub(target?: RagPublishTarget): Promise<{
+  success: boolean;
+  commitSha?: string;
+  syncedFiles?: string[];
+  targetRepo?: string;
+  error?: string;
+}> {
+  const executeSync = async (): Promise<{
+    success: boolean;
+    commitSha?: string;
+    syncedFiles?: string[];
+    targetRepo?: string;
+    error?: string;
+  }> => {
     let cleanRepo = '';
     let token = '';
     let branch = 'main';
 
-    if (target?.repo && target?.token) {
-      cleanRepo = target.repo.includes('/') ? target.repo : `${target.owner || 'craighckby-stack'}/${target.repo}`;
+    if (target?.token) {
       token = target.token;
       branch = target.branch || 'main';
+
+      if (target.emgRepo && target.emgRepo.trim()) {
+        cleanRepo = target.emgRepo.includes('/') ? target.emgRepo.trim() : `${target.owner || 'craighckby-stack'}/${target.emgRepo.trim()}`;
+      } else if (target.repo && (target.repo.toLowerCase().includes('emg') || target.repo.toLowerCase().includes('darlek'))) {
+        cleanRepo = target.repo.includes('/') ? target.repo.trim() : `${target.owner || 'craighckby-stack'}/${target.repo.trim()}`;
+      } else {
+        // Default to dedicated Sovereign Kernel EMG repository
+        cleanRepo = DEFAULT_EMG_REPO;
+      }
     } else {
       const stored = getStoredGithubTarget();
       if (!stored) {
-        return { success: false, error: 'No GitHub parameters or Personal Access Token configured' };
+        return { success: false, error: 'No GitHub Personal Access Token configured' };
       }
-      cleanRepo = `${stored.owner}/${stored.repo}`;
+      cleanRepo = stored.emgRepo || DEFAULT_EMG_REPO;
       token = stored.token;
       branch = stored.branch || 'main';
     }
 
     if (!token || !cleanRepo) {
-      return { success: false, error: 'GitHub PAT Token and target repository are required to publish RAG.' };
+      return { success: false, error: 'GitHub PAT Token and EMG repository are required to publish RAG.' };
     }
 
     try {
@@ -414,9 +439,16 @@ export async function publishRagToGithub(target?: {
   return op;
 }
 
-function getStoredGithubTarget() {
+function getStoredGithubTarget(): {
+  token: string;
+  owner?: string;
+  repo?: string;
+  emgRepo?: string;
+  branch?: string;
+} | null {
   if (typeof window === 'undefined') return null;
   try {
+    const emgRepo = localStorage.getItem('emg_rag_repo') || sessionStorage.getItem('emg_rag_repo') || DEFAULT_EMG_REPO;
     const saved = localStorage.getItem('darlek_cann_system_state');
     if (saved) {
       const parsed = JSON.parse(saved);
@@ -427,19 +459,21 @@ function getStoredGithubTarget() {
           token: parsed.githubToken,
           owner: owner || 'craighckby-stack',
           repo: repo || 'Python',
+          emgRepo,
           branch: parsed.githubBranch || 'main',
         };
       }
     }
     const token = localStorage.getItem('emg_github_token') || sessionStorage.getItem('emg_github_token');
     const repo = localStorage.getItem('emg_target_repo') || sessionStorage.getItem('emg_target_repo');
-    if (token && repo) {
-      const repoStr = repo.trim().replace(/^https:\/\/github\.com\//, '').replace(/\/$/, '');
+    if (token) {
+      const repoStr = (repo || 'Python').trim().replace(/^https:\/\/github\.com\//, '').replace(/\/$/, '');
       const [owner, repoName] = repoStr.split('/');
       return {
         token,
         owner: owner || 'craighckby-stack',
         repo: repoName || repoStr,
+        emgRepo,
         branch: 'main',
       };
     }
@@ -537,15 +571,15 @@ export function queryEmgRag(currentFileAndError: string): EmgQueryResult {
 
 let syncDebounceTimer: any = null;
 
-function scheduleDebouncedRagSync(target?: { token: string; repo: string; branch?: string }): void {
+function scheduleDebouncedRagSync(target?: RagPublishTarget): void {
   if (typeof window === 'undefined') return;
   if (syncDebounceTimer) {
     clearTimeout(syncDebounceTimer);
   }
-  // Debounce RAG sync by 60 seconds so rapid mutation cycles do not flood GitHub commits
+  // Debounce RAG sync by 5 seconds so updates are rapidly and reliably synced
   syncDebounceTimer = setTimeout(() => {
     publishRagToGithub(target).catch(() => {});
-  }, 60000);
+  }, 5000);
 }
 
 /**
@@ -555,7 +589,7 @@ export function appendCleanCommit(
   commitHash: string,
   filePath: string,
   diffSnippet: string,
-  target?: { token: string; repo: string; branch?: string }
+  target?: RagPublishTarget
 ): void {
   const newEntry: VectorEntry = {
     id: `correct_${commitHash}`,
@@ -646,7 +680,7 @@ export function findCachedDiagnosisInRag(
 export function invalidateCleanVectorsForFile(
   filePath: string,
   reason: string,
-  target?: { token: string; repo: string; branch?: string }
+  target?: RagPublishTarget
 ): number {
   if (!filePath) return 0;
   const normTarget = filePath.trim().toLowerCase();
@@ -743,7 +777,7 @@ export function appendFailureAndFix(
   ruleToAvoid: string,
   diagnosis?: string,
   fingerprint?: string,
-  target?: { token: string; repo: string; branch?: string }
+  target?: RagPublishTarget
 ): void {
   // First, reconcile and invalidate any previously recorded "clean" vectors on this file
   invalidateCleanVectorsForFile(

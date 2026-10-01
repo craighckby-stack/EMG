@@ -189,11 +189,11 @@ export const Header: React.FC<HeaderProps> = ({
             id="btn-header-sync-rag"
             onClick={onSyncRag}
             disabled={isSyncingRag}
-            title="Synchronize RAG Vector Database to Remote GitHub (CORRECT.md & WRONG.md)"
+            title="Synchronize RAG Vector Database directly to dedicated EMG repository (craighckby-stack/EMG)"
             className="px-3 py-2 rounded-xl bg-emerald-950/40 hover:bg-emerald-900/60 disabled:opacity-50 text-emerald-300 hover:text-emerald-100 border border-emerald-600/50 text-xs font-semibold transition-all flex items-center gap-1.5 cursor-pointer shadow-sm"
           >
             <Database className={`w-3.5 h-3.5 text-[#00F5A0] ${isSyncingRag ? 'animate-spin' : ''}`} />
-            <span className="hidden sm:inline">{isSyncingRag ? 'Syncing RAG...' : 'Sync RAG'}</span>
+            <span className="hidden sm:inline">{isSyncingRag ? 'Syncing to EMG...' : 'Sync to EMG'}</span>
           </button>
         )}
 

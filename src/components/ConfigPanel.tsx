@@ -415,6 +415,26 @@ export const ConfigPanel: React.FC<ConfigPanelProps> = ({
           />
         </div>
 
+        {/* EMG Sovereign Kernel RAG Repository */}
+        <div>
+          <div className="flex items-center justify-between mb-1.5">
+            <label htmlFor="input-emg-repo" className="text-xs font-semibold text-zinc-200 flex items-center gap-1.5">
+              <Shield className="w-3.5 h-3.5 text-[#00F5A0]" /> Sovereign RAG Repository
+            </label>
+            <span className="text-[10px] text-emerald-400 font-mono">Dedicated RAG Memory</span>
+          </div>
+          <input
+            id="input-emg-repo"
+            type="text"
+            placeholder="e.g. craighckby-stack/EMG"
+            value={config.emgRepo || 'craighckby-stack/EMG'}
+            disabled={disabled}
+            onChange={(e) => onChange('emgRepo', e.target.value)}
+            className="w-full bg-[#050b07] border border-emerald-900/80 rounded-xl p-2.5 text-xs text-white placeholder-zinc-500 outline-none focus:border-[#00F5A0] transition-colors font-mono"
+          />
+          <p className="text-[10px] text-zinc-400 mt-1">Cross-repo vector memories, clean patterns, and failure ledgers will sync to this repo without contaminating external target code.</p>
+        </div>
+
         {/* Custom Gemini Key Override (Optional) */}
         <div>
           <div className="flex items-center justify-between mb-1.5">

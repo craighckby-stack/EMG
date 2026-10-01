@@ -38,11 +38,11 @@ export default function SovereignKernelPanel(): JSX.Element {
   const handleSyncRagToGithub = useCallback(async (): Promise<void> => {
     playClickSound();
     setIsSyncingRag(true);
-    setSyncStatusMsg('Pushing vectors & ledgers to GitHub...');
+    setSyncStatusMsg('Pushing vectors & ledgers to craighckby-stack/EMG...');
     try {
-      const res = await publishRagToGithub();
+      const res = await publishRagToGithub({ emgRepo: 'craighckby-stack/EMG', token: '' });
       if (res.success) {
-        setSyncStatusMsg(`Successfully synchronized ${(res.syncedFiles || []).length} RAG ledgers!`);
+        setSyncStatusMsg(`Successfully synchronized ${(res.syncedFiles || []).length} RAG ledgers to EMG!`);
       } else {
         setSyncStatusMsg(`Sync error: ${res.error || 'Failed to sync'}`);
       }
