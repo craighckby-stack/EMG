@@ -155,3 +155,25 @@ const validateAndSanitizePrompt = (prompt: string): string => {
   if (prompt.length > MAX_PROMPT_LENGTH) {
     throw new Error("INVALID_PROMPT: Prompt excee
 ```
+
+## COMMIT: 7d13a979f48cb343926a4076cdd09812341d8c55
+- File: src/lib/personas.ts
+- Sanitizer: PASSED
+```typescript
+/**
+ * DARLEK CANN ARCHITECTURAL HEADER
+ * File: src/lib/personas.ts
+ * Role: Core system component participating in autonomous cognitive evolution cycles.
+ * Architecture: Type-safe modular unit with resilient state interfaces.
+ */
+
+export interface Persona {
+  description: string;
+  promptModifier: string;
+}
+
+const STATIC_PERSONAS: Record<string, Persona> = {
+  "First Principles Physicist": {
+    description: "Applies first-principles physics reasoning to decompose complex systems into fundamental truths.",
+    promptModifier: "Provide a deep, comprehensive analysis of the topic from the perspective of a 'First Principles Physicist'. The response must be approximately 250 lines long. Do not use markdown headers, lists, or formatting like bolding or italics, just continuous, flowing prose
+```
