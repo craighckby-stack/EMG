@@ -398,3 +398,25 @@ interface CerebrasResponseBody {
 
 const MAX_PROMPT_L
 ```
+
+## COMMIT: 2f74b6631319f13102eaafb74b2ff497d24aefe3
+- File: src/lib/personas.ts
+- Sanitizer: PASSED
+```typescript
+/**
+ * DARLEK CANN ARCHITECTURAL HEADER
+ * File: src/lib/personas.ts
+ * Role: Core system component participating in autonomous cognitive evolution cycles.
+ * Architecture: Type-safe modular unit with resilient state interfaces.
+ */
+
+export interface Persona {
+  readonly description: string;
+  readonly promptModifier: string;
+}
+
+const STATIC_PERSONAS: Readonly<Record<string, Persona>> = {
+  "First Principles Physicist": {
+    description: "Applies first-principles physics reasoning to decompose complex systems into fundamental truths.",
+    promptModifier: "Provide a deep, comprehensive analysis of the topic from the perspective of a 'First Principles Physicist'. The response must be approximately 250 lines long. Do not use markdown headers, lists, or formatting like bolding or italics, ju
+```
