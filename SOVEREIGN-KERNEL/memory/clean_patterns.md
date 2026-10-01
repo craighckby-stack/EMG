@@ -79,3 +79,29 @@ export async function confirmOrExit(command: string, message: string, yes: boole
   requireInteractive(command, 'Re-run with --yes to skip this confirmation.');
   const confirmed: symbol | boolean = aw
 ```
+
+## COMMIT: 7c6e4d5a6984f1f807c0da1b14a117e22f8e9cad
+- File: apps/cli/src/docker.ts
+- Sanitizer: PASSED
+```typescript
+/**
+ * Docker orchestration — compose lifecycle, network, image pull/build, worker spawning.
+ *
+ * Local mode: builds locally, uses docker-compose.yml from repo root, mounts prompts.
+ * NPX mode: pulls from Docker Hub, uses bundled compose.yml.
+ */
+
+import { type ChildProcess, execFileSync, spawn } from 'node:child_process';
+import crypto from 'node:crypto';
+import fs from 'node:fs';
+import os from 'node:os';
+import path from 'node:path';
+import { setTimeout as sleep } from 'node:timers/promises';
+import { fileURLToPath } from 'node:url';
+import type { SpinnerResult } from '@clack/prompts';
+import { envBool, PI_AUTH_CONTAINER_PATH } from './env.js';
+import { fail, warn } from './errors.js';
+import { getMode, isDevMode } from './mode.js';
+import { INTERNAL_DIR } from './paths.js';
+import {
+```
