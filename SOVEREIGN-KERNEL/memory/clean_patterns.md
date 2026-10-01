@@ -363,3 +363,29 @@ const sanitizeSegment = (value: string, fieldName: string): string => {
 
 export const ghFetch = async (url: string, token: string, options: Request
 ```
+
+## COMMIT: 06c23c6c31398a25e5c5c5bff49d76ff83dceea6
+- File: src/types.ts
+- Sanitizer: PASSED
+```typescript
+/**
+ * DARLEK CANN ARCHITECTURAL HEADER
+ * File: src/types.ts
+ * Role: Core system component participating in autonomous cognitive evolution cycles.
+ * Architecture: Type-safe modular unit with resilient state interfaces.
+ */
+
+// Branded types for strict input validation and injection mitigation
+export type SanitizedString = string & { readonly __brand: unique symbol };
+export type BoundedProbability = number & { readonly __range: '[0, 1]' };
+export type BoundedScore = number & { readonly __range: '[0, 100]' };
+export type BoundedMemoryLimit = number & { readonly __range: '[1, 1048576]' };
+
+export interface Chunk {
+  title: string;
+  file: string;
+  code: string;
+  explanation: string;
+  mutation: string;
+  /** Bounded between 0 and 1 inclusive for strict probabilistic alignment validation
+```
