@@ -94,34 +94,6 @@ export interface ProviderWeightMap {
 function parseAndClampWeight(value: string | undefined, fallback: number): number
 ```
 
-## COMMIT: 9d2c5cbe114a12976e90cf36b840b881ff8ec1c3
-- File: src/lib/env-validator.ts
-- Sanitizer: PASSED
-```typescript
-/**
- * ARCHITECTURAL SYSTEM ENVIRONMENT VALIDATOR & DIAGNOSTIC LOADER
- * Role: Validates runtime environment configuration against expected enterprise schemas,
- *       calculates diagnostic telemetry, and manages resilient multi-provider LLM fallbacks.
- * Integration: Consumed by kernel initialization and diagnostic execution loops.
- * Siphoned Pattern: craighckby-stack/AI_Agent_OS Concept/tessera-enterprise/lib/diagnostic-engine.ts
- */
-
-export interface EnvConfig {
-  geminiApiKey: string;
-  appUrl: string;
-  anthropicApiKey?: string;
-  cerebrasApiKey?: string;
-  xaiApiKey?: string;
-  deepseekApiKey?: string;
-  openaiApiKey?: string;
-  groqApiKey?: string;
-  ollamaBaseUrl?: string;
-  consensusThreshold: number;
-  zeroLeakSandboxEnabled: boolean;
-  memoryPersistencePath: string;
-  logLevel
-```
-
 ## COMMIT: b74a1bbb8e905cfe5f35f4fdcd937008cf44b5c9
 - File: src/lib/fallbacks.ts
 - Sanitizer: PASSED
