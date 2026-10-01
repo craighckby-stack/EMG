@@ -6784,3 +6784,589 @@ ${perspectiveText}`;
 ```
 
 ---
+
+## FAILURE: fail_muowayqe | FIX: fix_muowayqe
+- Error Class: CLEAN
+- File: src/lib/github.ts
+- Rule to Avoid: Objection! Detected 3 historical failure patterns matching this change. Errors: CLEAN, CLEAN, CLEAN. Sanitizer violations: None.
+- Diagnosis: Alignment Matrix Rejection: Confidence (0.66) below threshold or unsafe primitives detected.
+
+### Failure Diff
+```typescript
+/**
+ * DARLEK CANN ARCHITECTURAL HEADER
+ * File: src/lib/github.ts
+ * Role: Core system component participating in autonomous cognitive evolution cycles.
+ * Architecture: Type-safe modular unit with resilient state interfaces.
+ */
+
+
+export interface GitHubRepo {
+  owner: { login: string };
+  name: string;
+  default_branch: string;
+}
+
+const validateStringParam = (param: string, name: string): string => {
+  if (typeof param !== 'string' || param.trim() === '') {
+    throw new Error(`Security validation failed: Invalid or empty parameter '${name}'`);
+  }
+  return param.trim();
+};
+
+export const ghFetch = async (url: string, token: string, options: RequestInit = {}) => {
+  const cleanUrl = validateStringParam(url, 'url');
+  const cleanToken = validateStringParam(token, 'token');
+
+  // Use Bearer token for all modern tokens (github_pat or ghp_)
+  const authHeader = `Bearer ${cleanToken}`;
+  
+  const headers: Record<string, string> = {
+    'Authorization': authHeader,
+    'Accept': 'application/vnd.github.v3+json',
+    'Content-Type': 'application/json',
+    ...((options.headers as Record<string, string>) || {}),
+  };
+
+  const response = await fetch(cleanUrl, { ...options, headers }).catch(e => {
+    if (e.message.includes('Failed to fetch')) {
+      throw new Error("Network Error: Failed to connect to GitHub. Verify your credentials and internet connection.");
+    }
+    throw e;
+  });
+
+  if (response.status === 403 || response.status === 429) {
+    const rateLimitLimit = response.headers.get('x-ratelimit-limit');
+    const rateLimitRemaining = response.headers.get('x-ratelimit-remaining');
+    const rateLimitReset = response.headers.get('x-ratelimit-reset');
+    
+    if (rateLimitRemaining === '0') {
+      const resetDate = rateLimitReset ? new Date(parseInt(rateLimitReset, 10) * 1000).toLocaleTimeString() : 'soon';
+      throw new Error(`CRITICAL: GitHub API rate limit exceeded. Reset at ${resetDate}. Operation halted.`);
+    }
+  }
+
+  if (!response.ok) {
+    let errorMessage = response.statusText;
+    try {
+      const errorData = await response.json();
+      errorMessage = errorData.message || (errorData.errors ? JSON.stringify(errorData.errors) : response.statusText);
+      if (response.status === 403 && errorMessage.toLowerCase().includes('protected branch')) {
+        errorMessage = "Operation failed: The branch is PROTECTED. Please disable branch protection in repository settings to allow distillation.";
+      }
+    } catch (e) {
+      // Not JSON
+    }
+    throw new Error(`GitHub API Error [${response.status}]: ${errorMessage}`);
+  }
+  return response;
+};
+
+export const getRepoTree = async (repoUrl: string, token: string, branch: string = 'main') => {
+  const cleanRepoUrl = validateStringParam(repoUrl, 'repoUrl');
+  const match = cleanRepoUrl.match(/github\.com\/([^/]+)\/([^/]+)/);
+  if (!match) throw new Error('Invalid GitHub URL structure');
+  const [_, owner, name] = match;
+  const cleanOwner = validateStringParam(owner, 'owner');
+  const cleanName = name.replace(/\.git$/, '').replace(/\/$/, '');
+  const validatedName = validateStringParam(cleanName, 'repo name');
+  
+  // Branch names with slashes MUST be encoded
+  const encodedBranch = encodeURIComponent(branch);
+  const res = await ghFetch(`https://api.github.com/repos/${cleanOwner}/${validatedName}/git/trees/${encodedBranch}?recursive=1`, token);
+  return res.json();
+};
+
+export const getFileContent = async (url: string, token: string) => {
+  const cleanUrl = validateStringParam(url, 'url');
+  const res = await ghFetch(cleanUrl, token);
+  const data = await res.json();
+  
+  if (!data.content) return "";
+
+  try {
+    // Standard base64 decoding that handles UTF-8 correctly
+    const binaryString = atob(data.content.replace(/\s/g, ''));
+    const bytes = new Uint8Array(binaryString.length);
+    for (let i = 0; i < binaryString.length; i++) {
+      bytes[i] = binaryString.charCodeAt(i);
+    }
+    return new TextDecoder().decode(bytes);
+  } catch (e) {
+    console.warn(`[github] Failed to decode content for ${cleanUrl}:`, e);
+    return "/* [Error: Binary or malformed content could not be decoded] */";
+  }
+};
+
+export const getUserRepos = async (owner: string, token: string) => {
+  const cleanOwner = validateStringParam(owner, 'owner');
+  try {
+    const res = await ghFetch(`https://api.github.com/users/${encodeURIComponent(cleanOwner)}/repos?per_page=100&sort=updated`, token);
+    return await res.json();
+  } catch (e) {
+    const res = await ghFetch(`https://api.github.com/orgs/${encodeURIComponent(cleanOwner)}/repos?per_page=100&sort=updated`, token);
+    return await res.json();
+  }
+};
+
+export const getBranches = async (owner: string, repo: string, token: string) => {
+  const cleanOwner = validateStringParam(owner, 'owner');
+  const cleanRepo = validateStringParam(repo, 'repo');
+  const res = await ghFetch(`https://api.github.com/repos/${encodeURIComponent(cleanOwner)}/${encodeURIComponent(cleanRepo)}/branches`, token);
+  return res.json();
+};
+
+export const createBranch = async (owner: string, repo: string, newBranch: string, baseBranch: string, token: string) => {
+  const cleanOwner = validateStringParam(owner, 'owner');
+  const cleanRepo = validateStringParam(repo, 'repo');
+  const cleanNewBranch = validateStringParam(newBranch, 'newBranch');
+  const cleanBaseBranch = validateStringParam(baseBranch, 'baseBranch');
+
+  console.log(`[createBranch] Creating [${cleanNewBranch}] from [${cleanBaseBranch}]`);
+  
+  // Use encoded branch for commit lookup
+  const encodedBase = encodeURIComponent(cleanBaseBranch);
+  const baseRes = await ghFetch(`https://api.github.com/repos/${encodeURIComponent(cleanOwner)}/${encodeURIComponent(cleanRepo)}/commits/${encodedBase}`, token);
+  const baseData = await baseRes.json();
+  const sha = validateStringParam(baseData.sha, 'commit sha');
+
+  try {
+    const res = await ghFetch(`https://api.github.com/repos/${encodeURIComponent(cleanOwner)}/${encodeURIComponent(cleanRepo)}/git/refs`, token, {
+      method: 'POST',
+      body: JSON.stringify({
+        ref: `refs/heads/${cleanNewBranch}`,
+        sha
+      })
+    });
+    return await res.json();
+  } catch (e: any) {
+    console.warn(`[createBranch] Fallback triggered:`, e?.message || 'unknown error');
+    const fallbackName = `backup-${Math.random().toString(36).substring(2, 7)}`;
+    const res = await ghFetch(`https://api.github.com/repos/${encodeURIComponent(cleanOwner)}/${encodeURIComponent(cleanRepo)}/git/refs`, token, {
+      method: 'POST',
+      body: JSON.stringify({
+        ref: `refs/heads/${fallbackName}`,
+        sha
+      })
+    });
+    return await res.json();
+  }
+};
+
+export const distillRepository = async (owner: string, repo: string, readmeContent: string, token: string, branch: string) => {
+  const cleanOwner = validateStringParam(owner, 'owner');
+  const cleanRepo = validateStringParam(repo, 'repo');
+  const cleanBranch = validateStringParam(branch, 'branch');
+
+  console.log(`[distillRepository] Distilling [${cleanBranch}]`);
+  
+  const encodedBranch = encodeURIComponent(cleanBranch);
+  const commitRes = await ghFetch(`https://api.github.com/repos/${encodeURIComponent(cleanOwner)}/${encodeURIComponent(cleanRepo)}/commits/${encodedBranch}`, token);
+  const commitData = await commitRes.json();
+  const parentSha = validateStringParam(commitData.sha, 'parent sha');
+
+  const blobRes = await ghFetch(`https://api.github.com/repos/${encodeURIComponent(cleanOwner)}/${encodeURIComponent(cleanRepo)}/git/blobs`, token, {
+    method: 'POST',
+    body: JSON.stringify({
+      content: btoa(unescape(encodeURIComponent(readmeContent))),
+      encoding: 'base64'
+    })
+  });
+  const blobData = await blobRes.json();
+  const blobSha = validateStringParam(blobData.sha, 'blob sha');
+
+  // 3. Create a new tree containing ONLY the README
+  // Note: To delete all other files, we do NOT specify a base_tree.
+  // This creates a "root" tree with only the provided elements.
+  const treeRes = await ghFetch(`https://api.github.com/repos/${encodeURIComponent(cleanOwner)}/${encodeURIComponent(cleanRepo)}/git/trees`, token, {
+    method: 'POST',
+    body: JSON.stringify({
+      tree: [
+        {
+          path: 'README.md',
+          mode: '100644',
+          type: 'blob',
+          sha: blobSha
+        }
+      ]
+    })
+  });
+  const treeData = await treeRes.json();
+  const treeSha = validateStringParam(treeData.sha, 'tree sha');
+
+  // 4. Create a new commit
+  const finalCommitRes = await ghFetch(`https://api.github.com/repos/${encodeURIComponent(cleanOwner)}/${encodeURIComponent(cleanRepo)}/git/commits`, token, {
+    method: 'POST',
+    body: JSON.stringify({
+      message: 'chore: distill repository to logic manifest',
+      tree: treeSha,
+      parents: [parentSha]
+    })
+  });
+  const finalCommitData = await finalCommitRes.json();
+  const finalCommitSha = validateStringParam(finalCommitData.sha, 'final commit sha');
+
+  // 5. Update the branch reference
+  const encodedRef = encodeURIComponent(cleanBranch);
+  const updateRes = await ghFetch(`https://api.github.com/repos/${encodeURIComponent(cleanOwner)}/${encodeURIComponent(cleanRepo)}/git/refs/heads/${encodedRef}`, token, {
+    method: 'PATCH',
+    body: JSON.stringify({
+      sha: finalCommitSha,
+      force: true
+    })
+  });
+  return updateRes.json();
+};
+
+export const renameBranch = async (owner: string, repo: string, oldBranch: string, newName: string, token: string) => {
+  const cleanOwner = validateStringParam(owner, 'owner');
+  const cleanRepo = validateStringParam(repo, 'repo');
+  const cleanOldBranch = validateStringParam(oldBranch, 'oldBranch');
+  const cleanNewName = validateStringParam(newName, 'newName');
+
+  console.log(`[renameBranch] Renaming [${cleanOldBranch}] to [${cleanNewName}]`);
+  const encodedBranch = encodeURIComponent(cleanOldBranch);
+  const res = await ghFetch(`https://api.github.com/repos/${encodeURIComponent(cleanOwner)}/${encodeURIComponent(cleanRepo)}/branches/${encodedBranch}/rename`, token, {
+    method: 'POST',
+    body: JSON.stringify({ new_name: cleanNewName })
+  });
+  return res.json();
+};
+
+export const deleteBranch = async (owner: string, repo: string, branch: string, token: string) => {
+  const cleanOwner = validateStringParam(owner, 'owner');
+  const cleanRepo = validateStringParam(repo, 'repo');
+  const cleanBranch = validateStringParam(branch, 'branch');
+
+  console.log(`[deleteBranch] Deleting [${cleanBranch}]`);
+  const encodedRef = encodeURIComponent(cleanBranch);
+  const res = await ghFetch(`https://api.github.com/repos/${encodeURIComponent(cleanOwner)}/${encodeURIComponent(cleanRepo)}/git/refs/heads/${encodedRef}`, token, {
+    method: 'DELETE'
+  });
+  return res;
+};
+
+export const updateRepoVisibility = async (owner: string, repo: string, isPrivate: boolean, token: string) => {
+  const cleanOwner = validateStringParam(owner, 'owner');
+  const cleanRepo = validateStringParam(repo, 'repo');
+
+  console.log(`[updateRepoVisibility] Setting ${cleanRepo} to ${isPrivate ? 'private' : 'public'}`);
+  const res = await ghFetch(`https://api.github.com/repos/${encodeURIComponent(cleanOwner)}/${encodeURIComponent(cleanRepo)}`, token, {
+    method: 'PATCH',
+    body: JSON.stringify({ private: Boolean(isPrivate) })
+  });
+  return res.json();
+};
+
+export const protectBranch = async (owner: string, repo: string, branch: string, token: string) => {
+  const cleanOwner = validateStringParam(owner, 'owner');
+  const cleanRepo = validateStringParam(repo, 'repo');
+  const cleanBranch = validateStringParam(branch, 'branch');
+
+  console.log(`[protectBranch] Protecting [${cleanBranch}]`);
+  const encodedBranch = encodeURIComponent(cleanBranch);
+  const res = await ghFetch(`https://api.github.com/repos/${encodeURIComponent(cleanOwner)}/${encodeURIComponent(cleanRepo)}/branches/${encodedBranch}/protection`, token, {
+    method: 'PUT',
+    body: JSON.stringify({
+      required_status_checks: null,
+      enforce_admins: true,
+      required_pull_request_reviews: null,
+      restrictions: null,
+      allow_force_pushes: false,
+      allow_deletions: false
+    })
+  });
+  return res.json();
+};
+```
+
+### Paired Fix Diff
+```typescript
+/**
+ * DARLEK CANN ARCHITECTURAL HEADER
+ * File: src/lib/github.ts
+ * Role: Core system component participating in autonomous cognitive evolution cycles.
+ * Architecture: Type-safe modular unit with resilient state interfaces.
+ */
+
+
+export interface GitHubRepo {
+  owner: { login: string };
+  name: string;
+  default_branch: string;
+}
+
+const validateStringParam = (param: string, name: string): string => {
+  if (typeof param !== 'string' || param.trim() === '') {
+    throw new Error(`Security validation failed: Invalid or empty parameter '${name}'`);
+  }
+  return param.trim();
+};
+
+export const ghFetch = async (url: string, token: string, options: RequestInit = {}) => {
+  const cleanUrl = validateStringParam(url, 'url');
+  const cleanToken = validateStringParam(token, 'token');
+
+  // Use Bearer token for all modern tokens (github_pat or ghp_)
+  const authHeader = `Bearer ${cleanToken}`;
+  
+  const headers: Record<string, string> = {
+    'Authorization': authHeader,
+    'Accept': 'application/vnd.github.v3+json',
+    'Content-Type': 'application/json',
+    ...((options.headers as Record<string, string>) || {}),
+  };
+
+  const response = await fetch(cleanUrl, { ...options, headers }).catch(e => {
+    if (e.message.includes('Failed to fetch')) {
+      throw new Error("Network Error: Failed to connect to GitHub. Verify your credentials and internet connection.");
+    }
+    throw e;
+  });
+
+  if (response.status === 403 || response.status === 429) {
+    const rateLimitLimit = response.headers.get('x-ratelimit-limit');
+    const rateLimitRemaining = response.headers.get('x-ratelimit-remaining');
+    const rateLimitReset = response.headers.get('x-ratelimit-reset');
+    
+    if (rateLimitRemaining === '0') {
+      const resetDate = rateLimitReset ? new Date(parseInt(rateLimitReset, 10) * 1000).toLocaleTimeString() : 'soon';
+      throw new Error(`CRITICAL: GitHub API rate limit exceeded. Reset at ${resetDate}. Operation halted.`);
+    }
+  }
+
+  if (!response.ok) {
+    let errorMessage = response.statusText;
+    try {
+      const errorData = await response.json();
+      errorMessage = errorData.message || (errorData.errors ? JSON.stringify(errorData.errors) : response.statusText);
+      if (response.status === 403 && errorMessage.toLowerCase().includes('protected branch')) {
+        errorMessage = "Operation failed: The branch is PROTECTED. Please disable branch protection in repository settings to allow distillation.";
+      }
+    } catch (e) {
+      // Not JSON
+    }
+    throw new Error(`GitHub API Error [${response.status}]: ${errorMessage}`);
+  }
+  return response;
+};
+
+export const getRepoTree = async (repoUrl: string, token: string, branch: string = 'main') => {
+  const cleanRepoUrl = validateStringParam(repoUrl, 'repoUrl');
+  const match = cleanRepoUrl.match(/github\.com\/([^/]+)\/([^/]+)/);
+  if (!match) throw new Error('Invalid GitHub URL structure');
+  const [_, owner, name] = match;
+  const cleanOwner = validateStringParam(owner, 'owner');
+  const cleanName = name.replace(/\.git$/, '').replace(/\/$/, '');
+  const validatedName = validateStringParam(cleanName, 'repo name');
+  
+  // Branch names with slashes MUST be encoded
+  const encodedBranch = encodeURIComponent(branch);
+  const res = await ghFetch(`https://api.github.com/repos/${cleanOwner}/${validatedName}/git/trees/${encodedBranch}?recursive=1`, token);
+  return res.json();
+};
+
+export const getFileContent = async (url: string, token: string) => {
+  const cleanUrl = validateStringParam(url, 'url');
+  const res = await ghFetch(cleanUrl, token);
+  const data = await res.json();
+  
+  if (!data.content) return "";
+
+  try {
+    // Standard base64 decoding that handles UTF-8 correctly
+    const binaryString = atob(data.content.replace(/\s/g, ''));
+    const bytes = new Uint8Array(binaryString.length);
+    for (let i = 0; i < binaryString.length; i++) {
+      bytes[i] = binaryString.charCodeAt(i);
+    }
+    return new TextDecoder().decode(bytes);
+  } catch (e) {
+    console.warn(`[github] Failed to decode content for ${cleanUrl}:`, e);
+    return "/* [Error: Binary or malformed content could not be decoded] */";
+  }
+};
+
+export const getUserRepos = async (owner: string, token: string) => {
+  const cleanOwner = validateStringParam(owner, 'owner');
+  try {
+    const res = await ghFetch(`https://api.github.com/users/${encodeURIComponent(cleanOwner)}/repos?per_page=100&sort=updated`, token);
+    return await res.json();
+  } catch (e) {
+    const res = await ghFetch(`https://api.github.com/orgs/${encodeURIComponent(cleanOwner)}/repos?per_page=100&sort=updated`, token);
+    return await res.json();
+  }
+};
+
+export const getBranches = async (owner: string, repo: string, token: string) => {
+  const cleanOwner = validateStringParam(owner, 'owner');
+  const cleanRepo = validateStringParam(repo, 'repo');
+  const res = await ghFetch(`https://api.github.com/repos/${encodeURIComponent(cleanOwner)}/${encodeURIComponent(cleanRepo)}/branches`, token);
+  return res.json();
+};
+
+export const createBranch = async (owner: string, repo: string, newBranch: string, baseBranch: string, token: string) => {
+  const cleanOwner = validateStringParam(owner, 'owner');
+  const cleanRepo = validateStringParam(repo, 'repo');
+  const cleanNewBranch = validateStringParam(newBranch, 'newBranch');
+  const cleanBaseBranch = validateStringParam(baseBranch, 'baseBranch');
+
+  console.log(`[createBranch] Creating [${cleanNewBranch}] from [${cleanBaseBranch}]`);
+  
+  // Use encoded branch for commit lookup
+  const encodedBase = encodeURIComponent(cleanBaseBranch);
+  const baseRes = await ghFetch(`https://api.github.com/repos/${encodeURIComponent(cleanOwner)}/${encodeURIComponent(cleanRepo)}/commits/${encodedBase}`, token);
+  const baseData = await baseRes.json();
+  const sha = validateStringParam(baseData.sha, 'commit sha');
+
+  try {
+    const res = await ghFetch(`https://api.github.com/repos/${encodeURIComponent(cleanOwner)}/${encodeURIComponent(cleanRepo)}/git/refs`, token, {
+      method: 'POST',
+      body: JSON.stringify({
+        ref: `refs/heads/${cleanNewBranch}`,
+        sha
+      })
+    });
+    return await res.json();
+  } catch (e: any) {
+    console.warn(`[createBranch] Fallback triggered:`, e?.message || 'unknown error');
+    const fallbackName = `backup-${Math.random().toString(36).substring(2, 7)}`;
+    const res = await ghFetch(`https://api.github.com/repos/${encodeURIComponent(cleanOwner)}/${encodeURIComponent(cleanRepo)}/git/refs`, token, {
+      method: 'POST',
+      body: JSON.stringify({
+        ref: `refs/heads/${fallbackName}`,
+        sha
+      })
+    });
+    return await res.json();
+  }
+};
+
+export const distillRepository = async (owner: string, repo: string, readmeContent: string, token: string, branch: string) => {
+  const cleanOwner = validateStringParam(owner, 'owner');
+  const cleanRepo = validateStringParam(repo, 'repo');
+  const cleanBranch = validateStringParam(branch, 'branch');
+
+  console.log(`[distillRepository] Distilling [${cleanBranch}]`);
+  
+  const encodedBranch = encodeURIComponent(cleanBranch);
+  const commitRes = await ghFetch(`https://api.github.com/repos/${encodeURIComponent(cleanOwner)}/${encodeURIComponent(cleanRepo)}/commits/${encodedBranch}`, token);
+  const commitData = await commitRes.json();
+  const parentSha = validateStringParam(commitData.sha, 'parent sha');
+
+  const blobRes = await ghFetch(`https://api.github.com/repos/${encodeURIComponent(cleanOwner)}/${encodeURIComponent(cleanRepo)}/git/blobs`, token, {
+    method: 'POST',
+    body: JSON.stringify({
+      content: btoa(unescape(encodeURIComponent(readmeContent))),
+      encoding: 'base64'
+    })
+  });
+  const blobData = await blobRes.json();
+  const blobSha = validateStringParam(blobData.sha, 'blob sha');
+
+  // 3. Create a new tree containing ONLY the README
+  // Note: To delete all other files, we do NOT specify a base_tree.
+  // This creates a "root" tree with only the provided elements.
+  const treeRes = await ghFetch(`https://api.github.com/repos/${encodeURIComponent(cleanOwner)}/${encodeURIComponent(cleanRepo)}/git/trees`, token, {
+    method: 'POST',
+    body: JSON.stringify({
+      tree: [
+        {
+          path: 'README.md',
+          mode: '100644',
+          type: 'blob',
+          sha: blobSha
+        }
+      ]
+    })
+  });
+  const treeData = await treeRes.json();
+  const treeSha = validateStringParam(treeData.sha, 'tree sha');
+
+  // 4. Create a new commit
+  const finalCommitRes = await ghFetch(`https://api.github.com/repos/${encodeURIComponent(cleanOwner)}/${encodeURIComponent(cleanRepo)}/git/commits`, token, {
+    method: 'POST',
+    body: JSON.stringify({
+      message: 'chore: distill repository to logic manifest',
+      tree: treeSha,
+      parents: [parentSha]
+    })
+  });
+  const finalCommitData = await finalCommitRes.json();
+  const finalCommitSha = validateStringParam(finalCommitData.sha, 'final commit sha');
+
+  // 5. Update the branch reference
+  const encodedRef = encodeURIComponent(cleanBranch);
+  const updateRes = await ghFetch(`https://api.github.com/repos/${encodeURIComponent(cleanOwner)}/${encodeURIComponent(cleanRepo)}/git/refs/heads/${encodedRef}`, token, {
+    method: 'PATCH',
+    body: JSON.stringify({
+      sha: finalCommitSha,
+      force: true
+    })
+  });
+  return updateRes.json();
+};
+
+export const renameBranch = async (owner: string, repo: string, oldBranch: string, newName: string, token: string) => {
+  const cleanOwner = validateStringParam(owner, 'owner');
+  const cleanRepo = validateStringParam(repo, 'repo');
+  const cleanOldBranch = validateStringParam(oldBranch, 'oldBranch');
+  const cleanNewName = validateStringParam(newName, 'newName');
+
+  console.log(`[renameBranch] Renaming [${cleanOldBranch}] to [${cleanNewName}]`);
+  const encodedBranch = encodeURIComponent(cleanOldBranch);
+  const res = await ghFetch(`https://api.github.com/repos/${encodeURIComponent(cleanOwner)}/${encodeURIComponent(cleanRepo)}/branches/${encodedBranch}/rename`, token, {
+    method: 'POST',
+    body: JSON.stringify({ new_name: cleanNewName })
+  });
+  return res.json();
+};
+
+export const deleteBranch = async (owner: string, repo: string, branch: string, token: string) => {
+  const cleanOwner = validateStringParam(owner, 'owner');
+  const cleanRepo = validateStringParam(repo, 'repo');
+  const cleanBranch = validateStringParam(branch, 'branch');
+
+  console.log(`[deleteBranch] Deleting [${cleanBranch}]`);
+  const encodedRef = encodeURIComponent(cleanBranch);
+  const res = await ghFetch(`https://api.github.com/repos/${encodeURIComponent(cleanOwner)}/${encodeURIComponent(cleanRepo)}/git/refs/heads/${encodedRef}`, token, {
+    method: 'DELETE'
+  });
+  return res;
+};
+
+export const updateRepoVisibility = async (owner: string, repo: string, isPrivate: boolean, token: string) => {
+  const cleanOwner = validateStringParam(owner, 'owner');
+  const cleanRepo = validateStringParam(repo, 'repo');
+
+  console.log(`[updateRepoVisibility] Setting ${cleanRepo} to ${isPrivate ? 'private' : 'public'}`);
+  const res = await ghFetch(`https://api.github.com/repos/${encodeURIComponent(cleanOwner)}/${encodeURIComponent(cleanRepo)}`, token, {
+    method: 'PATCH',
+    body: JSON.stringify({ private: Boolean(isPrivate) })
+  });
+  return res.json();
+};
+
+export const protectBranch = async (owner: string, repo: string, branch: string, token: string) => {
+  const cleanOwner = validateStringParam(owner, 'owner');
+  const cleanRepo = validateStringParam(repo, 'repo');
+  const cleanBranch = validateStringParam(branch, 'branch');
+
+  console.log(`[protectBranch] Protecting [${cleanBranch}]`);
+  const encodedBranch = encodeURIComponent(cleanBranch);
+  const res = await ghFetch(`https://api.github.com/repos/${encodeURIComponent(cleanOwner)}/${encodeURIComponent(cleanRepo)}/branches/${encodedBranch}/protection`, token, {
+    method: 'PUT',
+    body: JSON.stringify({
+      required_status_checks: null,
+      enforce_admins: true,
+      required_pull_request_reviews: null,
+      restrictions: null,
+      allow_force_pushes: false,
+      allow_deletions: false
+    })
+  });
+  return res.json();
+};
+```
+
+---
